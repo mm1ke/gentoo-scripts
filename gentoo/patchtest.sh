@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /usr/portage
+cd /mnt/data/gentoo
 z=0
 ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 	cat=${line%%/*}
