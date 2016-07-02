@@ -2,41 +2,56 @@
 
 cd /mnt/data/gentoo
 z=0
+
 ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
-	cat=${line%%/*}
-	pak=${line##*/}
-	genpak='${PN}'
-	genpak2='"${PN}"'
-	genpakv='${P}'
-	genpakv2='"${P}"'
-	fullpath="/usr/portage/$line"
+	category=${line%%/*}
+	package_name=${line##*/}
+
+	var_package_name='${PN}'
+	var_package_name_version='${P}'
+	var_package_name_re_version='${PF}'
+	var_package_version='${PV}'
+
+	fullpath="/usr/portage/${line}"
 	if [ -e ${fullpath}/files ]; then
 		for i in ${fullpath}/files/*; do
 			if ! [ -d $i ]; then
-
+				# original patch name
 				i=${i##*/}
+				# skip readme files
 				if [ "$i" == "README.gentoo" ]; then
 					continue
 				fi
-				i_genpak=${i/$pak/$genpak}
-				i_genpak2=${i/$pak/$genpak2}
 
-				version=$(echo $i_genpak|cut -d'-' -f2)
-				fullname="${pak}-${version}"
-				i_genpakv=${i/${fullname}/$genpakv}
-				i_genpakv2=${i/${fullname}/$genpakv2}
+				custom_name_1=${i/${package_name}/${var_package_name}}
 
-				if $(grep ${i} ${fullpath}/*.ebuild >/dev/null); then
+				package_version=$(echo ${custom_name_1}|cut -d'-' -f2)
+				package_reversion=$(echo ${custom_name_1}|cut -d'-' -f3)
+				package_fullname="${package_name}-${package_version}"
+				package_fullname_reversion="${package_name}-${package_version}-${package_reversion}"
+
+				custom_name_2=${i/${package_fullname}/${var_package_name_version}}
+
+				if [[ "${package_reversion}" =~ ^r[0-9] ]];then
+					custom_name_3=${i/${package_fullname_reversion}/${var_package_name_re_version}}
+				else
+					package_reversion=""
+				fi
+
+#				custom_name_4=${i/${package_version}/${var_package_version}}
+
+
+				if $(sed 's|"||g' ${fullpath}/*.ebuild | grep $i >/dev/null); then
 					found=true
 					#continue
-				elif $(grep ${i_genpak} ${fullpath}/*.ebuild >/dev/null); then
+				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_1} >/dev/null); then
 					found=true
-				elif $(grep ${i_genpakv} ${fullpath}/*.ebuild >/dev/null); then
+				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_2} >/dev/null); then
 					found=true
-				elif $(grep ${i_genpak2} ${fullpath}/*.ebuild >/dev/null); then
+				elif [ -n "${package_reversion}" ] && $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_3} >/dev/null); then
 					found=true
-				elif $(grep ${i_genpakv2} ${fullpath}/*.ebuild >/dev/null); then
-					found=true
+#				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_4} >/dev/null); then
+#					found=true
 				else
 					echo "$line: patch $i not used"
 					z=$[$z+1]
