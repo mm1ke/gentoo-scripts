@@ -37,8 +37,11 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 				else
 					package_reversion=""
 				fi
-
-#				custom_name_4=${i/${package_version}/${var_package_version}}
+				if [[ "${package_version}" =~ ^[0-9] ]]; then
+					custom_name_4=${i/${package_version}/${var_package_version}}
+				else
+					package_version=""
+				fi
 
 
 				if $(sed 's|"||g' ${fullpath}/*.ebuild | grep $i >/dev/null); then
@@ -50,8 +53,8 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 					found=true
 				elif [ -n "${package_reversion}" ] && $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_3} >/dev/null); then
 					found=true
-#				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_4} >/dev/null); then
-#					found=true
+				elif [ -n "${package_version}" ] && $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_4} >/dev/null); then
+					found=true
 				else
 					echo "$line: patch $i not used"
 					z=$[$z+1]
