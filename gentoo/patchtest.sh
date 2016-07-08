@@ -11,6 +11,7 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 	var_package_name_version='${P}'
 	var_package_name_re_version='${PF}'
 	var_package_version='${PV}'
+	var_package_version_reversion='${PVR}'
 
 	fullpath="/usr/portage/${line}"
 	if [ -e ${fullpath}/files ]; then
@@ -23,46 +24,50 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 					continue
 				fi
 
-				custom_name_1=${i/${package_name}/${var_package_name}}
-
-				package_version=$(echo ${custom_name_1}|cut -d'-' -f2)
-				package_reversion=$(echo ${custom_name_1}|cut -d'-' -f3)
-				package_fullname="${package_name}-${package_version}"
-				package_fullname_reversion="${package_name}-${package_version}-${package_reversion}"
-
-				custom_name_2=${i/${package_fullname}/${var_package_name_version}}
-
-				if [[ "${package_reversion}" =~ ^r[0-9] ]];then
-					custom_name_3=${i/${package_fullname_reversion}/${var_package_name_re_version}}
-				else
-					package_reversion=""
-				fi
-				if [[ "${package_version}" =~ ^[0-9] ]]; then
-					custom_name_4=${i/${package_version}/${var_package_version}}
-				else
-					package_version=""
-				fi
+				for ebuild in ${fullpath}/*.ebuild; do
+					ebuild_full=${ebuild%.*}
+					ebuild_full=${ebuild_full##*/}
+					ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
+					ebuild_reversion=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
+					#echo "$package_name $ebuild_version $ebuild_reversion"
 
 
-				if $(sed 's|"||g' ${fullpath}/*.ebuild | grep $i >/dev/null); then
-					found=true
-					#continue
-				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_1} >/dev/null); then
-					found=true
-				elif $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_2} >/dev/null); then
-					found=true
-				elif [ -n "${package_reversion}" ] && $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_3} >/dev/null); then
-					found=true
-				elif [ -n "${package_version}" ] && $(sed 's|"||g' ${fullpath}/*.ebuild | grep ${custom_name_4} >/dev/null); then
-					found=true
-				else
+					custom_name_1=${i/${package_name}/${var_package_name}}
+					custom_name_2=${i/${package_name}-${ebuild_version}/${var_package_name_version}}
+					custom_name_4=${i/${ebuild_version}/${var_package_version}}
+					if [ -n "${ebuild_reversion}" ]; then
+						custom_name_3=${i/${package_name}-${ebuild_version}-${ebuild_reversion}/${var_package_name_re_version}}
+						custom_name_5=${i/${ebuild_version}-${ebuild_reversion}/${var_package_version_reversion}}
+					fi
+
+					
+					if $(sed 's|"||g' ${ebuild} | grep $i >/dev/null); then
+						found=true
+					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_1} >/dev/null); then
+						found=true
+					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_2} >/dev/null); then
+						found=true
+					elif [ -n "${ebuild_reversion}" ] && $(sed 's|"||g' ${ebuild} | grep ${custom_name_3} >/dev/null); then
+						found=true
+					elif [ -n "${ebuild_reversion}" ] && $(sed 's|"||g' ${ebuild} | grep ${custom_name_5} >/dev/null); then
+						found=true
+					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_4} >/dev/null); then
+						found=true
+					else
+						found=false
+					fi
+
+					$found && break
+
+				done
+
+				if ! $found; then
 					echo "$line: patch $i not used"
 					z=$[$z+1]
 				fi
+
+				found=false
 			fi
 		done
 	fi
-#	if [ $z -eq 10 ]; then
-#		break
-#	fi
 done
