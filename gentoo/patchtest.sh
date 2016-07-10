@@ -2,8 +2,17 @@
 
 cd /mnt/data/gentoo
 z=0
+toscan="*"
 
-ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
+if [ -n "$1" ]; then
+	if [ -d $1 ]; then
+		toscan=$1
+	else
+		echo "$1 doesn't exist. scanning all"
+	fi
+fi
+
+ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 	category=${line%%/*}
 	package_name=${line##*/}
 
@@ -38,6 +47,8 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 					if [ -n "${ebuild_reversion}" ]; then
 						custom_name_3=${i/${package_name}-${ebuild_version}-${ebuild_reversion}/${var_package_name_re_version}}
 						custom_name_5=${i/${ebuild_version}-${ebuild_reversion}/${var_package_version_reversion}}
+					else
+						custom_name_5=${i/${ebuild_version}/${var_package_version_reversion}}
 					fi
 
 					
@@ -49,7 +60,7 @@ ls -d */* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 						found=true
 					elif [ -n "${ebuild_reversion}" ] && $(sed 's|"||g' ${ebuild} | grep ${custom_name_3} >/dev/null); then
 						found=true
-					elif [ -n "${ebuild_reversion}" ] && $(sed 's|"||g' ${ebuild} | grep ${custom_name_5} >/dev/null); then
+					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_5} >/dev/null); then
 						found=true
 					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_4} >/dev/null); then
 						found=true
