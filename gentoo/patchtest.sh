@@ -1,8 +1,12 @@
 #!/bin/bash
 
-cd /mnt/data/gentoo
+PORTTREE="/mnt/data/gentoo/"
+
 z=0
 toscan="*"
+
+cd ${PORTTREE}
+
 
 if [ -n "$1" ]; then
 	if [ -d $1 ]; then
@@ -22,11 +26,12 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 	var_package_version='${PV}'
 	var_package_version_reversion='${PVR}'
 
-	fullpath="/usr/portage/${line}"
+	fullpath="/${PORTTREE}/${line}"
 	if [ -e ${fullpath}/files ]; then
 		for i in ${fullpath}/files/*; do
+			# ignore directories
 			if ! [ -d $i ]; then
-				# original patch name
+				# patch basename
 				i=${i##*/}
 				# skip readme files
 				if [ "$i" == "README.gentoo" ]; then
@@ -51,7 +56,6 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 						custom_name_5=${i/${ebuild_version}/${var_package_version_reversion}}
 					fi
 
-					
 					if $(sed 's|"||g' ${ebuild} | grep $i >/dev/null); then
 						found=true
 					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_1} >/dev/null); then
