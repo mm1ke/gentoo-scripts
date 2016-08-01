@@ -1,9 +1,13 @@
-#!/bin/bash
 
 PORTTREE="/mnt/data/gentoo/"
 
-z=0
 toscan="*"
+
+pn='${PN}'
+p='${P}'
+pf='${PF}'
+pv='${PV}'
+pvr='${PVR}'
 
 cd ${PORTTREE}
 
@@ -17,24 +21,19 @@ if [ -n "$1" ]; then
 fi
 
 ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
+
 	category=${line%%/*}
 	package_name=${line##*/}
 
-	var_package_name='${PN}'
-	var_package_name_version='${P}'
-	var_package_name_re_version='${PF}'
-	var_package_version='${PV}'
-	var_package_version_reversion='${PVR}'
-
 	fullpath="/${PORTTREE}/${line}"
 	if [ -e ${fullpath}/files ]; then
-		for i in ${fullpath}/files/*; do
+		for patchfile in ${fullpath}/files/*; do
 			# ignore directories
-			if ! [ -d $i ]; then
+			if ! [ -d ${patchfile} ]; then
 				# patch basename
-				i=${i##*/}
+				patchfile=${patchfile##*/}
 				# skip readme files
-				if [ "$i" == "README.gentoo" ]; then
+				if [ "${patchfile}" == "README.gentoo" ]; then
 					continue
 				fi
 
@@ -43,20 +42,19 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 					ebuild_full=${ebuild_full##*/}
 					ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
 					ebuild_reversion=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
-					#echo "$package_name $ebuild_version $ebuild_reversion"
 
 
-					custom_name_1=${i/${package_name}/${var_package_name}}
-					custom_name_2=${i/${package_name}-${ebuild_version}/${var_package_name_version}}
-					custom_name_4=${i/${ebuild_version}/${var_package_version}}
+					custom_name_1=${patchfile/${package_name}/${pn}}
+					custom_name_2=${patchfile/${package_name}-${ebuild_version}/${p}}
+					custom_name_4=${patchfile/${ebuild_version}/${pv}}
 					if [ -n "${ebuild_reversion}" ]; then
-						custom_name_3=${i/${package_name}-${ebuild_version}-${ebuild_reversion}/${var_package_name_re_version}}
-						custom_name_5=${i/${ebuild_version}-${ebuild_reversion}/${var_package_version_reversion}}
+						custom_name_3=${patchfile/${package_name}-${ebuild_version}-${ebuild_reversion}/${pf}}
+						custom_name_5=${patchfile/${ebuild_version}-${ebuild_reversion}/${pvr}}
 					else
-						custom_name_5=${i/${ebuild_version}/${var_package_version_reversion}}
+						custom_name_5=${patchfile/${ebuild_version}/${pvr}}
 					fi
 
-					if $(sed 's|"||g' ${ebuild} | grep $i >/dev/null); then
+					if $(sed 's|"||g' ${ebuild} | grep ${patchfile} >/dev/null); then
 						found=true
 					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_1} >/dev/null); then
 						found=true
@@ -77,8 +75,7 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 				done
 
 				if ! $found; then
-					echo "$line: patch $i not used"
-					z=$[$z+1]
+					echo "$line: ${patchfile}"
 				fi
 
 				found=false
