@@ -10,9 +10,9 @@ patchtest.sh:
 > Usage:
 > 
 ./patchtest.sh 
-	* searches in every catergory (takes some time)
+* searches in every catergory (takes some time)
 ./patchtest.sh $catergory
-	* only searches in the given catergory
+* only searches in the given catergory
 > 
 > Limitations:
 > 
