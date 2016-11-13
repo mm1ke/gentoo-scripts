@@ -24,8 +24,7 @@
 # simple scirpt to find unused patches in the gentoo portage tree
 
 PORTTREE="/mnt/data/gentoo/"
-
-toscan="*"
+cd ${PORTTREE}
 
 pn='${PN}'
 p='${P}'
@@ -33,26 +32,62 @@ pf='${PF}'
 pv='${PV}'
 pvr='${PVR}'
 
-cd ${PORTTREE}
+print_main=true
 
+usage() {
+	echo "You need an argument"
+}
 
-if [ -n "$1" ]; then
-	if [ -d $1 ]; then
-		toscan=$1
+if [ -z "${1}" ]; then
+	usage
+else
+	if [ -d "${PORTTREE}/${1}" ]; then
+		cat=${1%%/*}
+		pac=${1##*/}
+		if [ -z "${pac}" ] || [ "${cat}" == "${pac}" ]; then
+			pac="*"
+		fi
+	elif [ "${1}" == "full" ]; then
+		cat="*"
+		pac="*"
 	else
-		echo "$1 doesn't exist. scanning all"
+		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
 
-ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
+# python script to extract maintainers
+get_main(){
+	ret=`/usr/bin/python3 - $1 <<END
+import xml.etree.ElementTree
+import sys
+pack = str(sys.argv[1])
+projxml = "/usr/portage/" + pack + "/metadata.xml"
+e = xml.etree.ElementTree.parse(projxml).getroot()
+c = ""
+for i in e:
+	for v in i.iter('maintainer'):
+		try:
+			a=str(v[1].text)
+		except IndexError:
+			a="empty"
+		b=str(v[0].text)
+		c+=str(a)+' ('+str(b)+') // '
+print(c)
+END`
+	echo $ret
+}
+
+
+ls -d ${cat}/${pac} |grep -E -v "distfiles|metadata|eclass" | while read -r line; do
 
 	category=${line%%/*}
 	package_name=${line##*/}
-
 	fullpath="/${PORTTREE}/${line}"
+
+	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		for patchfile in ${fullpath}/files/*; do
-			# ignore directories
+			# ignore sub-directories
 			if ! [ -d ${patchfile} ]; then
 				# patch basename
 				patchfile=${patchfile##*/}
@@ -60,14 +95,13 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 				if [ "${patchfile}" == "README.gentoo" ]; then
 					continue
 				fi
-
+				# check every ebuild
 				for ebuild in ${fullpath}/*.ebuild; do
-					ebuild_full=${ebuild%.*}
-					ebuild_full=${ebuild_full##*/}
+					# get ebuild detail
+					ebuild_full=$(basename ${ebuild%.*})
 					ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
 					ebuild_reversion=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
-
-
+					# create custom names to check
 					custom_name_1=${patchfile/${package_name}/${pn}}
 					custom_name_2=${patchfile/${package_name}-${ebuild_version}/${p}}
 					custom_name_4=${patchfile/${ebuild_version}/${pv}}
@@ -77,7 +111,7 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 					else
 						custom_name_5=${patchfile/${ebuild_version}/${pvr}}
 					fi
-
+					# check ebuild for the custom names
 					if $(sed 's|"||g' ${ebuild} | grep ${patchfile} >/dev/null); then
 						found=true
 					elif $(sed 's|"||g' ${ebuild} | grep ${custom_name_1} >/dev/null); then
@@ -95,11 +129,15 @@ ls -d ${toscan}/* |grep -E -v "distfiles|metadata|eclass" | while read -r line; 
 					fi
 
 					$found && break
-
 				done
 
 				if ! $found; then
-					echo "$line: ${patchfile}"
+					if $print_main; then
+						main=$(get_main "${category}/${package_name}")
+						echo -e "$line: ${patchfile}\t\t${main}"
+					else
+						echo -e "$line: ${patchfile}"
+					fi
 				fi
 
 				found=false
