@@ -91,12 +91,10 @@ END`
 
 main() {
 
-	package=${1}
-
-	category="$(echo ${package}|cut -d'/' -f2)"
-	package_name=${line##*/}
-	fullpath="/${PORTTREE}/${line}"
-	main="$(get_main_min "${category}/${package_name}")"
+	local package=${1}
+	local category="$(echo ${package}|cut -d'/' -f2)"
+	local package_name=${line##*/}
+	local maintainer="$(get_main_min "${category}/${package_name}")"
 
 	for eb in $line/*.ebuild; do
 		_package=$(basename ${eb%.*})
@@ -106,12 +104,12 @@ main() {
 				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
 		
 				if echo $i|grep ^ftp >/dev/null;then
-					echo "FTP ${category}/${package_name} ${category}/${_package} ${i} ${main}" >> ${_tmp}
+					echo "FTP ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}" >> ${_tmp}
 				elif echo $i|grep '${' >/dev/null; then
-					echo "VAR ${category}/${package_name} ${category}/${_package} ${i} ${main}" >> ${_tmp}
+					echo "VAR ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}" >> ${_tmp}
 				elif [ -n "${_check_tmp}" ]; then
 					# don't check again
-					echo "${_check_tmp:0:3} ${category}/${package_name} ${category}/${_package} ${_check_tmp:4} ${main}" >> ${_tmp}
+					echo "${_check_tmp:0:3} ${category}/${package_name} ${category}/${_package} ${_check_tmp:4} ${maintainer}" >> ${_tmp}
 				else
 					_code="$(curl -o /dev/null --silent --max-time 10 --head --write-out '%{http_code}\n' ${i})"
 					echo "${_code} ${category}/${package_name} ${category}/${_package} ${i} ${main}" >> ${_tmp}
