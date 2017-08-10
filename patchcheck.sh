@@ -87,9 +87,9 @@ fi
 main(){
 	package=${1}
 
-	category="$(echo ${package}|cut -d'/' -f2)"
-	package_name=${package##*/}
-	fullpath="/${PORTTREE}/${package}"
+	local category="$(echo ${package}|cut -d'/' -f2)"
+	local package_name=${package##*/}
+	local fullpath="/${PORTTREE}/${package}"
 
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
