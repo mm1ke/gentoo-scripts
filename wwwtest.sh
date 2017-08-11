@@ -95,6 +95,9 @@ main() {
 	local category="$(echo ${package}|cut -d'/' -f2)"
 	local package_name=${line##*/}
 	local maintainer="$(get_main_min "${category}/${package_name}")"
+	if [ -z "${maintainer}" ]; then
+			maintainer="maintainer-needed@gentoo.org:"
+	fi
 
 	for eb in $line/*.ebuild; do
 		_package=$(basename ${eb%.*})

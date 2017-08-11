@@ -96,6 +96,10 @@ main(){
 		if ! grep -E ".diff|.patch|FILESDIR|apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular" ${fullpath}/*.ebuild >/dev/null; then
 			if $script_mode; then
 				main=$(get_main_min "${category}/${package_name}")
+				if [ -z "${main}" ]; then
+					main="maintainer-needed@gentoo.org:"
+				fi
+
 				mkdir -p ${script_mode_dir}/sort-by-package/${category}
 				ls ${PORTTREE}/${category}/${package_name}/files/* > ${script_mode_dir}/sort-by-package/${category}/${package_name}.txt
 				echo "${category}/${package_name}" >> ${script_mode_dir}/full.txt

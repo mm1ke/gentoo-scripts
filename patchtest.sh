@@ -55,7 +55,6 @@ usage() {
 if ! $script_mode; then
 	if [ -z "${1}" ]; then
 		usage
-		exit 1
 	else
 		if [ -d "${PORTTREE}/${1}" ]; then
 			level="${1}"
@@ -209,7 +208,7 @@ check_ebuild(){
 		# remove duplicates
 		mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
 		# replace list with newpackages
-		local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
+		searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
 
 		$DEBUG && >&2 echo "**DEBUG: Custom names: ${cn[@]}"
 		$DEBUG && >&2 echo "**DEBUG: Custom names normalized: ${searchpattern}"
@@ -217,11 +216,12 @@ check_ebuild(){
 		# check ebuild for the custom names
 		if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
 			found=true
-			$DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
 		else
 			found=false
 			$DEBUG && >&2 echo "***DEBUG: CHECK: doesn't found $patchfile"
 		fi
+
+		$found && $DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
 
 		$found && break
 	done
@@ -310,18 +310,23 @@ main(){
 		$DEBUG && echo >&2 "DEBUG: unused patches: ${unused_patches[@]}"
 		$DEBUG && echo >&2
 
+		main="$(get_main_min "${category}/${package_name}")"
+		if [ -z "${main}" ]; then
+			main="maintainer-needed@gentoo.org:"
+		fi
+
 
 		if [ -n "${unused_patches}" ]; then
 			if ${script_mode}; then
-				main=$(get_main_min "${category}/${package_name}")
 				for upatch in "${unused_patches[@]}"; do
 					echo -e "$package ${upatch}" >> ${script_mode_tmp}
 					echo -e "$package ${upatch}\t\t${main}" >> ${script_mode_tmp_full}
 				done
 			else
-				${print_main} && main="\t\t$(get_main_min "${category}/${package_name}")" || main=""
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "$package: ${upatch}${main}"
+					${print_main} && \
+						echo -e "$package: ${upatch}\t\t${main}" || \
+						echo -e "$package: ${upatch}"
 				done
 			fi
 		fi
