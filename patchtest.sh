@@ -217,12 +217,11 @@ check_ebuild(){
 		# check ebuild for the custom names
 		if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
 			found=true
+			$DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
 		else
 			found=false
 			$DEBUG && >&2 echo "***DEBUG: CHECK: doesn't found $patchfile"
 		fi
-
-		$found && $DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
 
 		$found && break
 	done
