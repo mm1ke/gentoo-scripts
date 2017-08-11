@@ -55,6 +55,7 @@ usage() {
 if ! $script_mode; then
 	if [ -z "${1}" ]; then
 		usage
+		exit 1
 	else
 		if [ -d "${PORTTREE}/${1}" ]; then
 			level="${1}"
@@ -208,7 +209,7 @@ check_ebuild(){
 		# remove duplicates
 		mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
 		# replace list with newpackages
-		searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
+		local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
 
 		$DEBUG && >&2 echo "**DEBUG: Custom names: ${cn[@]}"
 		$DEBUG && >&2 echo "**DEBUG: Custom names normalized: ${searchpattern}"
