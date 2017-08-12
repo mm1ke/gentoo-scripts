@@ -91,18 +91,22 @@ END`
 
 301check() {
 	local hp=${1}
+	local cat=${2}
+	local pak=${3}
+	local main=${4}
+
 	local found=false
-	local lastchar="${1: -1}"
-	_sitemuts=("${1/http:\/\//https:\/\/}" \
-		"${1/http:\/\//http:\/\/www.}" \
-		"${1/http:\/\//https:\/\/www.}" \
-		"${1/https:\/\//https:\/\/www.}")
+	local lastchar="${hp: -1}"
+	_sitemuts=("${hp/http:\/\//https:\/\/}" \
+		"${hp/http:\/\//http:\/\/www.}" \
+		"${hp/http:\/\//https:\/\/www.}" \
+		"${hp/https:\/\//https:\/\/www.}")
 	if ! [ "${lastchar}" = "/" ]; then
-		_sitemuts+=("${1}/" \
-		"${1/http:\/\//https:\/\/}/" \
-		"${1/http:\/\//http:\/\/www.}/" \
-		"${1/http:\/\//https:\/\/www.}/" \
-		"${1/https:\/\//https:\/\/www.}/")
+		_sitemuts+=("${hp}/" \
+		"${hp/http:\/\//https:\/\/}/" \
+		"${hp/http:\/\//http:\/\/www.}/" \
+		"${hp/http:\/\//https:\/\/www.}/" \
+		"${hp/https:\/\//https:\/\/www.}/")
 	fi
 
 	for sitemut in ${_sitemuts[@]}; do
@@ -110,17 +114,17 @@ END`
 		if [ ${_code} = 200 ]; then
 			found=true
 			$script_mode &&
-				echo "301 -> 200: ${1} -> ${sitemut} (${2} ${3})" >> ${_wwwdir}/special/301_slash_httpS_www.txt ||
-				echo "301 -> 200: ${1} -> ${sitemut} (${2} ${3})"
+				echo "${cat};${pak};${hp};${sitemut};${main}" >> ${_wwwdir}/special/301_slash_https_www.txt ||
+				echo "${cat};${pak};${hp};${sitemut};${main}"
 			break
 		fi
 	done
 	if ! ${found}; then
-		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${1})"
+		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${script_mode} &&
-			echo "301 -> ${new_code} // ${1} -> ${correct_site} (${2} ${3})" >> ${_wwwdir}/special/301_redirections.txt ||
-			echo "301 -> ${new_code} // ${1} -> ${correct_site} (${2} ${3})"
+			echo "${cat};${pak};${hp};${new_code};${correct_site};${main}" >> ${_wwwdir}/special/301_redirections.txt ||
+			echo "${cat};${pak};${hp};${new_code};${correct_site};${main}"
 	fi
 }
 
@@ -139,37 +143,46 @@ mode() {
 }
 
 main() {
-	local package=${1}
-	local category="$(echo ${package}|cut -d'/' -f2)"
-	local package_name=${line##*/}
-	local maintainer="$(get_main_min "${category}/${package_name}")"
+	local full_package=${1}
+	local category="$(echo ${full_package}|cut -d'/' -f2)"
+	local package=${line##*/}
+	local maintainer="$(get_main_min "${category}/${package}")"
+	local md5portage=false
+
 	if [ -z "${maintainer}" ]; then
 			maintainer="maintainer-needed@gentoo.org:"
 	fi
+	if [ -e "${PORTTREE}/metadata/md5-cache" ]; then
+		md5portage=true
+	fi
 
-	for eb in $line/*.ebuild; do
-		_package=$(basename ${eb%.*})
-		_hp="$(cat $eb|grep ^HOMEPAGE=|cut -d'"' -f2)"
+
+	for eb in ${PORTTREE}/$line/*.ebuild; do
+		ebuild=$(basename ${eb%.*})
+		
+		${md5portage} && _hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild}|cut -d'=' -f2)" ||
+			_hp="$(grep ^HOMEPAGE= ${eb}|cut -d'"' -f2)"
+
 		if [ -n "${_hp}" ]; then
 			for i in ${_hp}; do
 				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
 		
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "FTP ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
+					mode "FTP;${category};${package};${ebuild};${i};${maintainer}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "VAR ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
+					mode "VAR;${category};${package};${ebuild};${i};${maintainer}"
 				elif [ -n "${_check_tmp}" ]; then
 					# don't check again
-					mode "${_check_tmp:0:3} ${category}/${package_name} ${category}/${_package} ${_check_tmp:4} ${maintainer}"
+					mode "${_check_tmp:0:3};${category};${package};${ebuild};${_check_tmp:4};${maintainer}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${_code} ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
+					mode "${_code};${category};${package};${ebuild};${i};${maintainer}"
 					echo "${_code} ${i}" >> ${_ctmp}
 
 					case ${_code} in
 						301)
-							301check "${i}" "${category}/${package_name}" "${maintainer}"
+							301check "${i}" "${category}" "${package}" "${maintainer}"
 							;;
 						esac
 
@@ -195,7 +208,7 @@ done
 
 if ${script_mode}; then
 	# sort after http codes
-	for i in $(cat ${_tmp}|cut -d' ' -f1|sort|uniq); do
+	for i in $(cat ${_tmp}|cut -d';' -f1|sort|uniq); do
 		grep ^${i} ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
 	done
 	
@@ -206,16 +219,16 @@ if ${script_mode}; then
 	cp ${_ctmp} ${_wwwdir}/full-filtered.txt
 	
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${_ctmp}| cut -d ' ' -f2|sort|uniq)"
+	f_packages="$(cat ${_ctmp}| cut -d ';' -f2,3 --output-delimiter='/'|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
 		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-		grep $i ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+		grep ${i} ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 	
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${_ctmp} |cut -d' ' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${_ctmp} |cut -d';' -f6|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${_ctmp} > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 
