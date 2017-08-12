@@ -28,9 +28,11 @@ MIND=2
 
 
 if [ "$(hostname)" = methusalix ]; then
+	script_mode=true
 	_wwwdir="/var/www/gentoo.levelnine.at/wwwtest/"
 	PORTTREE="/usr/portage/"
 else
+	script_mode=false
 	_wwwdir="/home/ai/wwwtest/"
 	PORTTREE="/mnt/data/gentoo/"
 fi
@@ -40,8 +42,10 @@ cd ${PORTTREE}
 _date="$(date +%y%m%d)"
 _tmp="/tmp/wwwtest-${_date}-${RANDOM}.txt"
 _ctmp="/tmp/wwwtest-tmp-${RANDOM}.txt"
+_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
 
 touch ${_ctmp}
+${script_mode} && rm -rf ${_wwwdir}/* && mkdir -p ${_wwwdir}/{special,sort-by-{filter,maintainer,package,httpcode}}
 
 usage() {
 	echo "You need an argument"
@@ -55,9 +59,7 @@ else
 		level="${1}"
 		MAXD=0
 		MIND=0
-		_cat=${1%%/*}
-		_pac=${1##*/}
-		if [ -z "${_pac}" ] || [ "${_cat}" == "${_pac}" ]; then
+		if [ -z "${1##*/}" ] || [ "${1%%/*}" == "${1##*/}" ]; then
 			MAXD=1
 			MIND=1
 		fi
@@ -87,8 +89,56 @@ END`
 	echo $ret
 }
 
-main() {
+301check() {
+	local hp=${1}
+	local found=false
+	local lastchar="${1: -1}"
+	_sitemuts=("${1/http:\/\//https:\/\/}" \
+		"${1/http:\/\//http:\/\/www.}" \
+		"${1/http:\/\//https:\/\/www.}" \
+		"${1/https:\/\//https:\/\/www.}")
+	if ! [ "${lastchar}" = "/" ]; then
+		_sitemuts+=("${1}/" \
+		"${1/http:\/\//https:\/\/}/" \
+		"${1/http:\/\//http:\/\/www.}/" \
+		"${1/http:\/\//https:\/\/www.}/" \
+		"${1/https:\/\//https:\/\/www.}/")
+	fi
 
+	for sitemut in ${_sitemuts[@]}; do
+		local _code="$(get_code ${sitemut})"
+		if [ ${_code} = 200 ]; then
+			found=true
+			$script_mode &&
+				echo "301 -> 200: ${1} -> ${sitemut} (${2} ${3})" >> ${_wwwdir}/special/301_slash_httpS_www.txt ||
+				echo "301 -> 200: ${1} -> ${sitemut} (${2} ${3})"
+			break
+		fi
+	done
+	if ! ${found}; then
+		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${1})"
+		new_code="$(get_code ${correct_site})"
+		${script_mode} &&
+			echo "301 -> ${new_code} // ${1} -> ${correct_site} (${2} ${3})" >> ${_wwwdir}/special/301_redirections.txt ||
+			echo "301 -> ${new_code} // ${1} -> ${correct_site} (${2} ${3})"
+	fi
+}
+
+get_code() {
+	local code="$(curl -o /dev/null --silent --max-time 10 --head --write-out '%{http_code}\n' ${1})"
+	echo ${code}
+}
+
+mode() {
+	local msg=${1}
+	if ${script_mode}; then
+		echo "${msg}" >> ${_tmp}
+	else
+		echo "${msg}"
+	fi
+}
+
+main() {
 	local package=${1}
 	local category="$(echo ${package}|cut -d'/' -f2)"
 	local package_name=${line##*/}
@@ -104,17 +154,25 @@ main() {
 			for i in ${_hp}; do
 				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
 		
-				if echo $i|grep ^ftp >/dev/null;then
-					echo "FTP ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}" >> ${_tmp}
-				elif echo $i|grep '${' >/dev/null; then
-					echo "VAR ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}" >> ${_tmp}
+				if echo ${i}|grep ^ftp >/dev/null;then
+					mode "FTP ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
+				elif echo ${i}|grep '${' >/dev/null; then
+					mode "VAR ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
 				elif [ -n "${_check_tmp}" ]; then
 					# don't check again
-					echo "${_check_tmp:0:3} ${category}/${package_name} ${category}/${_package} ${_check_tmp:4} ${maintainer}" >> ${_tmp}
+					mode "${_check_tmp:0:3} ${category}/${package_name} ${category}/${_package} ${_check_tmp:4} ${maintainer}"
 				else
-					_code="$(curl -o /dev/null --silent --max-time 10 --head --write-out '%{http_code}\n' ${i})"
-					echo "${_code} ${category}/${package_name} ${category}/${_package} ${i} ${main}" >> ${_tmp}
-					echo "$_code $i" >> ${_ctmp}
+					# get http status code
+					_code="$(get_code ${i})"
+					mode "${_code} ${category}/${package_name} ${category}/${_package} ${i} ${maintainer}"
+					echo "${_code} ${i}" >> ${_ctmp}
+
+					case ${_code} in
+						301)
+							301check "${i}" "${category}/${package_name}" "${maintainer}"
+							;;
+						esac
+
 				fi
 			done
 		fi
@@ -134,36 +192,40 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	main ${line}
 done
 
-# remove old data
-rm -rf ${_wwwdir}/*
 
-# sort after http codes
-for i in $(cat ${_tmp}|cut -d' ' -f1|sort|uniq); do
-	mkdir -p ${_wwwdir}/sort-by-httpcode/
-	grep ^${i} ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
-done
+if ${script_mode}; then
+	# sort after http codes
+	for i in $(cat ${_tmp}|cut -d' ' -f1|sort|uniq); do
+		grep ^${i} ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
+	done
+	
+	# copy full log
+	cp ${_tmp} ${_wwwdir}/full.txt
+	# copy full log, ignoring "good" codes
+	grep -v -E "^VAR|^FTP|^200|^302|^307|^400|^503" ${_tmp} > ${_ctmp}
+	cp ${_ctmp} ${_wwwdir}/full-filtered.txt
+	
+	# sort by packages, ignoring "good" codes
+	f_packages="$(cat ${_ctmp}| cut -d ' ' -f2|sort|uniq)"
+	for i in ${f_packages}; do
+		f_cat="$(echo $i|cut -d'/' -f1)"
+		f_pak="$(echo $i|cut -d'/' -f2)"
+		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
+		grep $i ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+	done
+	
+	# sort by maintainer, ignoring "good" codes
+	for a in $(cat ${_ctmp} |cut -d' ' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${_ctmp} > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	done
 
-# copy full log
-cp ${_tmp} ${_wwwdir}/full.txt
+	# special filters
+	for site in ${_filters[@]}; do
+		grep ${site} ${_ctmp} > ${_wwwdir}/sort-by-filter/${site}.txt
+	done
 
-# copy full log, ignoring "good" codes
-grep -v -E "^VAR|^FTP|^200|^302|^307|^400|^503" ${_tmp} > ${_ctmp}
-cp ${_ctmp} ${_wwwdir}/full-filtered.txt
+	# remove tmp data
+	rm ${_tmp}
+fi
 
-# sort by packages, ignoring "good" codes
-f_packages="$(cat ${_ctmp}| cut -d ' ' -f2|sort|uniq)"
-for i in $f_packages; do
-	f_cat="$(echo $i|cut -d'/' -f1)"
-	f_pak="$(echo $i|cut -d'/' -f2)"
-	mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-	grep $i ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
-done
-
-#sort by maintainer, ignoring "good" codes
-for a in $(cat ${_ctmp} |cut -d' ' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-	mkdir -p ${_wwwdir}/sort-by-maintainer/
-	grep "${a}" ${_ctmp} > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-done
-
-rm ${_tmp}
 rm ${_ctmp}
