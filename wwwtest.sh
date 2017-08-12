@@ -45,7 +45,15 @@ _ctmp="/tmp/wwwtest-tmp-${RANDOM}.txt"
 _filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
 
 touch ${_ctmp}
-${script_mode} && rm -rf ${_wwwdir}/* && mkdir -p ${_wwwdir}/{special,sort-by-{filter,maintainer,package,httpcode}}
+if ${script_mode}; then
+	rm -rf ${_wwwdir}/* && mkdir -p ${_wwwdir}/{special,sort-by-{filter,maintainer,package,httpcode}}
+	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HTTP-CODE ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/DATA-USAGE.txt
+	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_slash_https_www_DATA-USAGE.txt
+	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HTTP-CODE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_redirections_DATA-USAGE.txt
+	for _dir in maintainer package httpcode; do
+		echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HTTP-CODE ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/sort-by-${_dir}/DATA-USAGE.txt
+	done
+fi
 
 usage() {
 	echo "You need an argument"
@@ -168,16 +176,16 @@ main() {
 				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
 		
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "FTP;${category};${package};${ebuild};${i};${maintainer}"
+					mode "${category};${package};${ebuild};FTP;${i};${maintainer}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "VAR;${category};${package};${ebuild};${i};${maintainer}"
+					mode "${category};${package};${ebuild};VAR;${i};${maintainer}"
 				elif [ -n "${_check_tmp}" ]; then
 					# don't check again
-					mode "${_check_tmp:0:3};${category};${package};${ebuild};${_check_tmp:4};${maintainer}"
+					mode "${category};${package};${ebuild};${_check_tmp:0:3};${_check_tmp:4};${maintainer}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${_code};${category};${package};${ebuild};${i};${maintainer}"
+					mode "${category};${package};${ebuild};${_code};${i};${maintainer}"
 					echo "${_code} ${i}" >> ${_ctmp}
 
 					case ${_code} in
@@ -208,23 +216,23 @@ done
 
 if ${script_mode}; then
 	# sort after http codes
-	for i in $(cat ${_tmp}|cut -d';' -f1|sort|uniq); do
-		grep ^${i} ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
+	for i in $(cat ${_tmp}|cut -d';' -f4|sort|uniq); do
+		grep ";${i};" ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
 	done
 	
 	# copy full log
 	cp ${_tmp} ${_wwwdir}/full.txt
 	# copy full log, ignoring "good" codes
-	grep -v -E "^VAR|^FTP|^200|^302|^307|^400|^503" ${_tmp} > ${_ctmp}
+	grep -v -E ";VAR;|;FTP;|;200;|;302;|;307;|;400;|;503;" ${_tmp} > ${_ctmp}
 	cp ${_ctmp} ${_wwwdir}/full-filtered.txt
 	
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${_ctmp}| cut -d ';' -f2,3 --output-delimiter='/'|sort|uniq)"
+	f_packages="$(cat ${_ctmp}| cut -d ';' -f1,2 --output-delimiter='/'|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
 		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-		grep ${i} ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+		grep "${f_cat};${f_pak}" ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 	
 	# sort by maintainer, ignoring "good" codes
