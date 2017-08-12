@@ -33,8 +33,6 @@ if [ "$(hostname)" = methusalix ]; then
 else
 	_wwwdir="/home/ai/wwwtest/"
 	PORTTREE="/mnt/data/gentoo/"
-	_test=true
-	_t=0
 fi
 
 cd ${PORTTREE}
@@ -116,8 +114,6 @@ main() {
 				else
 					_code="$(curl -o /dev/null --silent --max-time 10 --head --write-out '%{http_code}\n' ${i})"
 					echo "${_code} ${category}/${package_name} ${category}/${_package} ${i} ${main}" >> ${_tmp}
-					_t=$[$_t+1]
-		
 					echo "$_code $i" >> ${_ctmp}
 				fi
 			done
