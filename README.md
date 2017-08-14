@@ -9,8 +9,8 @@ At the moment following scripts are available
 
 ## patchtest.sh
 This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
-In order to improve it's finding rates it also replaces Variable liek `${P}`,`${PV}`,`${PN}` and other variations.
-Futher more it also creates lists of possible Name variation in order to find patches which are written like following:
+In order to improve it's finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations.
+Further more it also creates lists of possible Name variation in order to find patches which are written like following:
 
 `epatch foo-bar-{patch1,patch2,patch3}.patch`
 
@@ -54,13 +54,17 @@ A full run will take about **1 min**. This was stopped on a:
 * 8 GB-RAM
 
 ## wwwtest.sh
-This script tries to get the http statuscode of every homepage of the `HOMEPAGE` variable. This script is more usefull if the `script_mode` is enabled as it will multiple lists of the result. These a sorted after maintainer, httpcode, package and a special filter. Futher more homepages which reply with a `301` statuscode (redirect) will be saved in special lists which checks the redirected page again.
+This script tries to get the http statuscode of every homepage of the `HOMEPAGE` variable. This script is more usefull if the `script_mode` is enabled as it will multiple lists of the result.
+These a sorted after maintainer, httpcode, package and a special filter. Further more homepages which reply with a `301` statuscode (redirect) will be saved in special lists which checks the redirected page again.
 
 ### Duration:
 A full run will take about **6,5 hours**. This was stopped on a:
 * Gentoo VM
 * Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
 * 8 GB-RAM
+
+## maintainer.py
+This python script doesn't take any arguments and just prints every gentoo project and it members.
 
 
 # Usage:
@@ -71,7 +75,7 @@ Following usage will work for every script:
 * Scan a whole category: `./scriptname.sh app-admin`
 * Scan a single package: `./scriptname.sh app-admin/diradm`
 
-There are also a few Variables which can be set, but don't have too. Most importanly are:
+There are also a few Variables which can be set, but don't have too. Most importantly are:
 
 * `PORTTREE`: Set's the portage directory path, usually `/usr/portage`
 * `script_mode`: If this is set to `true` the script will save it's output in files. Default is `false`
