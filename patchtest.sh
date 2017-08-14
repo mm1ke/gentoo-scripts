@@ -42,9 +42,6 @@ fi
 
 cd ${PORTTREE}
 
-# print maintainer info
-print_main=true
-
 # for xargs...
 #export -f main
 
@@ -59,28 +56,26 @@ usage() {
 	echo -e "\tCheck against the package app-admin/diradm"
 }
 
-if ! $script_mode; then
-	if [ -z "${1}" ]; then
-		usage
-		exit 1
-	else
-		if [ -d "${PORTTREE}/${1}" ]; then
-			level="${1}"
-			MAXD=0
-			MIND=0
-			_cat=${1%%/*}
-			_pac=${1##*/}
-			if [ -z "${_pac}" ] || [ "${_cat}" == "${_pac}" ]; then
-				MAXD=1
-				MIND=1
-			fi
-		elif [ "${1}" == "full" ]; then
-			level=""
-			MAXD=2
-			MIND=2
-		else
-			echo "${PORTTREE}/${1}: Path not found"
+if [ -z "${1}" ]; then
+	usage
+	exit 1
+else
+	if [ -d "${PORTTREE}/${1}" ]; then
+		level="${1}"
+		MAXD=0
+		MIND=0
+		_cat=${1%%/*}
+		_pac=${1##*/}
+		if [ -z "${_pac}" ] || [ "${_cat}" == "${_pac}" ]; then
+			MAXD=1
+			MIND=1
 		fi
+	elif [ "${1}" == "full" ]; then
+		level=""
+		MAXD=2
+		MIND=2
+	else
+		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
 
@@ -331,14 +326,11 @@ main(){
 		if [ -n "${unused_patches}" ]; then
 			if ${script_mode}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "$package ${upatch}" >> ${script_mode_tmp}
-					echo -e "$package ${upatch}\t\t${main}" >> ${script_mode_tmp_full}
+					echo -e "${category}/${package_name};${upatch};${main}" >> ${script_mode_tmp}
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
-					${print_main} && \
-						echo -e "$package: ${upatch}\t\t${main}" || \
-						echo -e "$package: ${upatch}"
+					echo -e "${category}/${package_name};${upatch};${main}"
 				done
 			fi
 		fi
@@ -376,20 +368,18 @@ if ${script_mode}; then
 	# remove old data
 	rm -rf ${script_mode_dir}/*
 
-	f_packages="$(cat ${script_mode_tmp} | cut -d' ' -f1|sort|uniq)"
-	for i in $f_packages; do
-		f_cat="$(echo $i|cut -d'/' -f1)"
-		f_pak="$(echo $i|cut -d'/' -f2)"
+	f_packages="$(cat ${script_mode_tmp} | cut -d';' -f1|sort|uniq)"
+	for i in ${f_packages}; do
+		f_cat="$(echo ${i}|cut -d'/' -f1)"
+		f_pak="$(echo ${i}|cut -d'/' -f2)"
 		mkdir -p ${script_mode_dir}/sort-by-package/${f_cat}
-		grep $i ${script_mode_tmp} > ${script_mode_dir}/sort-by-package/${f_cat}/${f_pak}.txt
+		grep ${i} ${script_mode_tmp} > ${script_mode_dir}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
-	for a in $(cat ${script_mode_tmp_full} |cut -d$'\t' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${script_mode_tmp} |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		mkdir -p ${script_mode_dir}/sort-by-maintainer/
-		grep "${a}" ${script_mode_tmp_full} > ${script_mode_dir}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		grep "${a}" ${script_mode_tmp} > ${script_mode_dir}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-	cp ${script_mode_tmp} ${script_mode_dir}/full.txt
-	cp ${script_mode_tmp_full} ${script_mode_dir}/full-with-maintainers.txt
+	cp ${script_mode_tmp} ${script_mode_dir}/full-with-maintainers.txt
 	rm ${script_mode_tmp}
-	rm ${script_mode_tmp_full}
 fi
 
