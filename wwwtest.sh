@@ -50,7 +50,7 @@ if ${script_mode}; then
 	local filename="000-DATA-USAGE"
 	echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/${filename}.txt
 	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_slash_https_www_DATA-USAGE.txt
-	echo "PREAL-HTTP-CODE ; ACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_redirections_DATA-USAGE.txt
+	echo "REAL-HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_redirections_DATA-USAGE.txt
 	for _dir in maintainer package httpcode filter; do
 		echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/sort-by-${_dir}/${filename}.txt
 	done
