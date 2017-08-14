@@ -49,7 +49,14 @@ print_main=true
 #export -f main
 
 usage() {
-	echo "You need an argument"
+	echo "You need at least one argument:"
+	echo
+	echo "${0} full"
+	echo -e "\tCheck against the full tree"
+	echo "${0} app-admin"
+	echo -e "\tCheck against the category app-admin"
+	echo "${0} app-admin/diradm"
+	echo -e "\tCheck against the package app-admin/diradm"
 }
 
 if ! $script_mode; then
