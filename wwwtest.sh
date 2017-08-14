@@ -122,8 +122,8 @@ END`
 		if [ ${_code} = 200 ]; then
 			found=true
 			$script_mode &&
-				echo "${cat};${pak};${hp};${sitemut};${main}" >> ${_wwwdir}/special/301_slash_https_www.txt ||
-				echo "${cat};${pak};${hp};${sitemut};${main}"
+				echo "${cat}/${pak};${hp};${sitemut};${main}" >> ${_wwwdir}/special/301_slash_https_www.txt ||
+				echo "${cat}/${pak};${hp};${sitemut};${main}"
 			break
 		fi
 	done
@@ -131,8 +131,8 @@ END`
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${script_mode} &&
-			echo "${cat};${pak};${hp};${new_code};${correct_site};${main}" >> ${_wwwdir}/special/301_redirections.txt ||
-			echo "${cat};${pak};${hp};${new_code};${correct_site};${main}"
+			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}" >> ${_wwwdir}/special/301_redirections.txt ||
+			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}"
 	fi
 }
 
@@ -176,16 +176,16 @@ main() {
 				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
 		
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "${category};${package};${ebuild};FTP;${i};${maintainer}"
+					mode "FTP;${category}/${package};${ebuild};${i};${maintainer}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "${category};${package};${ebuild};VAR;${i};${maintainer}"
+					mode "VAR;${category}/${package};${ebuild};${i};${maintainer}"
 				elif [ -n "${_check_tmp}" ]; then
 					# don't check again
-					mode "${category};${package};${ebuild};${_check_tmp:0:3};${_check_tmp:4};${maintainer}"
+					mode "${_check_tmp:0:3};${category}/${package};${ebuild};${_check_tmp:4};${maintainer}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${category};${package};${ebuild};${_code};${i};${maintainer}"
+					mode "${_code};${category}/${package};${ebuild};${i};${maintainer}"
 					echo "${_code} ${i}" >> ${_ctmp}
 
 					case ${_code} in
@@ -216,27 +216,27 @@ done
 
 if ${script_mode}; then
 	# sort after http codes
-	for i in $(cat ${_tmp}|cut -d';' -f4|sort|uniq); do
-		grep ";${i};" ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
+	for i in $(cat ${_tmp}|cut -d';' -f1|sort|uniq); do
+		grep "^${i}" ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
 	done
 	
 	# copy full log
 	cp ${_tmp} ${_wwwdir}/full.txt
 	# copy full log, ignoring "good" codes
-	grep -v -E ";VAR;|;FTP;|;200;|;302;|;307;|;400;|;503;" ${_tmp} > ${_ctmp}
+	grep -v -E "^VAR|^FTP|^200|^302|^307|^400|^503" ${_tmp} > ${_ctmp}
 	cp ${_ctmp} ${_wwwdir}/full-filtered.txt
 	
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${_ctmp}| cut -d ';' -f1,2 --output-delimiter='/'|sort|uniq)"
+	f_packages="$(cat ${_ctmp}| cut -d ';' -f2 |sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
 		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-		grep "${f_cat};${f_pak}" ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+		grep "${i}" ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 	
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${_ctmp} |cut -d';' -f6|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${_ctmp} |cut -d';' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${_ctmp} > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 
