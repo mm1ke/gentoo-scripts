@@ -119,6 +119,9 @@ find_braces_candidates(){
 	local pat_found=()
 	local count
 
+	$DEBUG && >&2 echo
+	$DEBUG && >&2 echo "*DEBUG: find_braces_candidates"
+
 	#echo "worklist: ${work_list[@]}"
 	# expect patches in braces to use name+version or $PN
 	# thus the first 2 part (cut with -) ar similar
@@ -128,15 +131,20 @@ find_braces_candidates(){
 		local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
 		if [ $deli -ge 2 ]; then
 			pat_found+=("$(echo $patch|cut -d '-' -f1-$deli)")
+			$DEBUG && >&2 echo "***DEBUG: ${patch} could fit (found ${deli} matching \"-\" in filename)"
+			$DEBUG && >&2 echo "***DEBUG: saving file as $(echo $patch|cut -d '-' -f1-$deli)"
 		fi
 	done
 	# create a list of duplicates
 	dup_list=()
 	for patch in "${pat_found[@]}"; do
 		# search for every element in the array
+		$DEBUG && >&2 echo "**DEBUG: check for pattern ${patch}"
+
 		count=$(echo ${pat_found[@]}|grep -P -o "${patch}(?=\s|$)"|wc -w)
 		if [ $count -gt 1 ]; then
 			dup_list+=($patch)
+			$DEBUG && >&2 echo "***DEBUG: ${patch} matches more than 1"
 		fi
 	done
 	# remove duplicates from list
@@ -257,25 +265,23 @@ main(){
 				# reduce false positive by making some pre-checks
 				# check for vdr-plugin-2 eclass which installs rc-addon.sh files
 				if [ "${file}" = "rc-addon.sh" ]; then
-					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) && continue
+					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 				# check for vdr-plugin-2 eclass which installs confd files if exists
 				elif [ "${file}" = "confd" ]; then
-					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) && continue
+					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# check for games-mods eclass which install server.cfg files
 				elif [ "${file}" = "server.cfg" ]; then
-					${FPR} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) && continue
+					${FPR} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 				# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
 				elif [ "${file##*.}" = "conf" ]; then
 					${FPR} && $(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
-						$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) && continue
+						$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# check for elisp eclass which install el files if a SITEFILE is set
 				elif [ "${file##*.}" = "el" ]; then
 					${FPR} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
-						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) && continue
+						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# ignoring README.gentoo files
-				elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
-					continue
-				else
+				elif ! $(echo ${file}|grep -i README.gentoo >/dev/null); then
 					patch_list+=("${file}")
 				fi
 			fi
