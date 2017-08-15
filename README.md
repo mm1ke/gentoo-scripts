@@ -6,6 +6,7 @@ At the moment following scripts are available
 * patchtest.sh
 * patchcheck.sh
 * wwwtest.sh
+* srctest.sh
 
 ## patchtest.sh
 This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
@@ -67,7 +68,7 @@ A full run will take about **6,5 hours**. This was stopped on a:
 This script checks if the `SRC_URI` links are available. It generates 3 return values. Available and not_available are obviously. maybe_available will be return when wget gets 403/Forbidden as return code. In that case the download might be still available but doesn't get recognized from wget when it behaves as a spider.
 
 ### Duration:
-A full run will take about **6,5 hours**. This was stopped on a:
+A full run will take about **9,5 hours**. This was stopped on a:
 * Gentoo VM
 * Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
 * 8 GB-RAM
