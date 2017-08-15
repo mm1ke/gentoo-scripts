@@ -32,7 +32,7 @@ if [ "$(hostname)" = methusalix ]; then
 	_wwwdir="/var/www/gentoo.levelnine.at/srctest/"
 	PORTTREE="/usr/portage/"
 else
-	script_mode=true
+	script_mode=false
 	_wwwdir="/home/ai/srctest/"
 	PORTTREE="/usr/portage/"
 fi

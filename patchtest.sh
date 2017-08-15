@@ -29,6 +29,8 @@ script_mode_tmp="/tmp/patchtest-$(date +%y%m%d).txt"
 script_mode_tmp_full="/tmp/patchtest-$(date +%y%m%d)-full.txt"
 MAXD=2
 MIND=2
+# enable/disable false positive reduce
+FPR=true
 
 if [ "$(hostname)" = methusalix ]; then
 	PORTTREE="/usr/portage/"
@@ -247,13 +249,33 @@ main(){
 	if [ -e ${fullpath}/files ]; then
 		$DEBUG && >&2 echo "DEBUG: found files dir in ${category}/${package_name}"
 
-		# before checking, we have to generate a list of patches which we have to
-		# check, ignoring README.gentoo files
+		# before checking, we have to generate a list of patches which we have to check 
 		patch_list=()
 		for file in ${fullpath}/files/*; do
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
-				if ! $(echo ${file}|grep README.gentoo >/dev/null); then
+				# reduce false positive by making some pre-checks
+				# check for vdr-plugin-2 eclass which installs rc-addon.sh files
+				if [ "${file}" = "rc-addon.sh" ]; then
+					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) && continue
+				# check for vdr-plugin-2 eclass which installs confd files if exists
+				elif [ "${file}" = "confd" ]; then
+					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) && continue
+				# check for games-mods eclass which install server.cfg files
+				elif [ "${file}" = "server.cfg" ]; then
+					${FPR} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) && continue
+				# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
+				elif [ "${file##*.}" = "conf" ]; then
+					${FPR} && $(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
+						$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) && continue
+				# check for elisp eclass which install el files if a SITEFILE is set
+				elif [ "${file##*.}" = "el" ]; then
+					${FPR} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
+						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) && continue
+				# ignoring README.gentoo files
+				elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
+					continue
+				else
 					patch_list+=("${file}")
 				fi
 			fi
