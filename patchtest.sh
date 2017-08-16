@@ -216,6 +216,9 @@ check_ebuild(){
 		# looks for names with slotes, if slot is not 0
 		if [ -n "${ebuild_slot}" ] && ! [ "${ebuild_slot}" = "0" ]; then
 			cn+=("${patchfile/${ebuild_slot}/${slot}}")
+			name_slot="${patchfile/${package_name}/${pn}}"
+			name_slot="${name_slot/${ebuild_slot}/${slot}}"
+			cn+=("${name_slot}")
 		fi
 
 		# remove duplicates
