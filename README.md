@@ -90,3 +90,7 @@ There are also a few Variables which can be set, but don't have too. Most import
 * `PORTTREE`: Set's the portage directory path, usually `/usr/portage`
 * `script_mode`: If this is set to `true` the script will save it's output in files. Default is `false`
 * `_wwwdir`: This is the directory were the files will be written if `script_mode` is enabled.
+
+# License:
+
+All scripts are free software. You can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
