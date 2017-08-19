@@ -176,8 +176,12 @@ main() {
 	for eb in ${PORTTREE}/$line/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
 		
-		${md5portage} && _hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild}|cut -d'=' -f2)" ||
+		if ${md5portage}; then 
+			_hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
+			_hp="${_hp:9}"
+		else
 			_hp="$(grep ^HOMEPAGE= ${eb}|cut -d'"' -f2)"
+		fi
 
 		if [ -n "${_hp}" ]; then
 			for i in ${_hp}; do
