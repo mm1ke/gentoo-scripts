@@ -135,7 +135,8 @@ main() {
 	for eb in ${PORTTREE}/$line/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
 		
-		_src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild}|cut -d'=' -f2)"
+		_src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
+		_src=${_src:8}
 
 		if [ -n "${_src}" ]; then
 			# the variable SRC_URI sometimes has more data than just download links like
