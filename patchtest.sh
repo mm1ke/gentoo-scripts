@@ -220,6 +220,11 @@ check_ebuild(){
 			name_slot="${name_slot/${ebuild_slot}/${slot}}"
 			cn+=("${name_slot}")
 		fi
+		# find vmware-modules patches
+		if [ "${package_name}" = "vmware-modules" ]; then
+			local pv_major='${PV_MAJOR}'
+			cn+=("${patchfile/${ebuild_version%.*}/${pv_major}}")
+		fi
 
 		# remove duplicates
 		mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
