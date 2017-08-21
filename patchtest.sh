@@ -223,7 +223,7 @@ check_ebuild(){
 		# find vmware-modules patches
 		if [ "${package_name}" = "vmware-modules" ]; then
 			local pv_major='${PV_MAJOR}'
-			cn+=("${patchfile/${ebuild_version%.*}/${pv_major}}")
+			cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
 		fi
 
 		# remove duplicates
