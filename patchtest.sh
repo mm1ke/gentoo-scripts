@@ -208,6 +208,22 @@ check_ebuild(){
 		cn+=("${patchfile/${package_name}-${ebuild_version}/${p}}")
 		cn+=("${patchfile/${ebuild_version}/${pv}}")
 
+		# special naming
+		if $(grep -E "^MY_PN|^MY_P" ${ebuild} >/dev/null); then
+			local var_my_pn='${MY_PN}'
+			local var_my_p='${MY_P}'
+			local package_name_ver="${package_name}-${ebuild_version}"
+
+			my_pn_name="$(grep ^MY_PN ${ebuild})"
+			my_p_name="$(grep ^MY_P ${ebuild})"
+			eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")"
+			eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")"
+
+			$DEBUG && >&2 echo "****DEBUG: Found MY_PN var: $my_pn_name, $my_p_name"
+			cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
+			cn+=("${patchfile/${my_p_name}/${var_my_p}}")
+		fi
+
 		# add special naming if there is a revision
 		if [ -n "${ebuild_revision}" ]; then
 			cn+=("${patchfile/${package_name}-${ebuild_version}-${ebuild_revision}/${pf}}")
