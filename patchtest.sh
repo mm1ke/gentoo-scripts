@@ -209,19 +209,29 @@ check_ebuild(){
 		cn+=("${patchfile/${ebuild_version}/${pv}}")
 
 		# special naming
-		if $(grep -E "^MY_PN|^MY_P" ${ebuild} >/dev/null); then
+		if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=" ${ebuild} >/dev/null); then
 			local var_my_pn='${MY_PN}'
 			local var_my_p='${MY_P}'
+			local var_my_pv='${MY_PV}'
+
 			local package_name_ver="${package_name}-${ebuild_version}"
 
 			my_pn_name="$(grep ^MY_PN ${ebuild})"
 			my_p_name="$(grep ^MY_P ${ebuild})"
-			eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")"
-			eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")"
+			my_pv_name="$(grep ^MY_PV ${ebuild})"
 
-			$DEBUG && >&2 echo "****DEBUG: Found MY_PN var: $my_pn_name, $my_p_name"
-			cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
-			cn+=("${patchfile/${my_p_name}/${var_my_p}}")
+			[ -n "${my_pn_name}" ] && \
+				eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
+			[ -n "${my_pv_name}" ] && \
+				eval my_pv_name="$(echo ${my_pv_name:6}|sed "s|PV|ebuild_version|g")" >/dev/null 2>&1
+			[ -n "${my_p_name}" ] && \
+				eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")" >/dev/null 2>&1
+
+			$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name"
+
+			[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
+			[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
+			[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
 		fi
 
 		# add special naming if there is a revision
