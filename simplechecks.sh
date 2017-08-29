@@ -33,7 +33,7 @@ if [ "$(hostname)" = methusalix ]; then
 	PORTTREE="/usr/portage/"
 else
 	script_mode=false
-	_wwwdir="/home/ai/srctest/"
+	_wwwdir="/home/ai/simplechecks/"
 	PORTTREE="/usr/portage/"
 fi
 
