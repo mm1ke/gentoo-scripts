@@ -91,20 +91,7 @@ END`
 	echo $ret
 }
 
-#mode() {
-#	local msg=${1}
-#	local status=${2}
-#	if ${script_mode}; then
-#		echo "${msg}" >> "${_wwwdir}/full_${status}.txt"
-#		echo "${status};${msg}" >> "${_wwwdir}/full.txt"
-#	else
-#		echo "${status};${msg}"
-#	fi
-#}
-
 main() {
-
-#	echo $1
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -138,7 +125,6 @@ gen_sortings() {
 	for a in $(cat ${_wwwdir}/${NAME}/${NAME}.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${_wwwdir}/${NAME}/${NAME}.txt > ${_wwwdir}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-
 }
 
 # find trailing whitespaces
