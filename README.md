@@ -7,6 +7,7 @@ At the moment following scripts are available
 * patchcheck.sh
 * wwwtest.sh
 * srctest.sh
+* simplechecks.sh
 
 ## patchtest.sh
 This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
@@ -69,6 +70,17 @@ This script checks if the `SRC_URI` links are available. It generates 3 return v
 
 ### Duration:
 A full run will take about **9,5 hours**. This was stopped on a:
+* Gentoo VM
+* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
+* 8 GB-RAM
+
+## simplechecks.sh
+This is a simple scripts which check files for various mistakes (not just ebuilds). For now it can detect following spelling errors.
+* trailing whitespaces in ebuilds
+* mixed indentiations in metadata.xml files
+
+### Duration:
+A full run will take about **2 minutes**. This was stopped on a:
 * Gentoo VM
 * Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
 * 8 GB-RAM
