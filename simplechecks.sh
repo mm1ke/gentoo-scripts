@@ -158,4 +158,17 @@ find ./${level}  \( \
 	fi
 done
 
+NAME="gentoo_mirror_missuse"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | while read -r line; do
+	main $line
+done
+
 ${script_mode} && gen_sortings
