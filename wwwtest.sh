@@ -254,7 +254,7 @@ if ${script_mode}; then
 
 	# special filters
 	for site in ${_filters[@]}; do
-		grep ${site} ${_ctmp} > ${_wwwdir}/sort-by-filter/${site}.txt
+		grep ${site} ${_wwwdir}/full.txt > ${_wwwdir}/sort-by-filter/${site}.txt
 	done
 
 	# remove tmp data
