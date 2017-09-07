@@ -190,6 +190,24 @@ find ./${level}  \( \
 done
 ${script_mode} && gen_sortings
 
+NAME="dohtml_in_eapi6"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'EAPI' {} \; | while read -r line; do
+	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+		if grep dohtml $line >/dev/null; then
+			main $line
+		fi
+	fi
+done
+${script_mode} && gen_sortings
+
 NAME="description_over_80"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
