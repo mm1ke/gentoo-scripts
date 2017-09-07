@@ -140,7 +140,6 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | while read -r line; do
 	main ${line}
 done
-
 ${script_mode} && gen_sortings
 
 NAME="mixed_indentation"
@@ -157,7 +156,6 @@ find ./${level}  \( \
 		main $line
 	fi
 done
-
 ${script_mode} && gen_sortings
 
 NAME="gentoo_mirror_missuse"
@@ -172,5 +170,23 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | while read -r line; do
 	main $line
 done
-
 ${script_mode} && gen_sortings
+
+NAME="epatch_in_eapi6"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'EAPI' {} \; | while read -r line; do
+	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+		if grep epatch $line >/dev/null; then
+			main $line
+		fi
+	fi
+done
+${script_mode} && gen_sortings
+
