@@ -158,6 +158,8 @@ find ./${level}  \( \
 	fi
 done
 
+${script_mode} && gen_sortings
+
 NAME="gentoo_mirror_missuse"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
