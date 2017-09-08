@@ -117,8 +117,8 @@ gen_sortings() {
 		# sort by packages
 		f_packages="$(cat ${_wwwdir}/${i}/EAPI${i}.txt| cut -d ';' -f2|sort|uniq)"
 		for u in ${f_packages}; do
-			f_cat="$(echo $i|cut -d'/' -f1)"
-			f_pak="$(echo $i|cut -d'/' -f2)"
+			f_cat="$(echo $u|cut -d'/' -f1)"
+			f_pak="$(echo $u|cut -d'/' -f2)"
 			mkdir -p ${_wwwdir}/${i}/sort-by-package/${f_cat}
 			grep "${u}" ${_wwwdir}/${i}/EAPI${i}.txt > ${_wwwdir}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
 		done
