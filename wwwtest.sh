@@ -114,15 +114,15 @@ END`
 	local found=false
 	local lastchar="${hp: -1}"
 	_sitemuts=("${hp/http:\/\//https:\/\/}" \
-		"${hp/http:\/\//http:\/\/www.}" \
 		"${hp/http:\/\//https:\/\/www.}" \
-		"${hp/https:\/\//https:\/\/www.}")
+		"${hp/https:\/\//https:\/\/www.}" \
+		"${hp/http:\/\//http:\/\/www.}")
 	if ! [ "${lastchar}" = "/" ]; then
 		_sitemuts+=("${hp}/" \
 		"${hp/http:\/\//https:\/\/}/" \
-		"${hp/http:\/\//http:\/\/www.}/" \
 		"${hp/http:\/\//https:\/\/www.}/" \
-		"${hp/https:\/\//https:\/\/www.}/")
+		"${hp/https:\/\//https:\/\/www.}/" \
+		"${hp/http:\/\//http:\/\/www.}/")
 	fi
 
 	for sitemut in ${_sitemuts[@]}; do
