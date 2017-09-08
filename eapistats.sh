@@ -140,7 +140,7 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | while read -r line; do
 	if grep ^EAPI $line >/dev/null; then
-		main $line $(grep EAPI $line|tr -d '"'|cut -d'=' -f2)
+		main $line $(grep ^EAPI $line|tr -d '"'|cut -d'=' -f2)
 	else
 		main $line 0
 	fi
