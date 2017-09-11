@@ -181,11 +181,9 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'EAPI' {} \; | while read -r line; do
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'epatch' {} \; | while read -r line; do
 	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-		if grep epatch $line >/dev/null; then
-			main $line
-		fi
+		main $line
 	fi
 done
 ${script_mode} && gen_sortings
@@ -199,11 +197,9 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'EAPI' {} \; | while read -r line; do
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'dohtml' {} \; | while read -r line; do
 	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-		if grep dohtml $line >/dev/null; then
-			main $line
-		fi
+		main $line
 	fi
 done
 ${script_mode} && gen_sortings
