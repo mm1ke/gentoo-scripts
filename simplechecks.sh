@@ -220,18 +220,18 @@ find ./${level}  \( \
 done
 ${script_mode} && gen_sortings
 
-NAME="missing_LICENSE"
-find ./${level}  \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./.git/\* \) -prune -o -type f \( -name "*.ebuild" -o -name "*.eclass" \) -exec grep -L '^LICENSE' {} \; | while read -r line; do
-	main $line
-done
-${script_mode} && gen_sortings
+#NAME="missing_LICENSE"
+#find ./${level}  \( \
+#	-path ./scripts/\* -o \
+#	-path ./profiles/\* -o \
+#	-path ./packages/\* -o \
+#	-path ./licenses/\* -o \
+#	-path ./distfiles/\* -o \
+#	-path ./metadata/\* -o \
+#	-path ./.git/\* \) -prune -o -type f \( -name "*.ebuild" -o -name "*.eclass" \) -exec grep -L '^LICENSE' {} \; | while read -r line; do
+#	main $line
+#done
+#${script_mode} && gen_sortings
 
 NAME="missing_SLOT"
 find ./${level}  \( \
