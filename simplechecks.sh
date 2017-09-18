@@ -151,8 +151,8 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l $'^\t<' {} \; | while read -r line; do
-	if grep -E "^ <|^  <" $line >/dev/null; then
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | while read -r line; do
+	if grep $'\t' $line >/dev/null; then
 		main $line
 	fi
 done
