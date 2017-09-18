@@ -233,18 +233,18 @@ ${script_mode} && gen_sortings
 #done
 #${script_mode} && gen_sortings
 
-NAME="missing_SLOT"
-find ./${level}  \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./virtual/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L '^SLOT' {} \; | while read -r line; do
-	main $line
-done
-${script_mode} && gen_sortings
-
+#NAME="missing_SLOT"
+#find ./${level}  \( \
+#	-path ./scripts/\* -o \
+#	-path ./profiles/\* -o \
+#	-path ./packages/\* -o \
+#	-path ./licenses/\* -o \
+#	-path ./distfiles/\* -o \
+#	-path ./metadata/\* -o \
+#	-path ./eclass/\* -o \
+#	-path ./virtual/\* -o \
+#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L '^SLOT' {} \; | while read -r line; do
+#	main $line
+#done
+#${script_mode} && gen_sortings
+#
