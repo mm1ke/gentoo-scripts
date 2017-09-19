@@ -88,7 +88,6 @@ END`
 	echo $ret
 }
 
-
 main(){
 	local package=${1}
 
@@ -116,6 +115,12 @@ main(){
 	fi
 }
 
+export -f main
+export -f get_main_min
+export WWWDIR
+export PORTTREE
+export SCRIPT_MODE
+
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -124,9 +129,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | while read -r line; do
-	main ${line}
-done
+	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
 	for a in $(cat ${WWWDIR}/full-with-maintainers.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
