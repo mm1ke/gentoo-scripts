@@ -25,27 +25,17 @@
 
 DEBUG=false
 
-script_mode_tmp="/tmp/patchtest-$(date +%y%m%d).txt"
-script_mode_tmp_full="/tmp/patchtest-$(date +%y%m%d)-full.txt"
-MAXD=2
-MIND=2
-# enable/disable false positive reduce
-FPR=true
+SCRIPT_MODE=false
+PORTTREE="/usr/portage/"
+WWWDIR="${HOME}/patchtest/"
+TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
 
 if [ "$(hostname)" = methusalix ]; then
-	PORTTREE="/usr/portage/"
-	script_mode=true
-	script_mode_dir="/var/www/gentoo.levelnine.at/patchtest/"
-else
-	PORTTREE="/mnt/data/gentoo/"
-	script_mode=false
-	script_mode_dir="/home/ai/patchtest/"
+	SCRIPT_MODE=true
+	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
 fi
 
 cd ${PORTTREE}
-
-# for xargs...
-#export -f main
 
 usage() {
 	echo "You need at least one argument:"
@@ -280,6 +270,7 @@ check_ebuild(){
 }
 
 main(){
+	local prechecks=true
 	local package=${1}
 
 	category="$(echo ${package}|cut -d'/' -f2)"
@@ -291,7 +282,7 @@ main(){
 	if [ -e ${fullpath}/files ]; then
 		$DEBUG && >&2 echo "DEBUG: found files dir in ${category}/${package_name}"
 
-		# before checking, we have to generate a list of patches which we have to check 
+		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
 		for file in ${fullpath}/files/*; do
 			if ! [ -d ${file} ]; then
@@ -299,20 +290,20 @@ main(){
 				# reduce false positive by making some pre-checks
 				# check for vdr-plugin-2 eclass which installs rc-addon.sh files
 				if [ "${file}" = "rc-addon.sh" ]; then
-					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+					${prechecks} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 				# check for vdr-plugin-2 eclass which installs confd files if exists
 				elif [ "${file}" = "confd" ]; then
-					${FPR} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+					${prechecks} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# check for games-mods eclass which install server.cfg files
 				elif [ "${file}" = "server.cfg" ]; then
-					${FPR} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+					${prechecks} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 				# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
 				elif [ "${file##*.}" = "conf" ]; then
-					${FPR} && $(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
+					${prechecks} && $(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
 						$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# check for elisp eclass which install el files if a SITEFILE is set
 				elif [ "${file##*.}" = "el" ]; then
-					${FPR} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
+					${prechecks} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
 						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# ignoring README.gentoo files
 				elif ! $(echo ${file}|grep -i README.gentoo >/dev/null); then
@@ -386,9 +377,9 @@ main(){
 
 
 		if [ -n "${unused_patches}" ]; then
-			if ${script_mode}; then
+			if ${SCRIPT_MODE}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name};${upatch};${main}" >> ${script_mode_tmp}
+					echo -e "${category}/${package_name};${upatch};${main}" >> ${TMPFILE}
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
@@ -414,34 +405,21 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	main ${line}
 done
 
-# xargs versoin - not working yet...
-# https://stackoverflow.com/questions/11003418/calling-functions-with-xargs-within-a-bash-script
-#find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
-#-path ./scripts/\* -o \
-#-path ./profiles/\* -o \
-#-path ./packages/\* -o \
-#-path ./licenses/\* -o \
-#-path ./distfiles/\* -o \
-#-path ./metadata/\* -o \
-#-path ./eclass/\* -o \
-#-path ./.git/\* \) -prune -o -type d -print | xargs -n 1 -P 10 -I {} bash -c 'main "$@"' _ {}
-
-if ${script_mode}; then
+if ${SCRIPT_MODE}; then
 	# remove old data
-	rm -rf ${script_mode_dir}/*
+	rm -rf ${WWWDIR}/*
 
-	f_packages="$(cat ${script_mode_tmp} | cut -d';' -f1|sort|uniq)"
+	f_packages="$(cat ${TMPFILE} | cut -d';' -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo ${i}|cut -d'/' -f1)"
 		f_pak="$(echo ${i}|cut -d'/' -f2)"
-		mkdir -p ${script_mode_dir}/sort-by-package/${f_cat}
-		grep ${i} ${script_mode_tmp} > ${script_mode_dir}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
+		grep ${i} ${TMPFILE} > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
-	for a in $(cat ${script_mode_tmp} |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		mkdir -p ${script_mode_dir}/sort-by-maintainer/
-		grep "${a}" ${script_mode_tmp} > ${script_mode_dir}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${TMPFILE} |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		mkdir -p ${WWWDIR}/sort-by-maintainer/
+		grep "${a}" ${TMPFILE} > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-	cp ${script_mode_tmp} ${script_mode_dir}/full-with-maintainers.txt
-	rm ${script_mode_tmp}
+	cp ${TMPFILE} ${WWWDIR}/full-with-maintainers.txt
+	rm ${TMPFILE}
 fi
-
