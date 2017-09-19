@@ -23,36 +23,33 @@
 # Discription:
 # simple scirpt to find broken websites
 
-MAXD=2
-MIND=2
-
+SCRIPT_MODE=false
+SITEDIR="${HOME}/wwwtest/"
+PORTTREE="/usr/portage/"
+TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
+TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
 
 if [ "$(hostname)" = methusalix ]; then
-	script_mode=true
-	_wwwdir="/var/www/gentoo.levelnine.at/wwwtest/"
-	PORTTREE="/usr/portage/"
-else
-	script_mode=false
-	_wwwdir="/home/ai/wwwtest/"
-	PORTTREE="/mnt/data/gentoo/"
+	SCRIPT_MODE=true
+	SITEDIR="/var/www/gentoo.levelnine.at/wwwtest/"
 fi
 
 cd ${PORTTREE}
 
-_date="$(date +%y%m%d)"
-_tmp="/tmp/wwwtest-${_date}-${RANDOM}.txt"
-_ctmp="/tmp/wwwtest-tmp-${RANDOM}.txt"
-_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
+# touch file first, otherwise the _checktmp could fail because of
+# the missing file
+touch ${TMPCHECK}
 
-touch ${_ctmp}
-if ${script_mode}; then
-	rm -rf ${_wwwdir}/* && mkdir -p ${_wwwdir}/{special,sort-by-{filter,maintainer,package,httpcode}}
-	local filename="000-DATA-USAGE"
-	echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/${filename}.txt
-	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_slash_https_www_DATA-USAGE.txt
-	echo "REAL-HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${_wwwdir}/special/301_redirections_DATA-USAGE.txt
+# TODO:
+# Remove code below and point to a website (github) for the descripton
+if ${SCRIPT_MODE}; then
+	rm -rf ${SITEDIR}/* && mkdir -p ${SITEDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
+	filename="000-DATA-USAGE"
+	echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${SITEDIR}/${filename}.txt
+	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${SITEDIR}/special/301_slash_https_www_DATA-USAGE.txt
+	echo "REAL-HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${SITEDIR}/special/301_redirections_DATA-USAGE.txt
 	for _dir in maintainer package httpcode filter; do
-		echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${_wwwdir}/sort-by-${_dir}/${filename}.txt
+		echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${SITEDIR}/sort-by-${_dir}/${filename}.txt
 	done
 fi
 
@@ -110,9 +107,9 @@ END`
 	local cat=${2}
 	local pak=${3}
 	local main=${4}
-
 	local found=false
 	local lastchar="${hp: -1}"
+
 	_sitemuts=("${hp/http:\/\//https:\/\/}" \
 		"${hp/http:\/\//https:\/\/www.}" \
 		"${hp/https:\/\//https:\/\/www.}" \
@@ -129,8 +126,8 @@ END`
 		local _code="$(get_code ${sitemut})"
 		if [ ${_code} = 200 ]; then
 			found=true
-			$script_mode &&
-				echo "${cat}/${pak};${hp};${sitemut};${main}" >> ${_wwwdir}/special/301_slash_https_www.txt ||
+			$SCRIPT_MODE &&
+				echo "${cat}/${pak};${hp};${sitemut};${main}" >> ${SITEDIR}/special/301_slash_https_www.txt ||
 				echo "${cat}/${pak};${hp};${sitemut};${main}"
 			break
 		fi
@@ -138,8 +135,8 @@ END`
 	if ! ${found}; then
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
-		${script_mode} &&
-			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}" >> ${_wwwdir}/special/301_redirections.txt ||
+		${SCRIPT_MODE} &&
+			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}" >> ${SITEDIR}/special/301_redirections.txt ||
 			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}"
 	fi
 }
@@ -149,19 +146,20 @@ get_code() {
 	echo ${code}
 }
 
-mode() {
-	local msg=${1}
-	if ${script_mode}; then
-		echo "${msg}" >> ${_tmp}
-	else
-		echo "${msg}"
-	fi
-}
 
 main() {
+	mode() {
+		local msg=${1}
+		if ${SCRIPT_MODE}; then
+			echo "${msg}" >> ${TMPFILE}
+		else
+			echo "${msg}"
+		fi
+	}
+
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package=${line##*/}
+	local package=${full_package##*/}
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local md5portage=false
 
@@ -173,10 +171,10 @@ main() {
 	fi
 
 
-	for eb in ${PORTTREE}/$line/*.ebuild; do
+	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
-		
-		if ${md5portage}; then 
+
+		if ${md5portage}; then
 			_hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
 			_hp="${_hp:9}"
 		else
@@ -185,20 +183,20 @@ main() {
 
 		if [ -n "${_hp}" ]; then
 			for i in ${_hp}; do
-				_check_tmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${_ctmp})"
-		
+				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK})"
+
 				if echo ${i}|grep ^ftp >/dev/null;then
 					mode "FTP;${category}/${package};${ebuild};${i};${maintainer}"
 				elif echo ${i}|grep '${' >/dev/null; then
 					mode "VAR;${category}/${package};${ebuild};${i};${maintainer}"
-				elif [ -n "${_check_tmp}" ]; then
+				elif [ -n "${_checktmp}" ]; then
 					# don't check again
-					mode "${_check_tmp:0:3};${category}/${package};${ebuild};${_check_tmp:4};${maintainer}"
+					mode "${_checktmp:0:3};${category}/${package};${ebuild};${_checktmp:4};${maintainer}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
 					mode "${_code};${category}/${package};${ebuild};${i};${maintainer}"
-					echo "${_code} ${i}" >> ${_ctmp}
+					echo "${_code} ${i}" >> ${TMPCHECK}
 
 					case ${_code} in
 						301)
@@ -210,8 +208,19 @@ main() {
 			done
 		fi
 	done
-
 }
+
+# for parallel execution
+export -f get_main_min
+export -f main
+export -f get_code
+export -f 301check
+
+export PORTTREE
+export TMPCHECK
+export TMPFILE
+export SCRIPT_MODE
+export SITEDIR
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -221,44 +230,49 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | while read -r line; do
-	main ${line}
-done
+	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 
-if ${script_mode}; then
+if ${SCRIPT_MODE}; then
 	# sort after http codes
-	for i in $(cat ${_tmp}|cut -d';' -f1|sort|uniq); do
-		grep "^${i}" ${_tmp} > ${_wwwdir}/sort-by-httpcode/${i}.txt
+	for i in $(cat ${TMPFILE}|cut -d';' -f1|sort|uniq); do
+		grep "^${i}" ${TMPFILE} > ${SITEDIR}/sort-by-httpcode/${i}.txt
 	done
-	
+
 	# copy full log
-	cp ${_tmp} ${_wwwdir}/full.txt
+	cp ${TMPFILE} ${SITEDIR}/full.txt
+
+	# special filters
+	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
+	for site in ${_filters[@]}; do
+		grep ${site} ${SITEDIR}/full.txt > ${SITEDIR}/sort-by-filter/${site}.txt
+	done
+
 	# copy full log, ignoring "good" codes
-	grep -v -E "^VAR|^FTP|^200|^302|^307|^400|^503" ${_tmp} > ${_ctmp}
-	cp ${_ctmp} ${_wwwdir}/full-filtered.txt
-	
+	sed -i "/^VAR/d; \
+		/^FTP/d; \
+		/^200/d; \
+		/^301/d; \
+		/^302/d; \
+		/^307/d; \
+		/^400/d; \
+		/^503/d; \
+		" ${TMPFILE}
+	cp ${TMPFILE} ${SITEDIR}/full-filtered.txt
+
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${_ctmp}| cut -d ';' -f2 |sort|uniq)"
+	f_packages="$(cat ${TMPFILE}| cut -d ';' -f2 |sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-		grep "${i}" ${_ctmp} > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${SITEDIR}/sort-by-package/${f_cat}
+		grep "${i}" ${TMPFILE} > ${SITEDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
-	
+
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${_ctmp} |cut -d';' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${_ctmp} > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${TMPFILE} |cut -d';' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${TMPFILE} > ${SITEDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-
-	# special filters
-	for site in ${_filters[@]}; do
-		grep ${site} ${_wwwdir}/full.txt > ${_wwwdir}/sort-by-filter/${site}.txt
-	done
-
-	# remove tmp data
-	rm ${_tmp}
 fi
-
-rm ${_ctmp}
+# remove tmpfile
+rm ${TMPFILE}
