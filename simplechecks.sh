@@ -26,20 +26,18 @@
 # 	metadata: mixed indentation (mixed tabs & whitespaces)
 
 
+SCRIPT_MODE=false
+WWWDIR="${HOME}/simplechecks/"
+PORTTREE="/usr/portage/"
 
 if [ "$(hostname)" = methusalix ]; then
-	script_mode=true
-	_wwwdir="/var/www/gentoo.levelnine.at/simplechecks/"
-	PORTTREE="/usr/portage/"
-else
-	script_mode=false
-	_wwwdir="/home/ai/simplechecks/"
-	PORTTREE="/usr/portage/"
+	SCRIPT_MODE=true
+	WWWDIR="/var/www/gentoo.levelnine.at/simplechecks/"
 fi
 
 cd ${PORTTREE}
 
-${script_mode} && rm -rf /${_wwwdir}/*
+${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
 
 
 usage() {
@@ -102,9 +100,9 @@ main() {
 			maintainer="maintainer-needed@gentoo.org:"
 	fi
 
-	if ${script_mode}; then
-		mkdir -p /${_wwwdir}/${NAME}/
-		echo "${category}/${package}/${filename};${maintainer}" >> /${_wwwdir}/${NAME}/${NAME}.txt
+	if ${SCRIPT_MODE}; then
+		mkdir -p /${WWWDIR}/${NAME}/
+		echo "${category}/${package}/${filename};${maintainer}" >> /${WWWDIR}/${NAME}/${NAME}.txt
 	else
 		echo "${category}/${package}/${filename};${maintainer}"
 	fi
@@ -112,18 +110,18 @@ main() {
 
 gen_sortings() {
 	# sort by packages
-	f_packages="$(cat ${_wwwdir}/${NAME}/${NAME}.txt| cut -d ';' -f1|sort|uniq)"
+	f_packages="$(cat ${WWWDIR}/${NAME}/${NAME}.txt| cut -d ';' -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${_wwwdir}/${NAME}/sort-by-package/${f_cat}
-		grep "${i}" ${_wwwdir}/${NAME}/${NAME}.txt > ${_wwwdir}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WWWDIR}/${NAME}/sort-by-package/${f_cat}
+		grep "${i}" ${WWWDIR}/${NAME}/${NAME}.txt > ${WWWDIR}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 
-	mkdir -p ${_wwwdir}/${NAME}/sort-by-maintainer/
+	mkdir -p ${WWWDIR}/${NAME}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${_wwwdir}/${NAME}/${NAME}.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${_wwwdir}/${NAME}/${NAME}.txt > ${_wwwdir}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${WWWDIR}/${NAME}/${NAME}.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${WWWDIR}/${NAME}/${NAME}.txt > ${WWWDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 }
 
@@ -140,7 +138,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | while read -r line; do
 	main ${line}
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 NAME="mixed_indentation"
 find ./${level}  \( \
@@ -156,7 +154,7 @@ find ./${level}  \( \
 		main $line
 	fi
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 NAME="gentoo_mirror_missuse"
 find ./${level}  \( \
@@ -170,7 +168,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | while read -r line; do
 	main $line
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 NAME="epatch_in_eapi6"
 find ./${level}  \( \
@@ -186,7 +184,7 @@ find ./${level}  \( \
 		main $line
 	fi
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 NAME="dohtml_in_eapi6"
 find ./${level}  \( \
@@ -202,7 +200,7 @@ find ./${level}  \( \
 		main $line
 	fi
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 NAME="DESCRIPTION_over_80"
 find ./${level}  \( \
@@ -218,7 +216,7 @@ find ./${level}  \( \
 		main $line
 	fi
 done
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
 
 #NAME="missing_LICENSE"
 #find ./${level}  \( \
@@ -231,7 +229,7 @@ ${script_mode} && gen_sortings
 #	-path ./.git/\* \) -prune -o -type f \( -name "*.ebuild" -o -name "*.eclass" \) -exec grep -L '^LICENSE' {} \; | while read -r line; do
 #	main $line
 #done
-#${script_mode} && gen_sortings
+#${SCRIPT_MODE} && gen_sortings
 
 #NAME="missing_SLOT"
 #find ./${level}  \( \
@@ -246,5 +244,5 @@ ${script_mode} && gen_sortings
 #	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L '^SLOT' {} \; | while read -r line; do
 #	main $line
 #done
-#${script_mode} && gen_sortings
+#${SCRIPT_MODE} && gen_sortings
 #
