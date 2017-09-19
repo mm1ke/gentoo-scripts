@@ -115,7 +115,7 @@ mode() {
 main() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package=${line##*/}
+	local package=${full_package##*/}
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local md5portage=false
 
@@ -132,7 +132,7 @@ main() {
 	fi
 
 
-	for eb in ${PORTTREE}/$line/*.ebuild; do
+	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
 		
 		_src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
