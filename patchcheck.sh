@@ -23,17 +23,18 @@
 # Discription:
 # simple scirpt to find unused scripts directories in the gentoo tree
 
-MAXD=2
-MIND=2
+
+SCRIPT_MODE=false
+PORTTREE="/usr/portage"
+WWWDIR="${HOME}/patchcheck/"
 
 if [ "$(hostname)" = methusalix ]; then
-	PORTTREE="/usr/portage"
-	script_mode=true
-	script_mode_dir="/var/www/gentoo.levelnine.at/patchcheck/"
-else
-	PORTTREE="/mnt/data/gentoo/"
-	script_mode=false
+	SCRIPT_MODE=true
+	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
+
+${SCRIPT_MODE} && rm -rf ${WWWDIR}/*
+
 cd ${PORTTREE}
 
 usage() {
@@ -87,12 +88,9 @@ END`
 	echo $ret
 }
 
-if $script_mode; then
-	rm -rf ${script_mode_dir}/*
-fi
 
 main(){
-	package=${1}
+	local package=${1}
 
 	local category="$(echo ${package}|cut -d'/' -f2)"
 	local package_name=${package##*/}
@@ -101,15 +99,15 @@ main(){
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! grep -E ".diff|.patch|FILESDIR|apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular" ${fullpath}/*.ebuild >/dev/null; then
-			if ${script_mode}; then
+			if ${SCRIPT_MODE}; then
 				main=$(get_main_min "${category}/${package_name}")
 				if [ -z "${main}" ]; then
 					main="maintainer-needed@gentoo.org:"
 				fi
 
-				mkdir -p ${script_mode_dir}/sort-by-package/${category}
-				ls ${PORTTREE}/${category}/${package_name}/files/* > ${script_mode_dir}/sort-by-package/${category}/${package_name}.txt
-				echo -e "${category}/${package_name};${main}" >> ${script_mode_dir}/full-with-maintainers.txt
+				mkdir -p ${WWWDIR}/sort-by-package/${category}
+				ls ${PORTTREE}/${category}/${package_name}/files/* > ${WWWDIR}/sort-by-package/${category}/${package_name}.txt
+				echo -e "${category}/${package_name};${main}" >> ${WWWDIR}/full-with-maintainers.txt
 
 			else
 				echo "${category}/${package_name}"
@@ -130,10 +128,9 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	main ${line}
 done
 
-
-if ${script_mode}; then
-	for a in $(cat ${script_mode_dir}/full-with-maintainers.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		mkdir -p ${script_mode_dir}/sort-by-maintainer/
-		grep "${a}" ${script_mode_dir}/full-with-maintainers.txt > ${script_mode_dir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+if ${SCRIPT_MODE}; then
+	for a in $(cat ${WWWDIR}/full-with-maintainers.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		mkdir -p ${WWWDIR}/sort-by-maintainer/
+		grep "${a}" ${WWWDIR}/full-with-maintainers.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 fi
