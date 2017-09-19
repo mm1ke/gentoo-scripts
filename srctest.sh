@@ -23,24 +23,18 @@
 # Discription:
 # simple scirpt to find broken SRC_URI links
 
-MAXD=2
-MIND=2
-
+SCRIPT_MODE=false
+PORTTREE="/usr/portage/"
+WWWDIR="${HOME}/srctest/"
 
 if [ "$(hostname)" = methusalix ]; then
-	script_mode=true
-	_wwwdir="/var/www/gentoo.levelnine.at/srctest/"
-	PORTTREE="/usr/portage/"
-else
-	script_mode=false
-	_wwwdir="/home/ai/srctest/"
-	PORTTREE="/usr/portage/"
+	SCRIPT_MODE=true
+	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
 fi
 
 cd ${PORTTREE}
 
-${script_mode} && rm -rf /${_wwwdir}/*
-
+${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
 
 usage() {
 	echo "You need at least one argument:"
@@ -91,28 +85,30 @@ END`
 	echo $ret
 }
 
-get_status() {
-	local uri="${1}"
-	local code="${2}"
-	if $(timeout 15 wget -T 10 -S --spider ${uri} 2>&1 | grep "${code}" >/dev/null); then
-		echo true
-	else
-		echo false
-	fi
-}
 
-mode() {
-	local msg=${1}
-	local status=${2}
-	if ${script_mode}; then
-		echo "${msg}" >> "${_wwwdir}/full_${status}.txt"
-		echo "${status};${msg}" >> "${_wwwdir}/full.txt"
-	else
-		echo "${status};${msg}"
-	fi
-}
 
 main() {
+	get_status() {
+		local uri="${1}"
+		local code="${2}"
+		if $(timeout 15 wget -T 10 -S --spider ${uri} 2>&1 | grep "${code}" >/dev/null); then
+			echo true
+		else
+			echo false
+		fi
+	}
+
+	mode() {
+		local msg=${1}
+		local status=${2}
+		if ${SCRIPT_MODE}; then
+			echo "${msg}" >> "${WWWDIR}/full_${status}.txt"
+			echo "${status};${msg}" >> "${WWWDIR}/full.txt"
+		else
+			echo "${status};${msg}"
+		fi
+	}
+
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package=${full_package##*/}
@@ -133,10 +129,10 @@ main() {
 
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
-		ebuild=$(basename ${eb%.*})
+		local ebuild=$(basename ${eb%.*})
 		
-		_src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
-		_src=${_src:8}
+		local _src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
+		local _src=${_src:8}
 
 		if [ -n "${_src}" ]; then
 			# the variable SRC_URI sometimes has more data than just download links like
@@ -144,11 +140,11 @@ main() {
 			for u in ${_src}; do
 				# add ^mirror:// to the grep, somehow we should be able to test them too
 				for i in $(echo $u | grep -E "^http://|^https://"); do
-					first_check=$(get_status ${i} "${code_available}")
+					local first_check=$(get_status ${i} "${code_available}")
 					if ${first_check}; then
 						mode "${category}/${package};${i};${maintainer}" available
 					else
-						second_check=$(get_status ${i} "${maybe_available}")
+						local second_check=$(get_status ${i} "${maybe_available}")
 						if ${second_check}; then
 							mode "${category}/${package};${i};${maintainer}" maybe_available
 						else
@@ -159,7 +155,6 @@ main() {
 			done
 		fi
 	done
-
 }
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
@@ -174,23 +169,19 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	main ${line}
 done
 
-
-
-if ${script_mode}; then
-
+if ${SCRIPT_MODE}; then
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${_wwwdir}/full_not_available.txt| cut -d ';' -f1|sort|uniq)"
+	f_packages="$(cat ${WWWDIR}/full_not_available.txt| cut -d ';' -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${_wwwdir}/sort-by-package/${f_cat}
-		grep "${i}" ${_wwwdir}/full_not_available.txt > ${_wwwdir}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
+		grep "${i}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 	
-	mkdir -p ${_wwwdir}/sort-by-maintainer/
+	mkdir -p ${WWWDIR}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${_wwwdir}/full_not_available.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${_wwwdir}/full_not_available.txt > ${_wwwdir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-
 fi
