@@ -102,178 +102,176 @@ END`
 	echo $ret
 }
 
-find_braces_candidates(){
-
-	local work_list=("${unused_patches[@]}")
-	local patch
-	local pat_found=()
-	local count
-
-	$DEBUG && >&2 echo
-	$DEBUG && >&2 echo "*DEBUG: find_braces_candidates"
-
-	#echo "worklist: ${work_list[@]}"
-	# expect patches in braces to use name+version or $PN
-	# thus the first 2 part (cut with -) ar similar
-	#
-	# first generate a list of files which fits the rule
-	for patch in "${work_list[@]}"; do
-		local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
-		if [ $deli -ge 2 ]; then
-			pat_found+=("$(echo $patch|cut -d '-' -f1-$deli)")
-			$DEBUG && >&2 echo "***DEBUG: ${patch} could fit (found ${deli} matching \"-\" in filename)"
-			$DEBUG && >&2 echo "***DEBUG: saving file as $(echo $patch|cut -d '-' -f1-$deli)"
-		fi
-	done
-	# create a list of duplicates
-	dup_list=()
-	for patch in "${pat_found[@]}"; do
-		# search for every element in the array
-		$DEBUG && >&2 echo "**DEBUG: check for pattern ${patch}"
-
-		count=$(echo ${pat_found[@]}|grep -P -o "${patch}(?=\s|$)"|wc -w)
-		if [ $count -gt 1 ]; then
-			dup_list+=($patch)
-			$DEBUG && >&2 echo "***DEBUG: ${patch} matches more than 1"
-		fi
-	done
-	# remove duplicates from list
-	mapfile -t dup_list < <(printf '%s\n' "${dup_list[@]}"|sort -u)
-	#echo "duplist ${dup_list[@]}"
-}
-
-braces_patches() {
-	local patch=$1
-	# add matches to the patch_list
-	local matches=()
-	filess=()
-	braces_patch_list=()
-
-	for ffile in $(ls ${fullpath}/files/ |grep $patch); do
-		filess+=($ffile)
-		ffile="${ffile%.patch}"
-		matches+=("${ffile##*-}")
-	done
-	#echo "files: ${filess[@]}"
-	#echo "matches: ${matches[@]}"
-	# set the maximum permutations number (5-6 works)
-	if [ ${#matches[@]} -le 5 ]; then
-		matches="${matches[@]}"
-		local perm_list=$(get_perm "$matches")
-		for search_patch in $perm_list; do
-			braces_patch_list+=("$(echo $patch-{$search_patch}.patch)")
-		done
-	fi
-}
-
-check_ebuild(){
-	local patchfile=$1
-	local found=false
-	local pn='${PN}'
-	local p='${P}'
-	local pf='${PF}'
-	local pv='${PV}'
-	local pvr='${PVR}'
-	local slot='${SLOT}'
-
-
-	$DEBUG && >&2 echo
-	$DEBUG && >&2 echo "*DEBUG: pachfile to check: $patchfile"
-
-	for ebuild in ${fullpath}/*.ebuild; do
-		$DEBUG && >&2 echo "**DEBUG: Check ebuild: $ebuild"
-
-		# get ebuild detail
-		local ebuild_full=$(basename ${ebuild%.*})
-		local ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
-		local ebuild_revision=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
-		local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
-
-		$DEBUG && >&2 echo "**DEBUG: Ebuildvars: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot"
-
-		local cn=()
-		# create custom names to check
-		cn+=("${patchfile}")
-		cn+=("${patchfile/${package_name}/${pn}}")
-		cn+=("${patchfile/${package_name}-${ebuild_version}/${p}}")
-		cn+=("${patchfile/${ebuild_version}/${pv}}")
-
-		# special naming
-		if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=" ${ebuild} >/dev/null); then
-			local var_my_pn='${MY_PN}'
-			local var_my_p='${MY_P}'
-			local var_my_pv='${MY_PV}'
-
-			local package_name_ver="${package_name}-${ebuild_version}"
-
-			my_pn_name="$(grep ^MY_PN ${ebuild})"
-			my_p_name="$(grep ^MY_P ${ebuild})"
-			my_pv_name="$(grep ^MY_PV ${ebuild})"
-
-			[ -n "${my_pn_name}" ] && \
-				eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
-			[ -n "${my_pv_name}" ] && \
-				eval my_pv_name="$(echo ${my_pv_name:6}|sed "s|PV|ebuild_version|g")" >/dev/null 2>&1
-			[ -n "${my_p_name}" ] && \
-				eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")" >/dev/null 2>&1
-
-			$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name"
-
-			[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
-			[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
-			[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
-		fi
-
-		# add special naming if there is a revision
-		if [ -n "${ebuild_revision}" ]; then
-			cn+=("${patchfile/${package_name}-${ebuild_version}-${ebuild_revision}/${pf}}")
-			cn+=("${patchfile/${ebuild_version}-${ebuild_revision}/${pvr}}")
-		fi
-		# looks for names with slotes, if slot is not 0
-		if [ -n "${ebuild_slot}" ] && ! [ "${ebuild_slot}" = "0" ]; then
-			cn+=("${patchfile/${ebuild_slot}/${slot}}")
-			name_slot="${patchfile/${package_name}/${pn}}"
-			name_slot="${name_slot/${ebuild_slot}/${slot}}"
-			cn+=("${name_slot}")
-		fi
-		# find vmware-modules patches
-		if [ "${package_name}" = "vmware-modules" ]; then
-			local pv_major='${PV_MAJOR}'
-			cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
-		fi
-
-		# remove duplicates
-		mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
-		# replace list with newpackages
-		local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
-
-		$DEBUG && >&2 echo "**DEBUG: Custom names: ${cn[@]}"
-		$DEBUG && >&2 echo "**DEBUG: Custom names normalized: ${searchpattern}"
-
-		# check ebuild for the custom names
-		if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
-			found=true
-			$DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
-		else
-			found=false
-			$DEBUG && >&2 echo "***DEBUG: CHECK: doesn't found $patchfile"
-		fi
-
-		$found && break
-	done
-
-	if $found; then
-		echo true
-	else
-		echo false
-	fi
-}
-
 main(){
+	check_ebuild(){
+		local patchfile=$1
+		local found=false
+		local pn='${PN}'
+		local p='${P}'
+		local pf='${PF}'
+		local pv='${PV}'
+		local pvr='${PVR}'
+		local slot='${SLOT}'
+
+		$DEBUG && >&2 echo
+		$DEBUG && >&2 echo "*DEBUG: pachfile to check: $patchfile"
+
+		for ebuild in ${fullpath}/*.ebuild; do
+			$DEBUG && >&2 echo "**DEBUG: Check ebuild: $ebuild"
+
+			# get ebuild detail
+			local ebuild_full=$(basename ${ebuild%.*})
+			local ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
+			local ebuild_revision=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
+			local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
+
+			$DEBUG && >&2 echo "**DEBUG: Ebuildvars: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot"
+
+			local cn=()
+			# create custom names to check
+			cn+=("${patchfile}")
+			cn+=("${patchfile/${package_name}/${pn}}")
+			cn+=("${patchfile/${package_name}-${ebuild_version}/${p}}")
+			cn+=("${patchfile/${ebuild_version}/${pv}}")
+
+			# special naming
+			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=" ${ebuild} >/dev/null); then
+				local var_my_pn='${MY_PN}'
+				local var_my_p='${MY_P}'
+				local var_my_pv='${MY_PV}'
+
+				local package_name_ver="${package_name}-${ebuild_version}"
+
+				my_pn_name="$(grep ^MY_PN ${ebuild})"
+				my_p_name="$(grep ^MY_P ${ebuild})"
+				my_pv_name="$(grep ^MY_PV ${ebuild})"
+
+				[ -n "${my_pn_name}" ] && \
+					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
+				[ -n "${my_pv_name}" ] && \
+					eval my_pv_name="$(echo ${my_pv_name:6}|sed "s|PV|ebuild_version|g")" >/dev/null 2>&1
+				[ -n "${my_p_name}" ] && \
+					eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")" >/dev/null 2>&1
+
+				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name"
+
+				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
+				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
+				[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
+			fi
+
+			# add special naming if there is a revision
+			if [ -n "${ebuild_revision}" ]; then
+				cn+=("${patchfile/${package_name}-${ebuild_version}-${ebuild_revision}/${pf}}")
+				cn+=("${patchfile/${ebuild_version}-${ebuild_revision}/${pvr}}")
+			fi
+			# looks for names with slotes, if slot is not 0
+			if [ -n "${ebuild_slot}" ] && ! [ "${ebuild_slot}" = "0" ]; then
+				cn+=("${patchfile/${ebuild_slot}/${slot}}")
+				name_slot="${patchfile/${package_name}/${pn}}"
+				name_slot="${name_slot/${ebuild_slot}/${slot}}"
+				cn+=("${name_slot}")
+			fi
+			# find vmware-modules patches
+			if [ "${package_name}" = "vmware-modules" ]; then
+				local pv_major='${PV_MAJOR}'
+				cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
+			fi
+
+			# remove duplicates
+			mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
+			# replace list with newpackages
+			local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
+
+			$DEBUG && >&2 echo "**DEBUG: Custom names: ${cn[@]}"
+			$DEBUG && >&2 echo "**DEBUG: Custom names normalized: ${searchpattern}"
+
+			# check ebuild for the custom names
+			if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
+				found=true
+				$DEBUG && >&2 echo "**DEBUG: CHECK: found $patchfile"
+			else
+				found=false
+				$DEBUG && >&2 echo "***DEBUG: CHECK: doesn't found $patchfile"
+			fi
+
+			$found && break
+		done
+
+		if $found; then
+			echo true
+		else
+			echo false
+		fi
+	}
+
+	find_braces_candidates(){
+		local work_list=("${unused_patches[@]}")
+		local patch
+		local pat_found=()
+		local count
+
+		$DEBUG && >&2 echo
+		$DEBUG && >&2 echo "*DEBUG: find_braces_candidates"
+
+		#echo "worklist: ${work_list[@]}"
+		# expect patches in braces to use name+version or $PN
+		# thus the first 2 part (cut with -) ar similar
+		#
+		# first generate a list of files which fits the rule
+		for patch in "${work_list[@]}"; do
+			local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
+			if [ $deli -ge 2 ]; then
+				pat_found+=("$(echo $patch|cut -d '-' -f1-$deli)")
+				$DEBUG && >&2 echo "***DEBUG: ${patch} could fit (found ${deli} matching \"-\" in filename)"
+				$DEBUG && >&2 echo "***DEBUG: saving file as $(echo $patch|cut -d '-' -f1-$deli)"
+			fi
+		done
+		# create a list of duplicates
+		dup_list=()
+		for patch in "${pat_found[@]}"; do
+			# search for every element in the array
+			$DEBUG && >&2 echo "**DEBUG: check for pattern ${patch}"
+
+			count=$(echo ${pat_found[@]}|grep -P -o "${patch}(?=\s|$)"|wc -w)
+			if [ $count -gt 1 ]; then
+				dup_list+=($patch)
+				$DEBUG && >&2 echo "***DEBUG: ${patch} matches more than 1"
+			fi
+		done
+		# remove duplicates from list
+		mapfile -t dup_list < <(printf '%s\n' "${dup_list[@]}"|sort -u)
+		#echo "duplist ${dup_list[@]}"
+	}
+
+	braces_patches() {
+		local patch=$1
+		# add matches to the patch_list
+		local matches=()
+		filess=()
+		braces_patch_list=()
+
+		for ffile in $(ls ${fullpath}/files/ |grep $patch); do
+			filess+=($ffile)
+			ffile="${ffile%.patch}"
+			matches+=("${ffile##*-}")
+		done
+		#echo "files: ${filess[@]}"
+		#echo "matches: ${matches[@]}"
+		# set the maximum permutations number (5-6 works)
+		if [ ${#matches[@]} -le 5 ]; then
+			matches="${matches[@]}"
+			local perm_list=$(get_perm "$matches")
+			for search_patch in $perm_list; do
+				braces_patch_list+=("$(echo $patch-{$search_patch}.patch)")
+			done
+		fi
+	}
+
 	local prechecks=true
 	local package=${1}
+	local category="$(echo ${package}|cut -d'/' -f2)"
 
-	category="$(echo ${package}|cut -d'/' -f2)"
 	package_name=${package##*/}
 	fullpath="/${PORTTREE}/${package}"
 
@@ -393,17 +391,33 @@ main(){
 	fi
 }
 
-find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | while read -r line; do
-	main ${line}
-done
+export -f main get_perm get_main_min
+export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG
+
+# Don't use parallel if DEBUG is enabled
+if ${DEBUG}; then
+	find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type d -print | while read -r line; do
+		main ${line}
+	done
+else
+	find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type d -print | parallel main {}
+fi
 
 if ${SCRIPT_MODE}; then
 	# remove old data
