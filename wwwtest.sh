@@ -273,6 +273,7 @@ if ${SCRIPT_MODE}; then
 	for a in $(cat ${TMPFILE} |cut -d';' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${TMPFILE} > ${SITEDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
+
+	# remove tmpfile
+	rm ${TMPFILE}
 fi
-# remove tmpfile
-rm ${TMPFILE}
