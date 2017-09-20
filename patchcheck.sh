@@ -27,6 +27,7 @@
 SCRIPT_MODE=false
 PORTTREE="/usr/portage"
 WWWDIR="${HOME}/patchcheck/"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -106,10 +107,10 @@ main(){
 
 				mkdir -p ${WWWDIR}/sort-by-package/${category}
 				ls ${PORTTREE}/${category}/${package_name}/files/* > ${WWWDIR}/sort-by-package/${category}/${package_name}.txt
-				echo -e "${category}/${package_name};${main}" >> ${WWWDIR}/full-with-maintainers.txt
+				echo -e "${category}/${package_name}${DL}${main}" >> ${WWWDIR}/full-with-maintainers.txt
 
 			else
-				echo "${category}/${package_name}"
+				echo "${category}/${package_name}${DL}${main}"
 			fi
 		fi
 	fi
@@ -129,7 +130,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	for a in $(cat ${WWWDIR}/full-with-maintainers.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${WWWDIR}/full-with-maintainers.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		mkdir -p ${WWWDIR}/sort-by-maintainer/
 		grep "${a}" ${WWWDIR}/full-with-maintainers.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
