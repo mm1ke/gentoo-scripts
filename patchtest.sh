@@ -393,7 +393,7 @@ main(){
 }
 
 export -f main get_perm get_main_min
-export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG
+export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG DL
 
 # Don't use parallel if DEBUG is enabled
 if ${DEBUG}; then

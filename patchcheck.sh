@@ -117,7 +117,7 @@ main(){
 }
 
 export -f main get_main_min
-export WWWDIR PORTTREE SCRIPT_MODE
+export WWWDIR PORTTREE SCRIPT_MODE DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \

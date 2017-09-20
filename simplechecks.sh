@@ -145,7 +145,7 @@ pre_check_description_over_80() {
 
 export -f main get_main_min
 export -f pre_check_epatch_in_eapi6 pre_check_mixed_indentation pre_check_description_over_80
-export PORTTREE WWWDIR SCRIPT_MODE
+export PORTTREE WWWDIR SCRIPT_MODE DL
 
 # find trailing whitespaces
 export NAME="trailing_whitespaces"
