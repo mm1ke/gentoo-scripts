@@ -29,6 +29,7 @@ SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
 WWWDIR="${HOME}/patchtest/"
 TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -377,11 +378,11 @@ main(){
 		if [ -n "${unused_patches}" ]; then
 			if ${SCRIPT_MODE}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name};${upatch};${main}" >> ${TMPFILE}
+					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${TMPFILE}
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name};${upatch};${main}"
+					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}"
 				done
 			fi
 		fi
@@ -423,14 +424,14 @@ if ${SCRIPT_MODE}; then
 	# remove old data
 	rm -rf ${WWWDIR}/*
 
-	f_packages="$(cat ${TMPFILE} | cut -d';' -f1|sort|uniq)"
+	f_packages="$(cat ${TMPFILE} | cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo ${i}|cut -d'/' -f1)"
 		f_pak="$(echo ${i}|cut -d'/' -f2)"
 		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
 		grep ${i} ${TMPFILE} > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
-	for a in $(cat ${TMPFILE} |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${TMPFILE} |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		mkdir -p ${WWWDIR}/sort-by-maintainer/
 		grep "${a}" ${TMPFILE} > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
