@@ -183,7 +183,7 @@ main() {
 
 		if [ -n "${_hp}" ]; then
 			for i in ${_hp}; do
-				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK})"
+				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 
 				if echo ${i}|grep ^ftp >/dev/null;then
 					mode "FTP;${category}/${package};${ebuild};${i};${maintainer}"
