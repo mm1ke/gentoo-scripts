@@ -213,7 +213,7 @@ main() {
 
 # for parallel execution
 export -f main get_main_min get_code 301check
-export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE SITEDIR
+export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE SITEDIR DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
