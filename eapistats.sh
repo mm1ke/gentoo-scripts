@@ -27,6 +27,7 @@
 SCRIPT_MODE=false
 WWWDIR="${HOME}/eapistats/"
 PORTTREE="/usr/portage/"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -100,9 +101,9 @@ main() {
 	
 	if ${SCRIPT_MODE}; then
 		mkdir -p /${WWWDIR}/
-		echo "${eapi};${category}/${package}/${filename};${maintainer}" >> /${WWWDIR}/full.txt
+		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WWWDIR}/full.txt
 	else
-		echo "${eapi};${category}/${package}/${filename};${maintainer}"
+		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -112,7 +113,7 @@ gen_sortings() {
 		grep ^${i}\; ${WWWDIR}/full.txt > ${WWWDIR}/${i}/EAPI${i}.txt
 
 		# sort by packages
-		f_packages="$(cat ${WWWDIR}/${i}/EAPI${i}.txt| cut -d ';' -f2|sort|uniq)"
+		f_packages="$(cat ${WWWDIR}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
 		for u in ${f_packages}; do
 			f_cat="$(echo $u|cut -d'/' -f1)"
 			f_pak="$(echo $u|cut -d'/' -f2)"
@@ -121,7 +122,7 @@ gen_sortings() {
 		done
 	
 		mkdir -p ${WWWDIR}/${i}/sort-by-maintainer/
-		for a in $(cat ${WWWDIR}/${i}/EAPI${i}.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		for a in $(cat ${WWWDIR}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 			grep "${a}" ${WWWDIR}/${i}/EAPI${i}.txt > ${WWWDIR}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 		done
 	done
@@ -137,7 +138,7 @@ eapi_pre_check() {
 }
 
 export -f eapi_pre_check main get_main_min
-export SCRIPT_MODE WWWDIR PORTTREE
+export SCRIPT_MODE WWWDIR PORTTREE DL
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
