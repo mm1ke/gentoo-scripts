@@ -29,6 +29,7 @@
 SCRIPT_MODE=false
 WWWDIR="${HOME}/simplechecks/"
 PORTTREE="/usr/portage/"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -101,15 +102,15 @@ main() {
 
 	if ${SCRIPT_MODE}; then
 		mkdir -p /${WWWDIR}/${NAME}/
-		echo "${category}/${package}/${filename};${maintainer}" >> /${WWWDIR}/${NAME}/${NAME}.txt
+		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WWWDIR}/${NAME}/${NAME}.txt
 	else
-		echo "${NAME};${category}/${package}/${filename};${maintainer}"
+		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 gen_sortings() {
 	# sort by packages
-	f_packages="$(cat ${WWWDIR}/${NAME}/${NAME}.txt| cut -d ';' -f1|sort|uniq)"
+	f_packages="$(cat ${WWWDIR}/${NAME}/${NAME}.txt| cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
@@ -119,7 +120,7 @@ gen_sortings() {
 
 	mkdir -p ${WWWDIR}/${NAME}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WWWDIR}/${NAME}/${NAME}.txt |cut -d';' -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${WWWDIR}/${NAME}/${NAME}.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${WWWDIR}/${NAME}/${NAME}.txt > ${WWWDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 }
