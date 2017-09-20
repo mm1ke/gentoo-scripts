@@ -26,6 +26,7 @@
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
 WWWDIR="${HOME}/srctest/"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -101,9 +102,9 @@ main() {
 		local status=${2}
 		if ${SCRIPT_MODE}; then
 			echo "${msg}" >> "${WWWDIR}/full_${status}.txt"
-			echo "${status};${msg}" >> "${WWWDIR}/full.txt"
+			echo "${status}${DL}${msg}" >> "${WWWDIR}/full.txt"
 		else
-			echo "${status};${msg}"
+			echo "${status}${DL}${msg}"
 		fi
 	}
 
@@ -144,9 +145,9 @@ main() {
 					else
 						local second_check=$(get_status ${i} "${maybe_available}")
 						if ${second_check}; then
-							mode "${category}/${package};${i};${maintainer}" maybe_available
+							mode "${category}/${package}${DL}${i}${DL}${maintainer}" maybe_available
 						else
-							mode "${category}/${package};${i};${maintainer}" not_available
+							mode "${category}/${package}${DL}${i}${DL}${maintainer}" not_available
 						fi
 					fi
 				done
@@ -156,7 +157,7 @@ main() {
 }
 
 export -f main get_main_min
-export PORTTREE WWWDIR SCRIPT_MODE
+export PORTTREE WWWDIR SCRIPT_MODE DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -170,7 +171,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${WWWDIR}/full_not_available.txt| cut -d ';' -f1|sort|uniq)"
+	f_packages="$(cat ${WWWDIR}/full_not_available.txt| cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
@@ -180,7 +181,7 @@ if ${SCRIPT_MODE}; then
 	
 	mkdir -p ${WWWDIR}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 fi
