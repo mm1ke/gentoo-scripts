@@ -28,6 +28,7 @@ SITEDIR="${HOME}/wwwtest/"
 PORTTREE="/usr/portage/"
 TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
+DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
@@ -127,8 +128,8 @@ END`
 		if [ ${_code} = 200 ]; then
 			found=true
 			$SCRIPT_MODE &&
-				echo "${cat}/${pak};${hp};${sitemut};${main}" >> ${SITEDIR}/special/301_slash_https_www.txt ||
-				echo "${cat}/${pak};${hp};${sitemut};${main}"
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${SITEDIR}/special/301_slash_https_www.txt ||
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 			break
 		fi
 	done
@@ -136,8 +137,8 @@ END`
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${SCRIPT_MODE} &&
-			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}" >> ${SITEDIR}/special/301_redirections.txt ||
-			echo "${new_code};${cat}/${pak};${hp};${correct_site};${main}"
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${SITEDIR}/special/301_redirections.txt ||
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 	fi
 }
 
@@ -186,16 +187,16 @@ main() {
 				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK})"
 
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "FTP;${category}/${package};${ebuild};${i};${maintainer}"
+					mode "FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "VAR;${category}/${package};${ebuild};${i};${maintainer}"
+					mode "VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
 				elif [ -n "${_checktmp}" ]; then
 					# don't check again
-					mode "${_checktmp:0:3};${category}/${package};${ebuild};${_checktmp:4};${maintainer}"
+					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4}${DL}${maintainer}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${_code};${category}/${package};${ebuild};${i};${maintainer}"
+					mode "${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
 					echo "${_code} ${i}" >> ${TMPCHECK}
 
 					case ${_code} in
@@ -211,16 +212,8 @@ main() {
 }
 
 # for parallel execution
-export -f get_main_min
-export -f main
-export -f get_code
-export -f 301check
-
-export PORTTREE
-export TMPCHECK
-export TMPFILE
-export SCRIPT_MODE
-export SITEDIR
+export -f main get_main_min get_code 301check
+export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE SITEDIR
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -235,7 +228,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	# sort after http codes
-	for i in $(cat ${TMPFILE}|cut -d';' -f1|sort|uniq); do
+	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
 		grep "^${i}" ${TMPFILE} > ${SITEDIR}/sort-by-httpcode/${i}.txt
 	done
 
@@ -261,7 +254,7 @@ if ${SCRIPT_MODE}; then
 	cp ${TMPFILE} ${SITEDIR}/full-filtered.txt
 
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${TMPFILE}| cut -d ';' -f2 |sort|uniq)"
+	f_packages="$(cat ${TMPFILE}| cut -d "${DL}" -f2 |sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
@@ -270,7 +263,7 @@ if ${SCRIPT_MODE}; then
 	done
 
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${TMPFILE} |cut -d';' -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${TMPFILE} |cut -d "${DL}" -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${TMPFILE} > ${SITEDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 fi
