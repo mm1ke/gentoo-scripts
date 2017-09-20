@@ -85,8 +85,6 @@ END`
 	echo $ret
 }
 
-
-
 main() {
 	get_status() {
 		local uri="${1}"
@@ -157,6 +155,9 @@ main() {
 	done
 }
 
+export -f main get_main_min
+export PORTTREE WWWDIR SCRIPT_MODE
+
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -165,9 +166,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | while read -r line; do
-	main ${line}
-done
+	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
 	# sort by packages, ignoring "good" codes

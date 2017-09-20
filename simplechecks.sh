@@ -39,7 +39,6 @@ cd ${PORTTREE}
 
 ${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
 
-
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -104,7 +103,7 @@ main() {
 		mkdir -p /${WWWDIR}/${NAME}/
 		echo "${category}/${package}/${filename};${maintainer}" >> /${WWWDIR}/${NAME}/${NAME}.txt
 	else
-		echo "${category}/${package}/${filename};${maintainer}"
+		echo "${NAME};${category}/${package}/${filename};${maintainer}"
 	fi
 }
 
@@ -125,8 +124,30 @@ gen_sortings() {
 	done
 }
 
+pre_check_mixed_indentation() {
+	if grep $'\t' ${1} >/dev/null; then
+		main ${1}
+	fi
+}
+
+pre_check_epatch_in_eapi6() {
+	if [ "$(grep EAPI ${1}|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+		main ${1}
+	fi
+}
+
+pre_check_description_over_80() {
+	if [ $(grep DESCRIPTION ${1} | wc -m) -gt 95 ]; then
+		main ${1}
+	fi
+}
+
+export -f main get_main_min
+export -f pre_check_epatch_in_eapi6 pre_check_mixed_indentation pre_check_description_over_80
+export PORTTREE WWWDIR SCRIPT_MODE
+
 # find trailing whitespaces
-NAME="trailing_whitespaces"
+export NAME="trailing_whitespaces"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -135,12 +156,10 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | while read -r line; do
-	main ${line}
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-NAME="mixed_indentation"
+export NAME="mixed_indentation"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -149,14 +168,10 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | while read -r line; do
-	if grep $'\t' $line >/dev/null; then
-		main $line
-	fi
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_mixed_indentation {}
 ${SCRIPT_MODE} && gen_sortings
 
-NAME="gentoo_mirror_missuse"
+export NAME="gentoo_mirror_missuse"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -165,12 +180,10 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | while read -r line; do
-	main $line
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-NAME="epatch_in_eapi6"
+export NAME="epatch_in_eapi6"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -179,14 +192,10 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'epatch' {} \; | while read -r line; do
-	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-		main $line
-	fi
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'epatch' {} \; | parallel pre_check_epatch_in_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-NAME="dohtml_in_eapi6"
+export NAME="dohtml_in_eapi6"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -195,14 +204,10 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'dohtml' {} \; | while read -r line; do
-	if [ "$(grep EAPI $line|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-		main $line
-	fi
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'dohtml' {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-NAME="DESCRIPTION_over_80"
+export NAME="DESCRIPTION_over_80"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -211,11 +216,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'DESCRIPTION' {} \; | while read -r line; do
-	if [ $(grep DESCRIPTION $line | wc -m) -gt 95 ]; then
-		main $line
-	fi
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'DESCRIPTION' {} \; | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
 
 #NAME="missing_LICENSE"
