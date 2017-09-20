@@ -24,21 +24,18 @@
 # simple script for generating EAPI statistics
 
 
+SCRIPT_MODE=false
+WWWDIR="${HOME}/eapistats/"
+PORTTREE="/usr/portage/"
 
 if [ "$(hostname)" = methusalix ]; then
-	script_mode=true
-	_wwwdir="/var/www/gentoo.levelnine.at/eapistats/"
-	PORTTREE="/usr/portage/"
-else
-	script_mode=false
-	_wwwdir="/home/ai/eapistats/"
-	PORTTREE="/usr/portage/"
+	SCRIPT_MODE=true
+	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 fi
 
 cd ${PORTTREE}
 
-${script_mode} && rm -rf /${_wwwdir}/*
-
+${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
 
 usage() {
 	echo "You need at least one argument:"
@@ -101,34 +98,46 @@ main() {
 			maintainer="maintainer-needed@gentoo.org:"
 	fi
 	
-	if ${script_mode}; then
-		mkdir -p /${_wwwdir}/
-		echo "${eapi};${category}/${package}/${filename};${maintainer}" >> /${_wwwdir}/full.txt
+	if ${SCRIPT_MODE}; then
+		mkdir -p /${WWWDIR}/
+		echo "${eapi};${category}/${package}/${filename};${maintainer}" >> /${WWWDIR}/full.txt
 	else
 		echo "${eapi};${category}/${package}/${filename};${maintainer}"
 	fi
 }
 
 gen_sortings() {
-	for i in $(cut -c-1 ${_wwwdir}/full.txt|sort -u); do
-		mkdir -p ${_wwwdir}/${i}
-		grep ^${i}\; ${_wwwdir}/full.txt > ${_wwwdir}/${i}/EAPI${i}.txt
+	for i in $(cut -c-1 ${WWWDIR}/full.txt|sort -u); do
+		mkdir -p ${WWWDIR}/${i}
+		grep ^${i}\; ${WWWDIR}/full.txt > ${WWWDIR}/${i}/EAPI${i}.txt
 
 		# sort by packages
-		f_packages="$(cat ${_wwwdir}/${i}/EAPI${i}.txt| cut -d ';' -f2|sort|uniq)"
+		f_packages="$(cat ${WWWDIR}/${i}/EAPI${i}.txt| cut -d ';' -f2|sort|uniq)"
 		for u in ${f_packages}; do
 			f_cat="$(echo $u|cut -d'/' -f1)"
 			f_pak="$(echo $u|cut -d'/' -f2)"
-			mkdir -p ${_wwwdir}/${i}/sort-by-package/${f_cat}
-			grep "${u}" ${_wwwdir}/${i}/EAPI${i}.txt > ${_wwwdir}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
+			mkdir -p ${WWWDIR}/${i}/sort-by-package/${f_cat}
+			grep "${u}" ${WWWDIR}/${i}/EAPI${i}.txt > ${WWWDIR}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
 		done
 	
-		mkdir -p ${_wwwdir}/${i}/sort-by-maintainer/
-		for a in $(cat ${_wwwdir}/${i}/EAPI${i}.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-			grep "${a}" ${_wwwdir}/${i}/EAPI${i}.txt > ${_wwwdir}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		mkdir -p ${WWWDIR}/${i}/sort-by-maintainer/
+		for a in $(cat ${WWWDIR}/${i}/EAPI${i}.txt |cut -d';' -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+			grep "${a}" ${WWWDIR}/${i}/EAPI${i}.txt > ${WWWDIR}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 		done
 	done
 }
+
+eapi_pre_check() {
+	local var=${1}
+	if grep ^EAPI ${var} >/dev/null; then
+		main ${var} $(grep ^EAPI ${var}|tr -d '"'|cut -d'=' -f2)
+	else
+		main ${var} 0
+	fi
+}
+
+export -f eapi_pre_check main get_main_min
+export SCRIPT_MODE WWWDIR PORTTREE
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -138,12 +147,6 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | while read -r line; do
-	if grep ^EAPI $line >/dev/null; then
-		main $line $(grep ^EAPI $line|tr -d '"'|cut -d'=' -f2)
-	else
-		main $line 0
-	fi
-done
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel eapi_pre_check {}
 
-${script_mode} && gen_sortings
+${SCRIPT_MODE} && gen_sortings
