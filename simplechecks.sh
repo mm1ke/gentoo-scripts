@@ -131,7 +131,7 @@ pre_check_mixed_indentation() {
 	fi
 }
 
-pre_check_epatch_in_eapi6() {
+pre_check_eapi6() {
 	if [ "$(grep EAPI ${1}|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
 		main ${1}
 	fi
@@ -144,7 +144,7 @@ pre_check_description_over_80() {
 }
 
 export -f main get_main_min
-export -f pre_check_epatch_in_eapi6 pre_check_mixed_indentation pre_check_description_over_80
+export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80
 export PORTTREE WWWDIR SCRIPT_MODE DL
 
 # find trailing whitespaces
@@ -193,7 +193,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'epatch' {} \; | parallel pre_check_epatch_in_eapi6 {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<epatch\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
 export NAME="dohtml_in_eapi6"
@@ -205,7 +205,19 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'dohtml' {} \; | parallel main {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
+${SCRIPT_MODE} && gen_sortings
+
+export NAME="einstall_in_eapi6"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
 export NAME="DESCRIPTION_over_80"
@@ -217,7 +229,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'DESCRIPTION' {} \; | parallel pre_check_description_over_80 {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^DESCRIPTION" {} \; | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
 
 #NAME="missing_LICENSE"
