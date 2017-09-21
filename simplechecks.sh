@@ -208,17 +208,17 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="einstall_in_eapi6"
-find ./${level}  \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
-${SCRIPT_MODE} && gen_sortings
+#export NAME="einstall_in_eapi6"
+#find ./${level}  \( \
+#	-path ./scripts/\* -o \
+#	-path ./profiles/\* -o \
+#	-path ./packages/\* -o \
+#	-path ./licenses/\* -o \
+#	-path ./distfiles/\* -o \
+#	-path ./metadata/\* -o \
+#	-path ./eclass/\* -o \
+#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
+#${SCRIPT_MODE} && gen_sortings
 
 export NAME="DESCRIPTION_over_80"
 find ./${level}  \( \
