@@ -141,7 +141,7 @@ main() {
 				for i in $(echo $u | grep -E "^http://|^https://"); do
 					local first_check=$(get_status ${i} "${code_available}")
 					if ${first_check}; then
-						mode "${category}/${package};${i};${maintainer}" available
+						mode "${category}/${package}${DL}${i}${DL}${maintainer}" available
 					else
 						local second_check=$(get_status ${i} "${maybe_available}")
 						if ${second_check}; then
