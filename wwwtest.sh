@@ -100,7 +100,7 @@ for i in e:
 		c+=str(b)+':'
 print(c)
 END`
-	echo $ret
+	echo ${ret// /_}
 }
 
 301check() {
@@ -270,3 +270,4 @@ if ${SCRIPT_MODE}; then
 	# remove tmpfile
 	rm ${TMPFILE}
 fi
+rm ${TMPCHECK}
