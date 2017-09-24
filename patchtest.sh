@@ -100,7 +100,7 @@ for perm in itertools.permutations(list):
 	string= ','.join(perm)
 	print(string)
 END`
-	echo $ret
+	echo ${ret// /_}
 }
 
 main(){

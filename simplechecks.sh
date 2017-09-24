@@ -86,7 +86,7 @@ for i in e:
 		c+=str(b)+':'
 print(c)
 END`
-	echo $ret
+	echo ${ret// /_}
 }
 
 main() {
