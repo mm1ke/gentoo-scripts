@@ -17,12 +17,12 @@ All scripts are actually running once a day on a gentoo VM with following specs:
 * 8 GB-RAM
 
 Below are the estimated duration time of every script:
-* patchtest: **10min**
-* patchcheck: **1min**
-* wwwtest: **1,5hour**
-* srctest: **2,5hour**
-* simplechecks: **8min**
 * eapistats: **11min**
+* patchcheck: **~35sec**
+* patchtest: **8min**
+* simplechecks: **8min**
+* srctest: **2,5hour**
+* wwwtest: **1,5hour**
 
 As a side note, recently every script uses ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes it's basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
 
