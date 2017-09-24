@@ -26,12 +26,15 @@
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
 WWWDIR="${HOME}/srctest/"
+TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
 fi
+
+touch ${TMPCHECK}
 
 cd ${PORTTREE}
 
@@ -83,7 +86,7 @@ for i in e:
 		c+=str(b)+':'
 print(c)
 END`
-	echo $ret
+	echo ${ret// /_}
 }
 
 main() {
@@ -100,6 +103,7 @@ main() {
 	mode() {
 		local msg=${1}
 		local status=${2}
+		echo "$(echo ${status} ${msg} | tr '|' ' ')" >> ${TMPCHECK}
 		if ${SCRIPT_MODE}; then
 			echo "${msg}" >> "${WWWDIR}/full_${status}.txt"
 			echo "${status}${DL}${msg}" >> "${WWWDIR}/full.txt"
@@ -120,16 +124,15 @@ main() {
 	if [ -z "${maintainer}" ]; then
 			maintainer="maintainer-needed@gentoo.org:"
 	fi
-	
+
 	# only works best with the md5-cache
 	if ! [ -e "${PORTTREE}/metadata/md5-cache" ]; then
 		exit 1
 	fi
 
-
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		local ebuild=$(basename ${eb%.*})
-		
+
 		local _src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
 		local _src=${_src:8}
 
@@ -139,16 +142,15 @@ main() {
 			for u in ${_src}; do
 				# add ^mirror:// to the grep, somehow we should be able to test them too
 				for i in $(echo $u | grep -E "^http://|^https://"); do
-					local first_check=$(get_status ${i} "${code_available}")
-					if ${first_check}; then
-						mode "${category}/${package}${DL}${i}${DL}${maintainer}" available
+					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
+					if [ -n "${_checktmp}" ]; then
+						mode "$(echo ${_checktmp} | cut -d' ' -f2- |tr ' ' '|')" "$(echo ${_checktmp} | cut -d' ' -f1)"
+					elif $(get_status ${i} "${code_available}"); then
+						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" available
+					elif $(get_status ${i} "${maybe_available}"); then
+						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" maybe_available
 					else
-						local second_check=$(get_status ${i} "${maybe_available}")
-						if ${second_check}; then
-							mode "${category}/${package}${DL}${i}${DL}${maintainer}" maybe_available
-						else
-							mode "${category}/${package}${DL}${i}${DL}${maintainer}" not_available
-						fi
+						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" not_available
 					fi
 				done
 			done
@@ -157,7 +159,7 @@ main() {
 }
 
 export -f main get_main_min
-export PORTTREE WWWDIR SCRIPT_MODE DL
+export PORTTREE WWWDIR SCRIPT_MODE TMPCHECK DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -178,10 +180,11 @@ if ${SCRIPT_MODE}; then
 		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
 		grep "${i}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
-	
+
 	mkdir -p ${WWWDIR}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d "${DL}" -f4|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 fi
+rm ${TMPCHECK}
