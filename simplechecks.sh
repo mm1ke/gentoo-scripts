@@ -181,7 +181,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'SRC_URI="mirror://gentoo' {} \; | parallel main {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'mirror://gentoo' {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
 export NAME="epatch_in_eapi6"
@@ -208,18 +208,6 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-#export NAME="einstall_in_eapi6"
-#find ./${level}  \( \
-#	-path ./scripts/\* -o \
-#	-path ./profiles/\* -o \
-#	-path ./packages/\* -o \
-#	-path ./licenses/\* -o \
-#	-path ./distfiles/\* -o \
-#	-path ./metadata/\* -o \
-#	-path ./eclass/\* -o \
-#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
-#${SCRIPT_MODE} && gen_sortings
-
 export NAME="DESCRIPTION_over_80"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -231,6 +219,18 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^DESCRIPTION" {} \; | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
+
+#export NAME="einstall_in_eapi6"
+#find ./${level}  \( \
+#	-path ./scripts/\* -o \
+#	-path ./profiles/\* -o \
+#	-path ./packages/\* -o \
+#	-path ./licenses/\* -o \
+#	-path ./distfiles/\* -o \
+#	-path ./metadata/\* -o \
+#	-path ./eclass/\* -o \
+#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
+#${SCRIPT_MODE} && gen_sortings
 
 #NAME="missing_LICENSE"
 #find ./${level}  \( \
