@@ -110,7 +110,7 @@ main() {
 gen_sortings() {
 	for i in $(cut -c-1 ${WWWDIR}/full.txt|sort -u); do
 		mkdir -p ${WWWDIR}/${i}
-		grep ^${i}\; ${WWWDIR}/full.txt > ${WWWDIR}/${i}/EAPI${i}.txt
+		grep ^${i}${DL} ${WWWDIR}/full.txt > ${WWWDIR}/${i}/EAPI${i}.txt
 
 		# sort by packages
 		f_packages="$(cat ${WWWDIR}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
