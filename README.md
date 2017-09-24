@@ -1,13 +1,39 @@
 # Gentoo Scripts
 
-This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree.
-At the moment following scripts are available
+This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. At the moment following scripts are available:
 
 * patchtest.sh
 * patchcheck.sh
 * wwwtest.sh
 * srctest.sh
 * simplechecks.sh
+* eapistats.sh
+
+## Duration:
+
+All scripts are actually running once a day on a gentoo VM with following specs:
+* Gentoo VM
+* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
+* 8 GB-RAM
+
+Below are the estimated duration time of every script:
+* patchtest: **10min**
+* patchcheck: **1min**
+* wwwtest: **1,5hour**
+* srctest: **2,5hour**
+* simplechecks: **8min**
+* eapistats: **11min**
+
+As a side note, recently every script uses ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes it's basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
+
+Script | old | new (parallel)
+------|------|--------------
+eapistats | 30m | 11m
+patchcheck | ~50sec |  ~35sec
+patchtest | 15m | 8m
+simplechecks | 8m | 8m
+srctest | 11h | 2,5h
+wwwtest | 7,5h | 1,5h
 
 ## patchtest.sh
 This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
@@ -36,58 +62,29 @@ done
 * False negative will also happen if the filename just contains the packagename and thus would be found anyway in the ebuild.
 * Directories under the `files` directory will be ignored (for now)
 
-### Duration:
-
-A full run will take about **10min**. This was stopped on a:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
-
 ## patchcheck.sh
 This scripts is more like an spin-off of `patchtest`. It also tries to find unused patches, but doesn't look to deep.
 patchcheck basically just looks into every package if it has a `files` directory and then check if the ebuilds matches (via grep) for one of the following words:
 
 `.patch|.diff|FILESDIR|...` + a list of eclasses who uses the FILESDIR as well.
 
-### Duration:
-A full run will take about **1 min**. This was stopped on a:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
-
 ## wwwtest.sh
 This script tries to get the http statuscode of every homepage of the `HOMEPAGE` variable. This script is more usefull if the `script_mode` is enabled as it will multiple lists of the result.
 These a sorted after maintainer, httpcode, package and a special filter. Further more homepages which reply with a `301` statuscode (redirect) will be saved in special lists which checks the redirected page again.
 
-### Duration:
-A full run will take about **6,5 hours**. This was stopped on a:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
-
 ## srctest.sh
 This script checks if the `SRC_URI` links are available. It generates 3 return values. Available and not_available are obviously. maybe_available will be return when wget gets 403/Forbidden as return code. In that case the download might be still available but doesn't get recognized from wget when it behaves as a spider.
-
-### Duration:
-A full run will take about **9,5 hours**. This was stopped on a:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
 
 ## simplechecks.sh
 This is a simple scripts which check files for various mistakes (not just ebuilds). For now it can detect following spelling errors.
 * trailing whitespaces in ebuilds
 * mixed indentiations in metadata.xml files
 
-### Duration:
-A full run will take about **2 minutes**. This was stopped on a:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
+## eapistats.sh
+This script only generates statistics about EAPI usage. Also it sorts every EAPI by maintainer.
 
 ## maintainer.py
 This python script doesn't take any arguments and just prints every gentoo project and it members.
-
 
 # Usage:
 
@@ -100,8 +97,8 @@ Following usage will work for every script:
 There are also a few Variables which can be set, but don't have too. Most importantly are:
 
 * `PORTTREE`: Set's the portage directory path, usually `/usr/portage`
-* `script_mode`: If this is set to `true` the script will save it's output in files. Default is `false`
-* `_wwwdir`: This is the directory were the files will be written if `script_mode` is enabled.
+* `SCRIPT_MODE`: If this is set to `true` the script will save it's output in files. Default is `false`
+* `WWWDIR`: This is the directory were the files will be written if `SCRIPT_MODE` is enabled.
 
 # License:
 
