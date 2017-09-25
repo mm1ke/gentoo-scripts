@@ -103,7 +103,6 @@ main() {
 	mode() {
 		local msg=${1}
 		local status=${2}
-		echo "$(echo ${status} ${msg} | tr '|' ' ')" >> ${TMPCHECK}
 		if ${SCRIPT_MODE}; then
 			echo "${msg}" >> "${WWWDIR}/full_${status}.txt"
 			echo "${status}${DL}${msg}" >> "${WWWDIR}/full.txt"
@@ -144,13 +143,18 @@ main() {
 				for i in $(echo $u | grep -E "^http://|^https://"); do
 					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
-						mode "$(echo ${_checktmp} | cut -d' ' -f2- |tr ' ' '|')" "$(echo ${_checktmp} | cut -d' ' -f1)"
-					elif $(get_status ${i} "${code_available}"); then
-						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" available
-					elif $(get_status ${i} "${maybe_available}"); then
-						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" maybe_available
+						mode "${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}" "$(echo ${_checktmp} | cut -d' ' -f1)"
 					else
-						mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" not_available
+						if $(get_status ${i} "${code_available}"); then
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" available
+							echo "available ${i}" >> ${TMPCHECK}
+						elif $(get_status ${i} "${maybe_available}"); then
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" maybe_available
+							echo "maybe_available ${i}" >> ${TMPCHECK}
+						else
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" not_available
+							echo "not_available ${i}" >> ${TMPCHECK}
+						fi
 					fi
 				done
 			done
