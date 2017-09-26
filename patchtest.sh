@@ -215,18 +215,29 @@ main(){
 		$DEBUG && >&2 echo
 		$DEBUG && >&2 echo "*DEBUG: find_braces_candidates"
 
-		#echo "worklist: ${work_list[@]}"
-		# expect patches in braces to use name+version or $PN
-		# thus the first 2 part (cut with -) ar similar
 		#
+		# expect patches in braces to look like
+		# 	packagename-{patch1,patch2}
+		# 	$PN-{patch1,patch2}
+		#   or
+		# 	packagename-version-{patch1,patch2}
+		# 	${P}-${PV}-{patch1,patch2}
+		#   or
+		# 	packagename-versoin-genname-{patch1,patch2}
+		#
+		# This means 1-3 parts of a filename before '-' should be
+		# found at least 2 times
+
 		# first generate a list of files which fits the rule
 		for patch in "${work_list[@]}"; do
 			local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
-			if [ $deli -ge 2 ]; then
-				pat_found+=("$(echo $patch|cut -d '-' -f1-$deli)")
-				$DEBUG && >&2 echo "***DEBUG: ${patch} could fit (found ${deli} matching \"-\" in filename)"
-				$DEBUG && >&2 echo "***DEBUG: saving file as $(echo $patch|cut -d '-' -f1-$deli)"
-			fi
+			for n in 3 2 1; do
+				if [ ${deli} -ge ${n} ]; then
+					pat_found+=("$(echo $patch|cut -d '-' -f1-${deli})")
+					$DEBUG && >&2 echo "***DEBUG: ${patch} could fit (found ${deli} matching \"-\" in filename)"
+					$DEBUG && >&2 echo "***DEBUG: saving file as $(echo $patch|cut -d '-' -f1-${deli})"
+				fi
+			done
 		done
 		# create a list of duplicates
 		dup_list=()
