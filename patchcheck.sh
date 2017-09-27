@@ -101,6 +101,7 @@ main(){
 			"app-portage/gpyutils"	 	#implementations.txt
 			"net-libs/czmq"			#version.sh
 			"sys-apps/superiotool"		#make-tarball.sh
+			"app-portage/install-mask" 	#install-mask.conf location-db.conf location-db.xml
 			)
 
 	# check if the patches folder exist
