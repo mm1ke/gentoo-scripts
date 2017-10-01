@@ -94,10 +94,8 @@ pack = str(sys.argv[1])
 projxml = "/usr/portage/" + pack + "/metadata.xml"
 e = xml.etree.ElementTree.parse(projxml).getroot()
 c = ""
-for i in e:
-	for v in i.iter('maintainer'):
-		b=str(v[0].text)
-		c+=str(b)+':'
+for x in e.iterfind("./maintainer/email"):
+	c+=(x.text+':')
 print(c)
 END`
 	echo ${ret// /_}
