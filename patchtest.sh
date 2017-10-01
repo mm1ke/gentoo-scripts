@@ -141,9 +141,9 @@ main(){
 
 				local package_name_ver="${package_name}-${ebuild_version}"
 
-				my_pn_name="$(grep ^MY_PN ${ebuild})"
-				my_p_name="$(grep ^MY_P ${ebuild})"
-				my_pv_name="$(grep ^MY_PV ${ebuild})"
+				my_pn_name="$(grep ^MY_PN\= ${ebuild})"
+				my_p_name="$(grep ^MY_P\= ${ebuild})"
+				my_pv_name="$(grep ^MY_PV\= ${ebuild})"
 
 				[ -n "${my_pn_name}" ] && \
 					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
