@@ -36,6 +36,7 @@ if [ "$(hostname)" = methusalix ]; then
 	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
 fi
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 cd ${PORTTREE}
 
 usage() {
@@ -289,6 +290,12 @@ main(){
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
+		if [ -e ${startdir}/whitelist ]; then
+			source ${startdir}/whitelist
+		else
+			white_list=()
+		fi
+
 		for file in ${fullpath}/files/*; do
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
@@ -311,7 +318,12 @@ main(){
 					${prechecks} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
 						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 				# ignoring README.gentoo files
-				elif ! $(echo ${file}|grep -i README.gentoo >/dev/null); then
+				elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
+					${prechecks} || patch_list+=("${file}")
+				# ignore whitelist
+				elif $(echo ${white_list[@]} | grep "${package}/files/${file}" >/dev/null); then
+					${prechecks} || patch_list+=("${file}")
+				else
 					patch_list+=("${file}")
 				fi
 			fi
@@ -445,7 +457,7 @@ main(){
 }
 
 export -f main get_perm get_main_min
-export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG DL
+export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG DL startdir
 
 # Don't use parallel if DEBUG is enabled
 if ${DEBUG}; then
