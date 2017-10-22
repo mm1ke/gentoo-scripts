@@ -136,13 +136,21 @@ pre_check_eapi6() {
 }
 
 pre_check_description_over_80() {
-	if [ $(grep DESCRIPTION ${1} | wc -m) -gt 95 ]; then
+	local full_package=${1}
+	local category="$(echo ${full_package}|cut -d'/' -f2)"
+	local filename="$(echo ${full_package}|cut -d'/' -f4)"
+
+	if [ $(grep DESCRIPTION ${PORTTREE}/metadata/md5-cache/${category}/${filename%.*} | wc -m) -gt 95 ]; then
 		main ${1}
 	fi
 }
 
 pre_proxy_maint_check() {
-	local maintainer="$(get_main_min "$(echo ${1}|cut -d'/' -f2)/$(echo ${1}|cut -d'/' -f3)")"
+	local full_package=${1}
+	local category="$(echo ${full_package}|cut -d'/' -f2)"
+	local package="$(echo ${full_package}|cut -d'/' -f3)"
+
+	local maintainer="$(get_main_min "${category}/${package}")"
 	local ok=false
 
 	for i in $(echo ${maintainer}|tr ':' '\n'); do
@@ -229,7 +237,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^DESCRIPTION" {} \; | parallel pre_check_description_over_80 {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
 
 export NAME="proxy-maint-check"
