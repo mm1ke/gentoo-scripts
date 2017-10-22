@@ -141,8 +141,22 @@ pre_check_description_over_80() {
 	fi
 }
 
+pre_proxy_maint_check() {
+	local maintainer="$(get_main_min "$(echo ${1}|cut -d'/' -f2)/$(echo ${1}|cut -d'/' -f3)")"
+	local ok=false
+
+	for i in $(echo ${maintainer}|tr ':' '\n'); do
+		if ! $(echo $i | grep "@gentoo.org" >/dev/null ); then
+			ok=true
+		fi
+	done
+
+	${ok} || main ${1}
+}
+
+
 export -f main get_main_min
-export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80
+export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check
 export PORTTREE WWWDIR SCRIPT_MODE DL
 
 # find trailing whitespaces
@@ -217,6 +231,19 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^DESCRIPTION" {} \; | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
+
+export NAME="proxy-maint-check"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_proxy_maint_check {}
+${SCRIPT_MODE} && gen_sortings
+
 
 #export NAME="einstall_in_eapi6"
 #find ./${level}  \( \
