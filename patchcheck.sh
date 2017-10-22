@@ -36,6 +36,7 @@ fi
 
 ${SCRIPT_MODE} && rm -rf ${WWWDIR}/*
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 cd ${PORTTREE}
 
 usage() {
@@ -94,28 +95,31 @@ main(){
 	local package_name=${package##*/}
 	local fullpath="/${PORTTREE}/${package}"
 
+	if [ -e ${startdir}/whitelist ]; then
+		source ${startdir}/whitelist
+		for i in ${white_list[@]}; do
+			whitelist+=("$(echo ${i}|cut -d'/' --output-delimiter='/' -f2,3)")
+		done
+	else
+		whitelist=()
+	fi
+	# remove duplicates
+	mapfile -t whitelist < <(printf '%s\n' "${whitelist[@]}"|sort -u)
 
-	local whitelist=("app-office/libreoffice-l10n"	#lo_gen_langs.sh
-			"app-portage/gpyutils"	 	#implementations.txt
-			"net-libs/czmq"			#version.sh
-			"sys-apps/superiotool"		#make-tarball.sh
-			"app-portage/install-mask" 	#install-mask.conf location-db.conf location-db.xml
-			)
+	local eclasses="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
 
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then
-			if ! grep -E ".diff|.patch|FILESDIR|apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular" ${fullpath}/*.ebuild >/dev/null; then
+			if ! grep -E ".diff|.patch|FILESDIR|${eclasses}" ${fullpath}/*.ebuild >/dev/null; then
+				main=$(get_main_min "${category}/${package_name}")
+				if [ -z "${main}" ]; then
+					main="maintainer-needed@gentoo.org:"
+				fi
 				if ${SCRIPT_MODE}; then
-					main=$(get_main_min "${category}/${package_name}")
-					if [ -z "${main}" ]; then
-						main="maintainer-needed@gentoo.org:"
-					fi
-	
 					mkdir -p ${WWWDIR}/sort-by-package/${category}
 					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WWWDIR}/sort-by-package/${category}/${package_name}.txt
 					echo -e "${category}/${package_name}${DL}${main}" >> ${WWWDIR}/full-with-maintainers.txt
-	
 				else
 					echo "${category}/${package_name}${DL}${main}"
 				fi
@@ -125,7 +129,7 @@ main(){
 }
 
 export -f main get_main_min
-export WWWDIR PORTTREE SCRIPT_MODE DL
+export WWWDIR PORTTREE SCRIPT_MODE DL startdir
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
