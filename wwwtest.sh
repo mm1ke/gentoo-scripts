@@ -46,11 +46,11 @@ touch ${TMPCHECK}
 if ${SCRIPT_MODE}; then
 	rm -rf ${SITEDIR}/* && mkdir -p ${SITEDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 	filename="000-DATA-USAGE"
-	echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${SITEDIR}/${filename}.txt
-	echo "PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${SITEDIR}/special/301_slash_https_www_DATA-USAGE.txt
-	echo "REAL-HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; HOMEPAGE ; REAL-HOMEPAGE ; MAINTAINER" > ${SITEDIR}/special/301_redirections_DATA-USAGE.txt
+	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/${filename}.txt
+	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/special/301_slash_https_www_DATA-USAGE.txt
+	echo "REAL-HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/special/301_redirections_DATA-USAGE.txt
 	for _dir in maintainer package httpcode filter; do
-		echo "HTTP-CODE ; PACKAGE-CATEGORY ; PACKAGE-NAME ; EBUILD ; HOMEPAGE ; MAINTAINER" > ${SITEDIR}/sort-by-${_dir}/${filename}.txt
+		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/sort-by-${_dir}/${filename}.txt
 	done
 fi
 
