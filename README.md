@@ -17,27 +17,27 @@ All scripts are actually running once a day on a gentoo VM with following specs:
 * 8 GB-RAM
 
 Below are the estimated duration time of every script:
-* eapistats: **11min**
-* patchcheck: **~35sec**
-* patchtest: **8min**
-* simplechecks: **8min**
-* srctest: **2,5hour**
-* wwwtest: **1,5hour**
+* eapistats: **11 min**
+* patchcheck: **~35 sec**
+* patchtest: **8 min**
+* simplechecks: **8 min**
+* srctest: **2.5 hour**
+* wwwtest: **1.5 hour**
 
-As a side note, recently every script uses ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes it's basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
+As a side note, recently every script uses ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes its basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
 
 Script | old | new (parallel)
 ------|------|--------------
-eapistats | 30m | 11m
-patchcheck | ~50sec |  ~35sec
-patchtest | 15m | 8m
-simplechecks | 8m | 8m
-srctest | 11h | 2,5h
-wwwtest | 7,5h | 1,5h
+eapistats | 30 m | 11 m
+patchcheck | ~50 sec |  ~35 sec
+patchtest | 15 m | 8 m
+simplechecks | 8 m | 8 m
+srctest | 11 h | 2.5 h
+wwwtest | 7.5 h | 1.5 h
 
 ## patchtest.sh
 This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
-In order to improve it's finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations.
+In order to improve its finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations.
 Further more it also creates lists of possible Name variation in order to find patches which are written like following:
 
 `epatch foo-bar-{patch1,patch2,patch3}.patch`
