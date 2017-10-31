@@ -134,6 +134,9 @@ main(){
 			cn+=("${patchfile/${package_name}-${ebuild_version}/${p}}")
 			cn+=("${patchfile/${ebuild_version}/${pv}}")
 
+			local cn_name_vers="${patchfile/${package_name}/${pn}}"
+			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
+
 			# special naming
 			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=" ${ebuild} >/dev/null); then
 				local var_my_pn='${MY_PN}'
