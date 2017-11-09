@@ -24,7 +24,8 @@
 # simple scirpt to find broken websites
 
 SCRIPT_MODE=false
-WORKDIR="${HOME}/wwwtest/"
+WWWDIR="${HOME}/wwwtest/"
+WORKDIR="/tmp/wwwtest-${RANDOM}"
 PORTTREE="/usr/portage/"
 TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
@@ -33,7 +34,6 @@ DL='|'
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/wwwtest/"
-	WORKDIR="/tmp/wwwtest-${RANDOM}"
 fi
 
 cd ${PORTTREE}

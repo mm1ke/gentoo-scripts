@@ -27,13 +27,13 @@
 
 
 SCRIPT_MODE=false
-WORKDIR="${HOME}/simplechecks/"
+WWWDIR="${HOME}/simplechecks/"
+WORKDIR="/tmp/simplechecks-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	WORKDIR="/tmp/simplechecks-${RANDOM}"
 	WWWDIR="/var/www/gentoo.levelnine.at/simplechecks/"
 fi
 

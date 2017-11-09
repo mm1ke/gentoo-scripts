@@ -26,12 +26,12 @@
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage"
-WORKDIR="${HOME}/patchcheck/"
+WWWDIR="${HOME}/patchcheck/"
+WORKDIR="/tmp/patchcheck-${RANDOM}/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	WORKDIR="/tmp/patchcheck-${RANDOM}/"
 	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
 

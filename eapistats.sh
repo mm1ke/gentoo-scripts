@@ -25,13 +25,13 @@
 
 
 SCRIPT_MODE=false
-WORKDIR="${HOME}/eapistats/"
+WWWDIR="${HOME}/eapistats/"
+WORKDIR="/tmp/eapistats-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	WORKDIR="/tmp/eapistats-${RANDOM}"
 	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 fi
 

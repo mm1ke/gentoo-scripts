@@ -25,14 +25,14 @@
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
-WORKDIR="${HOME}/srctest/"
+WWWDIR="${HOME}/srctest/"
+WORKDIR="/tmp/srctest-${RANDOM}"
 TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
-	WORKDIR="/tmp/srctest-${RANDOM}"
 fi
 
 touch ${TMPCHECK}

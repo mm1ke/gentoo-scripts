@@ -27,13 +27,13 @@ DEBUG=false
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
-WORKDIR="${HOME}/patchtest/"
+WWWDIR="${HOME}/patchtest/"
+WORKDIR="/tmp/patchtest-${RANDOM}/"
 TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	WORKDIR="/tmp/patchtest-${RANDOM}/"
 	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
 fi
 
