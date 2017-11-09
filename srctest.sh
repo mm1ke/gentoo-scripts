@@ -25,20 +25,21 @@
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/srctest/"
+WORKDIR="${HOME}/srctest/"
 TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
+	WORKDIR="/tmp/srctest-${RANDOM}"
 fi
 
 touch ${TMPCHECK}
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
+${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
 
 usage() {
 	echo "You need at least one argument:"
@@ -102,8 +103,8 @@ main() {
 		local msg=${1}
 		local status=${2}
 		if ${SCRIPT_MODE}; then
-			echo "${msg}" >> "${WWWDIR}/full_${status}.txt"
-			echo "${status}${DL}${msg}" >> "${WWWDIR}/full.txt"
+			echo "${msg}" >> "${WORKDIR}/full_${status}.txt"
+			echo "${status}${DL}${msg}" >> "${WORKDIR}/full.txt"
 		else
 			echo "${status}${DL}${msg}"
 		fi
@@ -161,7 +162,7 @@ main() {
 }
 
 export -f main get_main_min
-export PORTTREE WWWDIR SCRIPT_MODE TMPCHECK DL
+export PORTTREE WORKDIR SCRIPT_MODE TMPCHECK DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -175,18 +176,19 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${WWWDIR}/full_not_available.txt| cut -d "${DL}" -f1|sort|uniq)"
+	f_packages="$(cat ${WORKDIR}/full_not_available.txt| cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
-		grep "${i}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WORKDIR}/sort-by-package/${f_cat}
+		grep "${i}" ${WORKDIR}/full_not_available.txt > ${WORKDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 
-	mkdir -p ${WWWDIR}/sort-by-maintainer/
+	mkdir -p ${WORKDIR}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WWWDIR}/full_not_available.txt |cut -d "${DL}" -f4|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${WWWDIR}/full_not_available.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${WORKDIR}/full_not_available.txt |cut -d "${DL}" -f4|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${WORKDIR}/full_not_available.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
+	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
