@@ -26,15 +26,16 @@
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage"
-WWWDIR="${HOME}/patchcheck/"
+WORKDIR="${HOME}/patchcheck/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
+	WORKDIR="/tmp/patchcheck-${RANDOM}/"
 	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
 
-${SCRIPT_MODE} && rm -rf ${WWWDIR}/*
+${SCRIPT_MODE} && rm -rf ${WORKDIR}/*
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 cd ${PORTTREE}
@@ -117,9 +118,9 @@ main(){
 					main="maintainer-needed@gentoo.org:"
 				fi
 				if ${SCRIPT_MODE}; then
-					mkdir -p ${WWWDIR}/sort-by-package/${category}
-					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WWWDIR}/sort-by-package/${category}/${package_name}.txt
-					echo -e "${category}/${package_name}${DL}${main}" >> ${WWWDIR}/full-with-maintainers.txt
+					mkdir -p ${WORKDIR}/sort-by-package/${category}
+					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WORKDIR}/sort-by-package/${category}/${package_name}.txt
+					echo -e "${category}/${package_name}${DL}${main}" >> ${WORKDIR}/full-with-maintainers.txt
 				else
 					echo "${category}/${package_name}${DL}${main}"
 				fi
@@ -129,7 +130,7 @@ main(){
 }
 
 export -f main get_main_min
-export WWWDIR PORTTREE SCRIPT_MODE DL startdir
+export WORKDIR PORTTREE SCRIPT_MODE DL startdir
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -142,8 +143,9 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	for a in $(cat ${WWWDIR}/full-with-maintainers.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		mkdir -p ${WWWDIR}/sort-by-maintainer/
-		grep "${a}" ${WWWDIR}/full-with-maintainers.txt > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${WORKDIR}/full-with-maintainers.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		mkdir -p ${WORKDIR}/sort-by-maintainer/
+		grep "${a}" ${WORKDIR}/full-with-maintainers.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
+	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
 fi
