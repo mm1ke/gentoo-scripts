@@ -41,11 +41,11 @@ cd ${PORTTREE}
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
+mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 
 # TODO:
 # Remove code below and point to a website (github) for the descripton
 if ${SCRIPT_MODE}; then
-	mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 	filename="000-DATA-USAGE"
 	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${filename}.txt
 	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_slash_https_www_DATA-USAGE.txt

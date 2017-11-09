@@ -37,6 +37,8 @@ fi
 
 cd ${PORTTREE}
 
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}
+
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -97,7 +99,6 @@ main() {
 	fi
 	
 	if ${SCRIPT_MODE}; then
-		mkdir -p /${WORKDIR}/
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/full.txt
 	else
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"

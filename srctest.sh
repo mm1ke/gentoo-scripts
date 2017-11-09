@@ -36,6 +36,7 @@ if [ "$(hostname)" = methusalix ]; then
 fi
 
 touch ${TMPCHECK}
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
 cd ${PORTTREE}
 
