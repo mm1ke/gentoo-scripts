@@ -25,18 +25,19 @@
 
 
 SCRIPT_MODE=false
-WWWDIR="${HOME}/eapistats/"
+WORKDIR="${HOME}/eapistats/"
 PORTTREE="/usr/portage/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
+	WORKDIR="/tmp/eapistats-${RANDOM}"
 	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 fi
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
+${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
 
 usage() {
 	echo "You need at least one argument:"
@@ -98,30 +99,30 @@ main() {
 	fi
 	
 	if ${SCRIPT_MODE}; then
-		mkdir -p /${WWWDIR}/
-		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WWWDIR}/full.txt
+		mkdir -p /${WORKDIR}/
+		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/full.txt
 	else
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 gen_sortings() {
-	for i in $(cut -c-1 ${WWWDIR}/full.txt|sort -u); do
-		mkdir -p ${WWWDIR}/${i}
-		grep ^${i}${DL} ${WWWDIR}/full.txt > ${WWWDIR}/${i}/EAPI${i}.txt
+	for i in $(cut -c-1 ${WORKDIR}/full.txt|sort -u); do
+		mkdir -p ${WORKDIR}/${i}
+		grep ^${i}${DL} ${WORKDIR}/full.txt > ${WORKDIR}/${i}/EAPI${i}.txt
 
 		# sort by packages
-		f_packages="$(cat ${WWWDIR}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
+		f_packages="$(cat ${WORKDIR}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
 		for u in ${f_packages}; do
 			f_cat="$(echo $u|cut -d'/' -f1)"
 			f_pak="$(echo $u|cut -d'/' -f2)"
-			mkdir -p ${WWWDIR}/${i}/sort-by-package/${f_cat}
-			grep "${u}" ${WWWDIR}/${i}/EAPI${i}.txt > ${WWWDIR}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
+			mkdir -p ${WORKDIR}/${i}/sort-by-package/${f_cat}
+			grep "${u}" ${WORKDIR}/${i}/EAPI${i}.txt > ${WORKDIR}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
 		done
 	
-		mkdir -p ${WWWDIR}/${i}/sort-by-maintainer/
-		for a in $(cat ${WWWDIR}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-			grep "${a}" ${WWWDIR}/${i}/EAPI${i}.txt > ${WWWDIR}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		mkdir -p ${WORKDIR}/${i}/sort-by-maintainer/
+		for a in $(cat ${WORKDIR}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+			grep "${a}" ${WORKDIR}/${i}/EAPI${i}.txt > ${WORKDIR}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 		done
 	done
 }
@@ -136,7 +137,7 @@ eapi_pre_check() {
 }
 
 export -f eapi_pre_check main get_main_min
-export SCRIPT_MODE WWWDIR PORTTREE DL
+export SCRIPT_MODE WORKDIR PORTTREE DL
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -148,4 +149,4 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel eapi_pre_check {}
 
-${SCRIPT_MODE} && gen_sortings
+${SCRIPT_MODE} && gen_sortings && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
