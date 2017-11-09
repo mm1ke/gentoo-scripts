@@ -27,12 +27,13 @@ DEBUG=false
 
 SCRIPT_MODE=false
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/patchtest/"
+WORKDIR="${HOME}/patchtest/"
 TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
+	WORKDIR="/tmp/patchtest-${RANDOM}/"
 	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
 fi
 
@@ -460,7 +461,7 @@ main(){
 }
 
 export -f main get_perm get_main_min
-export TMPFILE PORTTREE WWWDIR SCRIPT_MODE DEBUG DL startdir
+export TMPFILE PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir
 
 # Don't use parallel if DEBUG is enabled
 if ${DEBUG}; then
@@ -489,19 +490,21 @@ fi
 
 if ${SCRIPT_MODE}; then
 	# remove old data
-	rm -rf ${WWWDIR}/*
+	rm -rf ${WORKDIR}/*
 
 	f_packages="$(cat ${TMPFILE} | cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo ${i}|cut -d'/' -f1)"
 		f_pak="$(echo ${i}|cut -d'/' -f2)"
-		mkdir -p ${WWWDIR}/sort-by-package/${f_cat}
-		grep ${i} ${TMPFILE} > ${WWWDIR}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WORKDIR}/sort-by-package/${f_cat}
+		grep ${i} ${TMPFILE} > ${WORKDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 	for a in $(cat ${TMPFILE} |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		mkdir -p ${WWWDIR}/sort-by-maintainer/
-		grep "${a}" ${TMPFILE} > ${WWWDIR}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		mkdir -p ${WORKDIR}/sort-by-maintainer/
+		grep "${a}" ${TMPFILE} > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}| sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-	cp ${TMPFILE} ${WWWDIR}/full-with-maintainers.txt
+	cp ${TMPFILE} ${WORKDIR}/full-with-maintainers.txt
 	rm ${TMPFILE}
+
+	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
 fi
