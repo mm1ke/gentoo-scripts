@@ -27,18 +27,19 @@
 
 
 SCRIPT_MODE=false
-WWWDIR="${HOME}/simplechecks/"
+WORKDIR="${HOME}/simplechecks/"
 PORTTREE="/usr/portage/"
 DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
+	WORKDIR="/tmp/simplechecks-${RANDOM}"
 	WWWDIR="/var/www/gentoo.levelnine.at/simplechecks/"
 fi
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WWWDIR}/*
+${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
 
 usage() {
 	echo "You need at least one argument:"
@@ -99,8 +100,8 @@ main() {
 	fi
 
 	if ${SCRIPT_MODE}; then
-		mkdir -p /${WWWDIR}/${NAME}/
-		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WWWDIR}/${NAME}/${NAME}.txt
+		mkdir -p /${WORKDIR}/${NAME}/
+		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/${NAME}.txt
 	else
 		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
@@ -108,18 +109,18 @@ main() {
 
 gen_sortings() {
 	# sort by packages
-	f_packages="$(cat ${WWWDIR}/${NAME}/${NAME}.txt| cut -d "${DL}" -f1|sort|uniq)"
+	f_packages="$(cat ${WORKDIR}/${NAME}/${NAME}.txt| cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WWWDIR}/${NAME}/sort-by-package/${f_cat}
-		grep "${i}" ${WWWDIR}/${NAME}/${NAME}.txt > ${WWWDIR}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WORKDIR}/${NAME}/sort-by-package/${f_cat}
+		grep "${i}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 
-	mkdir -p ${WWWDIR}/${NAME}/sort-by-maintainer/
+	mkdir -p ${WORKDIR}/${NAME}/sort-by-maintainer/
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WWWDIR}/${NAME}/${NAME}.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${WWWDIR}/${NAME}/${NAME}.txt > ${WWWDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	for a in $(cat ${WORKDIR}/${NAME}/${NAME}.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+		grep "${a}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 }
 
@@ -165,7 +166,7 @@ pre_proxy_maint_check() {
 
 export -f main get_main_min
 export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check
-export PORTTREE WWWDIR SCRIPT_MODE DL
+export PORTTREE WORKDIR SCRIPT_MODE DL
 
 # find trailing whitespaces
 export NAME="trailing_whitespaces"
@@ -252,6 +253,8 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_proxy_maint_check {}
 ${SCRIPT_MODE} && gen_sortings
 
+
+${SCRIPT_MODE} && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
 
 #export NAME="einstall_in_eapi6"
 #find ./${level}  \( \
