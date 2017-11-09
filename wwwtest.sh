@@ -24,7 +24,7 @@
 # simple scirpt to find broken websites
 
 SCRIPT_MODE=false
-SITEDIR="${HOME}/wwwtest/"
+WORKDIR="${HOME}/wwwtest/"
 PORTTREE="/usr/portage/"
 TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
@@ -32,7 +32,8 @@ DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentoo.levelnine.at/wwwtest/"
+	WORKDIR="/var/www/gentoo.levelnine.at/wwwtest/"
+	WWWDIR="/tmp/wwwtest-${RANDOM}"
 fi
 
 cd ${PORTTREE}
@@ -44,13 +45,13 @@ touch ${TMPCHECK}
 # TODO:
 # Remove code below and point to a website (github) for the descripton
 if ${SCRIPT_MODE}; then
-	rm -rf ${SITEDIR}/* && mkdir -p ${SITEDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
+	rm -rf ${WORKDIR}/* && mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 	filename="000-DATA-USAGE"
-	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/${filename}.txt
-	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/special/301_slash_https_www_DATA-USAGE.txt
-	echo "REAL-HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/special/301_redirections_DATA-USAGE.txt
+	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${filename}.txt
+	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_slash_https_www_DATA-USAGE.txt
+	echo "REAL-HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_redirections_DATA-USAGE.txt
 	for _dir in maintainer package httpcode filter; do
-		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${SITEDIR}/sort-by-${_dir}/${filename}.txt
+		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/sort-by-${_dir}/${filename}.txt
 	done
 fi
 
@@ -126,7 +127,7 @@ END`
 		if [ ${_code} = 200 ]; then
 			found=true
 			$SCRIPT_MODE &&
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${SITEDIR}/special/301_slash_https_www.txt ||
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/special/301_slash_https_www.txt ||
 				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 			break
 		fi
@@ -135,7 +136,7 @@ END`
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${SCRIPT_MODE} &&
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${SITEDIR}/special/301_redirections.txt ||
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/special/301_redirections.txt ||
 			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 	fi
 }
@@ -211,7 +212,7 @@ main() {
 
 # for parallel execution
 export -f main get_main_min get_code 301check
-export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE SITEDIR DL
+export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -227,16 +228,16 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 if ${SCRIPT_MODE}; then
 	# sort after http codes
 	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
-		grep "^${i}" ${TMPFILE} > ${SITEDIR}/sort-by-httpcode/${i}.txt
+		grep "^${i}" ${TMPFILE} > ${WORKDIR}/sort-by-httpcode/${i}.txt
 	done
 
 	# copy full log
-	cp ${TMPFILE} ${SITEDIR}/full.txt
+	cp ${TMPFILE} ${WORKDIR}/full.txt
 
 	# special filters
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
 	for site in ${_filters[@]}; do
-		grep ${site} ${SITEDIR}/full.txt > ${SITEDIR}/sort-by-filter/${site}.txt
+		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}.txt
 	done
 
 	# copy full log, ignoring "good" codes
@@ -249,23 +250,24 @@ if ${SCRIPT_MODE}; then
 		/^400/d; \
 		/^503/d; \
 		" ${TMPFILE}
-	cp ${TMPFILE} ${SITEDIR}/full-filtered.txt
+	cp ${TMPFILE} ${WORKDIR}/full-filtered.txt
 
 	# sort by packages, ignoring "good" codes
 	f_packages="$(cat ${TMPFILE}| cut -d "${DL}" -f2 |sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo $i|cut -d'/' -f1)"
 		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${SITEDIR}/sort-by-package/${f_cat}
-		grep "${i}" ${TMPFILE} > ${SITEDIR}/sort-by-package/${f_cat}/${f_pak}.txt
+		mkdir -p ${WORKDIR}/sort-by-package/${f_cat}
+		grep "${i}" ${TMPFILE} > ${WORKDIR}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 
 	# sort by maintainer, ignoring "good" codes
 	for a in $(cat ${TMPFILE} |cut -d "${DL}" -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${TMPFILE} > ${SITEDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		grep "${a}" ${TMPFILE} > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 
 	# remove tmpfile
 	rm ${TMPFILE}
 fi
 rm ${TMPCHECK}
+${SCRIPT_MODE} && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
