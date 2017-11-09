@@ -489,9 +489,6 @@ else
 fi
 
 if ${SCRIPT_MODE}; then
-	# remove old data
-	rm -rf ${WORKDIR}/*
-
 	f_packages="$(cat ${TMPFILE} | cut -d "${DL}" -f1|sort|uniq)"
 	for i in ${f_packages}; do
 		f_cat="$(echo ${i}|cut -d'/' -f1)"
@@ -506,5 +503,7 @@ if ${SCRIPT_MODE}; then
 	cp ${TMPFILE} ${WORKDIR}/full-with-maintainers.txt
 	rm ${TMPFILE}
 
-	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
 fi

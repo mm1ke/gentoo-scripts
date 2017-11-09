@@ -39,8 +39,6 @@ touch ${TMPCHECK}
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
-
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -189,6 +187,8 @@ if ${SCRIPT_MODE}; then
 	for a in $(cat ${WORKDIR}/full_not_available.txt |cut -d "${DL}" -f4|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
 		grep "${a}" ${WORKDIR}/full_not_available.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}

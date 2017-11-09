@@ -37,8 +37,6 @@ fi
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
-
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -149,4 +147,10 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel eapi_pre_check {}
 
-${SCRIPT_MODE} && gen_sortings && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
+if ${SCRIPT_MODE}; then
+	gen_sortings
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
+fi
+

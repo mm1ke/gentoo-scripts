@@ -35,8 +35,6 @@ if [ "$(hostname)" = methusalix ]; then
 	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
 
-${SCRIPT_MODE} && rm -rf ${WORKDIR}/*
-
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 cd ${PORTTREE}
 
@@ -147,5 +145,7 @@ if ${SCRIPT_MODE}; then
 		mkdir -p ${WORKDIR}/sort-by-maintainer/
 		grep "${a}" ${WORKDIR}/full-with-maintainers.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
-	rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
 fi

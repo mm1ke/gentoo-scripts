@@ -32,8 +32,8 @@ DL='|'
 
 if [ "$(hostname)" = methusalix ]; then
 	SCRIPT_MODE=true
-	WORKDIR="/var/www/gentoo.levelnine.at/wwwtest/"
-	WWWDIR="/tmp/wwwtest-${RANDOM}"
+	WWWDIR="/var/www/gentoo.levelnine.at/wwwtest/"
+	WORKDIR="/tmp/wwwtest-${RANDOM}"
 fi
 
 cd ${PORTTREE}
@@ -45,7 +45,7 @@ touch ${TMPCHECK}
 # TODO:
 # Remove code below and point to a website (github) for the descripton
 if ${SCRIPT_MODE}; then
-	rm -rf ${WORKDIR}/* && mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
+	mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 	filename="000-DATA-USAGE"
 	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${filename}.txt
 	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_slash_https_www_DATA-USAGE.txt
@@ -268,6 +268,8 @@ if ${SCRIPT_MODE}; then
 
 	# remove tmpfile
 	rm ${TMPFILE}
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
-${SCRIPT_MODE} && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}

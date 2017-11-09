@@ -39,8 +39,6 @@ fi
 
 cd ${PORTTREE}
 
-${SCRIPT_MODE} && rm -rf /${WORKDIR}/*
-
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -254,7 +252,11 @@ find ./${level}  \( \
 ${SCRIPT_MODE} && gen_sortings
 
 
-${SCRIPT_MODE} && rm -rf ${WWWDIR}/* && cp -r ${WORKDIR}/* ${WWWDIR}/ && rm -rf ${WORKDIR}
+if ${SCRIPT_MODE}; then
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
+fi
 
 #export NAME="einstall_in_eapi6"
 #find ./${level}  \( \
