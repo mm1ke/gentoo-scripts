@@ -30,7 +30,7 @@ WORKDIR="/tmp/eapistats-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
-if [ "$(hostname)" = methusalix ]; then
+if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 fi

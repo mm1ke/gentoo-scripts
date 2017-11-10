@@ -32,7 +32,7 @@ WORKDIR="/tmp/patchtest-${RANDOM}/"
 TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
 DL='|'
 
-if [ "$(hostname)" = methusalix ]; then
+if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
 fi

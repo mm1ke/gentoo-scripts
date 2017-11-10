@@ -30,7 +30,7 @@ WWWDIR="${HOME}/patchcheck/"
 WORKDIR="/tmp/patchcheck-${RANDOM}/"
 DL='|'
 
-if [ "$(hostname)" = methusalix ]; then
+if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
