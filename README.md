@@ -1,13 +1,6 @@
 # Gentoo Scripts
 
-This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. At the moment following scripts are available:
-
-* patchtest.sh
-* patchcheck.sh
-* wwwtest.sh
-* srctest.sh
-* simplechecks.sh
-* eapistats.sh
+This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. The results of the script can be seen on http://gentoo.levelnine.at/
 
 ## Duration:
 
