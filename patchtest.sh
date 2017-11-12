@@ -139,17 +139,24 @@ main(){
 			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
 
 			# special naming
-			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=" ${ebuild} >/dev/null); then
+			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=" ${ebuild} >/dev/null); then
+				# set variables
 				local var_my_pn='${MY_PN}'
 				local var_my_p='${MY_P}'
 				local var_my_pv='${MY_PV}'
+				local var_mod_ver='${MODULE_VERSION}'
+				local var_dist_ver='${DIST_VERSION}'
 
 				local package_name_ver="${package_name}-${ebuild_version}"
 
+				# get the variables from the ebuilds
 				my_pn_name="$(grep ^MY_PN\= ${ebuild})"
 				my_p_name="$(grep ^MY_P\= ${ebuild})"
 				my_pv_name="$(grep ^MY_PV\= ${ebuild})"
+				my_mod_ver="$(grep ^MODULE_VERSION\= ${ebuild})"
+				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild})"
 
+				# i dont know
 				[ -n "${my_pn_name}" ] && \
 					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
 				[ -n "${my_pv_name}" ] && \
@@ -157,11 +164,30 @@ main(){
 				[ -n "${my_p_name}" ] && \
 					eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")" >/dev/null 2>&1
 
-				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name"
+				[ -n "${my_mod_ver}" ] && \
+					eval my_mod_ver="$(echo ${my_mod_ver:15})" >/dev/null 2>&1
+				[ -n "${my_dist_ver}" ] && \
+					eval my_dist_ver="$(echo ${my_dist_ver:13})" >/dev/null 2>&1
+
+				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver"
 
 				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
 				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
 				[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
+
+				if [ -n "${my_mod_ver}" ]; then
+					cn+=("${patchfile/${my_mod_ver}/${var_mod_ver}}")
+					n1="${patchfile/${my_mod_ver}/${var_mod_ver}}"
+					cn+=("${n1/${package_name}/${pn}}")
+				fi
+
+				if [ -n "${my_dist_ver}" ]; then
+					cn+=("${patchfile/${my_dist_ver}/${var_dist_ver}}")
+					n2="${patchfile/${my_dist_ver}/${var_dist_ver}}"
+					cn+=("${n2/${package_name}/${pn}}")
+				fi
+
+
 			fi
 
 			# add special naming if there is a revision
