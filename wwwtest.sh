@@ -242,7 +242,7 @@ if ${SCRIPT_MODE}; then
 
 	# find different homepages in same packages
 	mkdir -p ${WORKDIR}/special/unsync-homepages/
-	for i in $(cat ${WORKDIR}/full.txt | cud -d'|' -f2|sort -u); do
+	for i in $(cat ${WORKDIR}/full.txt | cut -d'|' -f2|sort -u); do
 		hp_lines="$(grep "HOMEPAGE=" /usr/portage/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 		if [ "${hp_lines}" -gt 1 ]; then
 			mkdir -p ${WORKDIR}/special/unsync-homepages/${i%%/*}
