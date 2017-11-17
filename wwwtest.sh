@@ -235,7 +235,7 @@ if ${SCRIPT_MODE}; then
 	cp ${TMPFILE} ${WORKDIR}/full.txt
 
 	# special filters
-	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org')
+	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com')
 	for site in ${_filters[@]}; do
 		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}.txt
 	done
