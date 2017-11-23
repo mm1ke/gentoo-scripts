@@ -247,6 +247,7 @@ if ${SCRIPT_MODE}; then
 		if [ "${hp_lines}" -gt 1 ]; then
 			mkdir -p ${WORKDIR}/special/unsync-homepages/${i%%/*}
 			grep "|${i}|" ${WORKDIR}/full.txt > ${WORKDIR}/special/unsync-homepages/${i}.txt
+			grep "|${i}|" ${WORKDIR}/full.txt |head -n1| cut -d'|' -f2,5  >> ${WORKDIR}/special/unsync-homepages/full.txt
 		fi
 	done
 
