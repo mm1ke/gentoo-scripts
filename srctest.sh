@@ -91,7 +91,7 @@ main() {
 	get_status() {
 		local uri="${1}"
 		local code="${2}"
-		if $(timeout 15 wget -T 10 -S --spider ${uri} 2>&1 | grep "${code}" >/dev/null); then
+		if $(timeout 15 wget -T 10 -S --spider ${uri} 2>&1 | grep -E "${code}" >/dev/null); then
 			echo true
 		else
 			echo false
@@ -115,8 +115,9 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local md5portage=false
 
-	code_available='HTTP/1.1 200 OK'
-	maybe_available='HTTP/1.1 403 Forbidden'
+#	code_available='HTTP/1.0 200 OK|HTTP/1.1 200 OK'
+	code_available='Remote file exists.'
+	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
 
 	if [ -z "${maintainer}" ]; then
 			maintainer="maintainer-needed@gentoo.org:"
