@@ -263,7 +263,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* fdo-mime" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND RESTRICT SRC_URI DOCS"
+_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 for var in ${_varibales}; do
 	export NAME="leading_trailing_whitespace_${var}"
 	find ./${level}  \( \
