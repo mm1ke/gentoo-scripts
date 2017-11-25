@@ -97,7 +97,7 @@ main(){
 	if [ -e ${startdir}/whitelist ]; then
 		source ${startdir}/whitelist
 		for i in ${white_list[@]}; do
-			whitelist+=("$(echo ${i}|cut -d'/' --output-delimiter='/' -f2,3)")
+			whitelist+=("$(echo ${i}|cut -d';' -f1)")
 		done
 	else
 		whitelist=()
@@ -106,7 +106,7 @@ main(){
 	mapfile -t whitelist < <(printf '%s\n' "${whitelist[@]}"|sort -u)
 
 	local eclasses="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
-
+	
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then

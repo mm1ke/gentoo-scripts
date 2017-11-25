@@ -320,41 +320,75 @@ main(){
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
-		if [ -e ${startdir}/whitelist ]; then
-			source ${startdir}/whitelist
-		else
-			white_list=()
-		fi
+		
+		# white list checking
+		white_check(){
+			local pfile=${1}
+			if [ -e ${startdir}/whitelist ]; then
+				source ${startdir}/whitelist
+			else
+				echo false
+			fi
+
+			if $(echo ${white_list[@]} | grep "${package:2};${pfile}" >/dev/null); then
+				for white in ${white_list[@]}; do
+					local cat_pak="$(echo ${white}|cut -d';' -f1)"
+					local white_file="$(echo ${white}|cut -d';' -f2)"
+					local white_ebuild="$(echo ${white}|cut -d';' -f3)"
+					if [ "${package:2};${pfile}" = "${cat_pak};${white_file}" ]; then
+						if [ "${white_ebuild}" = "*" ]; then
+							echo true
+							break
+						else
+							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
+								if [ -e ${PORTTREE}/${package}/${wbuild} ]; then
+									echo true
+									break 2
+								fi
+							done
+						fi
+						echo false
+						break
+					fi
+				done
+			else
+				echo false
+			fi
+
+		}
 
 		for file in ${fullpath}/files/*; do
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
-				# reduce false positive by making some pre-checks
-				# check for vdr-plugin-2 eclass which installs rc-addon.sh files
-				if [ "${file}" = "rc-addon.sh" ]; then
-					${prechecks} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
-				# check for vdr-plugin-2 eclass which installs confd files if exists
-				elif [ "${file}" = "confd" ]; then
-					${prechecks} && $(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-				# check for games-mods eclass which install server.cfg files
-				elif [ "${file}" = "server.cfg" ]; then
-					${prechecks} && $(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
-				# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
-				elif [ "${file##*.}" = "conf" ]; then
-					${prechecks} && $(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
-						$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-				# check for elisp eclass which install el files if a SITEFILE is set
-				elif [ "${file##*.}" = "el" ]; then
-					${prechecks} && $(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
-						$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-				# ignoring README.gentoo files
-				elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
-					${prechecks} || patch_list+=("${file}")
-				# ignore whitelist
-				elif $(echo ${white_list[@]} | grep "${package}/files/${file}" >/dev/null); then
-					${prechecks} || patch_list+=("${file}")
-				else
-					patch_list+=("${file}")
+				wlr="$(white_check ${file})"
+
+				if ! ${wlr}; then
+					if ${prechecks}; then
+						if [ "${file}" = "rc-addon.sh" ]; then
+							$(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+						# check for vdr-plugin-2 eclass which installs confd files if exists
+						elif [ "${file}" = "confd" ]; then
+							$(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+						# check for games-mods eclass which install server.cfg files
+						elif [ "${file}" = "server.cfg" ]; then
+							$(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+						# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
+						elif [ "${file##*.}" = "conf" ]; then
+							$(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
+								$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+						# check for elisp eclass which install el files if a SITEFILE is set
+						elif [ "${file##*.}" = "el" ]; then
+							$(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
+								$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+						# ignoring README.gentoo files
+						elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
+							break
+						else
+							patch_list+=("${file}")
+						fi
+					else
+						patch_list+=("${file}")
+					fi
 				fi
 			fi
 		done
@@ -489,7 +523,7 @@ main(){
 export -f main get_perm get_main_min
 export TMPFILE PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir
 
-# Don't use parallel if DEBUG is enabled
+# Dont use parallel if DEBUG is enabled
 if ${DEBUG}; then
 	find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 		-path ./scripts/\* -o \
