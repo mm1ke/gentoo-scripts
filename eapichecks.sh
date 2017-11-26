@@ -104,12 +104,15 @@ main() {
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
-
 	local name="${filename%.*}"
-	local ebuild_eapi="$(grep ^EAPI ${full_package} |tr -d '"'|cut -d'=' -f2|cut -c1-2)"
+
+	if ! $(cat ${full_package} | grep ^EAPI >/dev/null ); then
+		local ebuild_eapi="0"
+	else
+		local ebuild_eapi="$(grep ^EAPI ${full_package} |tr -d '"'|cut -d'=' -f2|cut -c1-2)"
+	fi
 
 	local date_today="$(date '+%s' -d today)"
-
 	local package_path="/${PORTTREE}/${category}/${package}"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
@@ -126,16 +129,11 @@ main() {
 		org_name=${name}
 	fi
 
-	local found=false
-
 	# check for maximal 10 reversion
 	for i in $(seq $start 10); do
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
 			found_ebuild="${package_path}/${name}-r${i}.ebuild"
 			if [ "$(grep ^EAPI ${found_ebuild} |tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-				found=true
-
-				
 				if [ "$(grep ^KEYWORDS ${package_path}/${org_name}.ebuild)" = "$(grep ^KEYWORDS ${package_path}/${name}-r${i}.ebuild)" ]; then
 					output "${ebuild_eapi}${DL}$(get_age "${org_name}")${category}/${package}${DL}${org_name}${DL}6${DL}$(get_age "${name}-r${i}")${category}/${name}-r${i}${DL}${maintainer}" "bump_matchingkeywords"
 
@@ -146,16 +144,25 @@ main() {
 			fi
 		fi
 	done
-	if ! ${found}; then
-		if ! [ ${ebuild_eapi} = 5 ]; then
-			other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
-			output "${ebuild_eapi}${DL}$(get_age "${org_name}")$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" "bump_needed"
-		fi
+	if ! [ ${ebuild_eapi} = 5 ]; then
+		other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
+		[ -z "${other_ebuild_eapi}" ] && other_ebuild_eapi=0
+		output "${ebuild_eapi}${DL}$(get_age "${org_name}")$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" "bump_needed"
 	fi
 }
 
 export -f main output get_age
 export PORTTREE WORKDIR SCRIPT_MODE DL git_enable gitdir
+
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L "^EAPI" {} \; | parallel main {}
 
 for e in $(seq 1 5); do
 	find ./${level}  \( \
@@ -176,7 +183,7 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${git_enable} && echo 8 || echo 6) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
 	gen_sort_pak ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${git_enable} && echo 3 || echo 2) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
 
-	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 8 || echo 5) ${WORKDIR}/bump_matchingkeywords/ ${DL}
+	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 8 || echo 6) ${WORKDIR}/bump_matchingkeywords/ ${DL}
 	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 3 || echo 2) ${WORKDIR}/bump_matchingkeywords/ ${DL}
 
 	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
