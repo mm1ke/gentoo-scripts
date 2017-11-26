@@ -31,6 +31,14 @@ TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
 DL='|'
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/wwwtest/"
@@ -42,6 +50,7 @@ cd ${PORTTREE}
 # the missing file
 touch ${TMPCHECK}
 mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
+mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
 
 # TODO:
 # Remove code below and point to a website (github) for the descripton
@@ -51,20 +60,9 @@ if ${SCRIPT_MODE}; then
 	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_slash_https_www_DATA-USAGE.txt
 	echo "REAL-HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_redirections_DATA-USAGE.txt
 	for _dir in maintainer package httpcode filter; do
-		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/sort-by-${_dir}/${filename}.txt
+		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${_dir}-${filename}.txt
 	done
 fi
-
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
 
 if [ -z "${1}" ]; then
 	usage
@@ -86,21 +84,6 @@ else
 		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
-
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
 
 301check() {
 	local hp=${1}
@@ -126,8 +109,8 @@ END`
 		local _code="$(get_code ${sitemut})"
 		if [ ${_code} = 200 ]; then
 			found=true
-			$SCRIPT_MODE &&
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/special/301_slash_https_www.txt ||
+			${SCRIPT_MODE} &&
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt ||
 				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 			break
 		fi
@@ -136,7 +119,7 @@ END`
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${SCRIPT_MODE} &&
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/special/301_redirections.txt ||
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/special/301_redirections/301_redirections.txt ||
 			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 	fi
 }
@@ -211,7 +194,7 @@ main() {
 }
 
 # for parallel execution
-export -f main get_main_min get_code 301check
+export -f main get_code 301check
 export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
@@ -233,24 +216,6 @@ if ${SCRIPT_MODE}; then
 
 	# copy full log
 	cp ${TMPFILE} ${WORKDIR}/full.txt
-
-	# special filters
-	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
-	for site in ${_filters[@]}; do
-		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}.txt
-	done
-
-	# find different homepages in same packages
-	mkdir -p ${WORKDIR}/special/unsync-homepages/
-	for i in $(cat ${WORKDIR}/full.txt | cut -d'|' -f2|sort -u); do
-		hp_lines="$(grep "HOMEPAGE=" /usr/portage/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
-		if [ "${hp_lines}" -gt 1 ]; then
-			mkdir -p ${WORKDIR}/special/unsync-homepages/${i%%/*}
-			grep "|${i}|" ${WORKDIR}/full.txt > ${WORKDIR}/special/unsync-homepages/${i}.txt
-			grep "|${i}|" ${WORKDIR}/full.txt |head -n1| cut -d'|' -f2,5  >> ${WORKDIR}/special/unsync-homepages/full.txt
-		fi
-	done
-
 	# copy full log, ignoring "good" codes
 	sed -i "/^VAR/d; \
 		/^FTP/d; \
@@ -263,19 +228,40 @@ if ${SCRIPT_MODE}; then
 		" ${TMPFILE}
 	cp ${TMPFILE} ${WORKDIR}/full-filtered.txt
 
-	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${TMPFILE}| cut -d "${DL}" -f2 |sort|uniq)"
-	for i in ${f_packages}; do
-		f_cat="$(echo $i|cut -d'/' -f1)"
-		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WORKDIR}/sort-by-package/${f_cat}
-		grep "${i}" ${TMPFILE} > ${WORKDIR}/sort-by-package/${f_cat}/${f_pak}.txt
+	# special filters
+	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
+	for site in ${_filters[@]}; do
+		mkdir -p ${WORKDIR}/sort-by-filter/${site}
+		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}/${site}.txt
+		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
+		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
 	done
 
-	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${TMPFILE} |cut -d "${DL}" -f5|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${TMPFILE} > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	# find different homepages in same packages
+	for i in $(cat ${WORKDIR}/full.txt | cut -d'|' -f2|sort -u); do
+		hp_lines="$(grep "HOMEPAGE=" /usr/portage/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
+		if [ "${hp_lines}" -gt 1 ]; then
+			mkdir -p ${WORKDIR}/special/unsync-homepages/sort-by-package/${i%%/*}
+			grep "|${i}|" ${WORKDIR}/full.txt > ${WORKDIR}/special/unsync-homepages/sort-by-package/${i}.txt
+			grep "|${i}|" ${WORKDIR}/full.txt |head -n1| cut -d'|' -f2,5  >> ${WORKDIR}/special/unsync-homepages/full.txt
+		fi
 	done
+	# sort unsync homepages by maintainer
+	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR}/special/unsync-homepages/ ${DL}
+
+	# create sortings for 301_redirections
+	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR}/special/301_redirections/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR}/special/301_redirections/ ${DL}
+
+	# create sortings for 301_slash_https_www
+	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR}/special/301_slash_https_www/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR}/special/301_slash_https_www/ ${DL}
+
+	# sort by packages, ignoring "good" codes
+	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR} ${DL}
+
+	# sort by maintainer, ignoring "good" codes
+	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR} ${DL}
 
 	# remove tmpfile
 	rm ${TMPFILE}
