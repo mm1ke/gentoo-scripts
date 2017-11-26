@@ -24,8 +24,6 @@
 # This scripts checks eapi usage. it looks for ebuils with old eapi 
 # and checks if there is a revision/version bump with a newer eapi
 
-
-
 SCRIPT_MODE=false
 WWWDIR="${HOME}/eapichecks/"
 WORKDIR="/tmp/eapichecks-${RANDOM}"
@@ -37,18 +35,15 @@ if [ "$(hostname)" = s6 ]; then
 	WWWDIR="/var/www/gentoo.levelnine.at/eapichecks/"
 fi
 
-cd ${PORTTREE}
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
 
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
+cd ${PORTTREE}
 
 if [ -z "${1}" ]; then
 	usage
@@ -71,21 +66,6 @@ else
 	fi
 fi
 
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
-
 main() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -103,23 +83,6 @@ main() {
 	else
 		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
-}
-
-gen_sortings() {
-	# sort by packages
-	f_packages="$(cat ${WORKDIR}/${NAME}/${NAME}.txt| cut -d "${DL}" -f1|sort|uniq)"
-	for i in ${f_packages}; do
-		f_cat="$(echo $i|cut -d'/' -f1)"
-		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WORKDIR}/${NAME}/sort-by-package/${f_cat}
-		grep "${i}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
-	done
-
-	mkdir -p ${WORKDIR}/${NAME}/sort-by-maintainer/
-	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WORKDIR}/${NAME}/${NAME}.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
 }
 
 pre_eapi_check() {
@@ -180,15 +143,11 @@ pre_eapi_check() {
 			echo "${ebuild_eapi}|${category}/$org_name|needs a bump"
 		fi
 	fi
-
 }
 
 export -f main get_main_min
 export -f pre_eapi_check
 export PORTTREE WORKDIR SCRIPT_MODE DL
-
-${SCRIPT_MODE} && gen_sortings
-
 
 export NAME="quickbump"
 for e in $(seq 1 5); do
@@ -203,4 +162,7 @@ for e in $(seq 1 5); do
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^EAPI.*${e}" {} \; | parallel pre_eapi_check {}
 done
 
-${SCRIPT_MODE} && gen_sortings
+#if ${SCRIPT_MODE}; then
+#	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR}/special/unsync-homepages/ ${DL}
+#	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR}/special/301_redirections/ ${DL}
+#fi
