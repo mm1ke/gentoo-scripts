@@ -180,7 +180,7 @@ find ./${level}  \( \
 ${SCRIPT_MODE} && gen_sortings
 
 export NAME="mixed_indentation"
-find ./${level}  \( \
+find ./${level} -maxdepth 1 \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
