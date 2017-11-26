@@ -35,20 +35,17 @@ if [ "$(hostname)" = s6 ]; then
 	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 fi
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 cd ${PORTTREE}
 
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}
-
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
 
 if [ -z "${1}" ]; then
 	usage
@@ -70,21 +67,6 @@ else
 		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
-
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
 
 main() {
 	local full_package=${1}
