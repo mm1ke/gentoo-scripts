@@ -43,6 +43,14 @@ else
 	exit 1
 fi
 
+gitdir="/mnt/data/gentoo/"
+if [ -e ${gitdir} ] && [ -n "${gitdir}" ]; then
+	git_enable=true
+else
+	git_enable=false
+fi
+
+
 cd ${PORTTREE}
 
 if [ -z "${1}" ]; then
@@ -66,26 +74,32 @@ else
 	fi
 fi
 
-main() {
-	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package="$(echo ${full_package}|cut -d'/' -f3)"
-	local filename="$(echo ${full_package}|cut -d'/' -f4)"
-
-	local maintainer="$(get_main_min "${category}/${package}")"
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
+output() {
+	local text="${1}"
+	local type="${2}"
 
 	if ${SCRIPT_MODE}; then
-		mkdir -p /${WORKDIR}/${NAME}/
-		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/${NAME}.txt
+		mkdir -p /${WORKDIR}/${type}/
+		echo "${text}" >> /${WORKDIR}/${type}/full.txt
 	else
-		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${text}${DL}${type}"
 	fi
 }
 
-pre_eapi_check() {
+get_age() {
+
+	file_age=${1}
+	if ${git_enable}; then
+		age_file="$(expr \( "${date_today}" - \
+			"$(date '+%s' -d $(git -C ${gitdir} log --format="format:%ci" --name-only --diff-filter=A ${gitdir}/${category}/${package}/${file_age}.ebuild \
+			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)${DL}"
+		echo "${age_file}"
+	else
+		echo ""
+	fi
+}
+
+main() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -94,10 +108,14 @@ pre_eapi_check() {
 	local name="${filename%.*}"
 	local ebuild_eapi="$(grep ^EAPI ${full_package} |tr -d '"'|cut -d'=' -f2|cut -c1-2)"
 
-	local gitdir="/mnt/data/gentoo/"
 	local date_today="$(date '+%s' -d today)"
 
 	local package_path="/${PORTTREE}/${category}/${package}"
+
+	local maintainer="$(get_main_min "${category}/${package}")"
+	if [ -z "${maintainer}" ]; then
+			maintainer="maintainer-needed@gentoo.org:"
+	fi
 
 	if [ "${name: -3}" = "-r${name: -1}" ]; then
 		start=$(expr ${name: -1} + 1)
@@ -108,48 +126,37 @@ pre_eapi_check() {
 		org_name=${name}
 	fi
 
+	local found=false
+
+	# check for maximal 10 reversion
 	for i in $(seq $start 10); do
-		if [ -e ${package_path}/${name}-r$i.ebuild ]; then
-			found_ebuild="${package_path}/${name}-r$i.ebuild"
+		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
+			found_ebuild="${package_path}/${name}-r${i}.ebuild"
 			if [ "$(grep ^EAPI ${found_ebuild} |tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+				found=true
 
-				if [ -e ${gitdir} ]; then
-					age_file1=$(expr \( "${date_today}" - \
-						"$(date '+%s' -d $(git -C ${gitdir} log --format="format:%ci" --name-only --diff-filter=A ${gitdir}/${category}/${package}/${org_name}.ebuild \
-						| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)
-					age_file2=$(expr \( "${date_today}" - \
-						"$(date '+%s' -d $(git -C ${gitdir} log --format="format:%ci" --name-only --diff-filter=A ${gitdir}/${category}/${package}/${name}-r$i.ebuild \
-						| head -1|cut -d' ' -f1) 2>/dev/null)" \) / 86400 2>/dev/null)
-				else
-					age_file1="NULL"
-					age_file2="NULL"
-				fi
-
-				if [ "$(grep ^KEYWORDS ${package_path}/${org_name}.ebuild)" = "$(grep ^KEYWORDS ${package_path}/${name}-r$i.ebuild)" ]; then
-#					echo "${category}/${org_name} (EAPI:${ebuild_eapi} / AGE:${age_file1}) --> ${category}/${name}-r$i (EAPI:6 / AGE:${age_file2})"
-					echo "${ebuild_eapi}|${age_file1}|${category}/${org_name}|6|${age_file2}|${category}/${name}-r$i"
+				
+				if [ "$(grep ^KEYWORDS ${package_path}/${org_name}.ebuild)" = "$(grep ^KEYWORDS ${package_path}/${name}-r${i}.ebuild)" ]; then
+					output "${ebuild_eapi}${DL}$(get_age "${org_name}")${category}/${package}${DL}${org_name}${DL}6${DL}$(get_age "${name}-r${i}")${category}/${name}-r${i}${DL}${maintainer}" "bump_matchingkeywords"
 
 				else
-#					echo "${category}/${org_name} (EAPI:${ebuild_eapi} / AGE:${age_file1}) --keywordsbump-> ${category}/${name}-r$i (EAPI:6 / AGE:${age_file2})"
-					echo "${ebuild_eapi}|${age_file1}|${category}/${org_name}|6|${age_file2}|${category}/${name}-r$i|nonmatchingkeyword"
-
+					output "${ebuild_eapi}${DL}$(get_age "${org_name}")${category}/${package}${DL}${org_name}${DL}6${DL}$(get_age "${name}-r${i}")${category}/${name}-r${i}${DL}${maintainer}" "bump_nonmatchingkeyword"
 				fi
 				break 2
 			fi
 		fi
 	done
-	if [ $i = 10 ]; then
+	if ! ${found}; then
 		if ! [ ${ebuild_eapi} = 5 ]; then
-			echo "${ebuild_eapi}|${category}/$org_name|needs a bump"
+			other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
+			output "${ebuild_eapi}${DL}$(get_age "${org_name}")$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" "bump_needed"
 		fi
 	fi
 }
 
-export -f main get_main_min
-export -f pre_eapi_check
-export PORTTREE WORKDIR SCRIPT_MODE DL
+export -f main output get_age
+export PORTTREE WORKDIR SCRIPT_MODE DL git_enable gitdir
 
-export NAME="quickbump"
 for e in $(seq 1 5); do
 	find ./${level}  \( \
 		-path ./scripts/\* -o \
@@ -159,10 +166,20 @@ for e in $(seq 1 5); do
 		-path ./distfiles/\* -o \
 		-path ./metadata/\* -o \
 		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^EAPI.*${e}" {} \; | parallel pre_eapi_check {}
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^EAPI.*${e}" {} \; | parallel main {}
 done
 
-#if ${SCRIPT_MODE}; then
-#	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR}/special/unsync-homepages/ ${DL}
-#	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR}/special/301_redirections/ ${DL}
-#fi
+if ${SCRIPT_MODE}; then
+	gen_sort_main ${WORKDIR}/bump_needed/full.txt $(${git_enable} && echo 6 || echo 5) ${WORKDIR}/bump_needed/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_needed/full.txt $(${git_enable} && echo 4 || echo 3) ${WORKDIR}/bump_needed/ ${DL}
+
+	gen_sort_main ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${git_enable} && echo 8 || echo 6) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${git_enable} && echo 3 || echo 2) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
+
+	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 8 || echo 5) ${WORKDIR}/bump_matchingkeywords/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 3 || echo 2) ${WORKDIR}/bump_matchingkeywords/ ${DL}
+
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
+fi
