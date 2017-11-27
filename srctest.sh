@@ -91,7 +91,7 @@ main() {
 	get_status() {
 		local uri="${1}"
 		local code="${2}"
-		if $(timeout 15 wget -T 10 -S --spider ${uri} 2>&1 | grep -E "${code}" >/dev/null); then
+		if $(timeout 15 wget -T 10 --no-check-certificate -S --spider ${uri} 2>&1 | grep -E "${code}" >/dev/null); then
 			echo true
 		else
 			echo false
