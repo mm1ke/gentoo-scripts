@@ -89,4 +89,5 @@ white_list=(
 	"www-apps/webdavcgi;postinstall-webdavwrapper-en.txt;webdavcgi-0.8.3.ebuild"
 	"www-apps/webdavcgi;webdav-0.8.conf;webdavcgi-0.8.4.ebuild"
 	"www-apps/webdavcgi;webdav-1.1.conf;webdavcgi-1.1.1.ebuild"
+	"net-misc/asterisk-rate_engine;rate-engine-0.5.4-astcfg.diff;asterisk-rate_engine-0.5.4.ebuild"
 )
