@@ -47,7 +47,16 @@ _dirs_to_check="patchcheck \
 	simplechecks/proxy-maint-check \
 	simplechecks/trailing_whitespaces \
 	srctest \
-	wwwtest"
+	wwwtest \
+	wwwtest/special/unsync-homepages \
+	wwwtest/sort-by-filter/berlios.de \
+	wwwtest/sort-by-filter/code.google.com \
+	wwwtest/sort-by-filter/codehaus.org \
+	wwwtest/sort-by-filter/fedorahosted.org \
+	wwwtest/sort-by-filter/freecode.com \
+	wwwtest/sort-by-filter/freshmeat.net \
+	wwwtest/sort-by-filter/gitorious.org \
+	wwwtest/sort-by-filter/gna.org"
 
 mkdir -p ${WORKDIR}/full-sort-by-{package,maintainer}
 
