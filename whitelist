@@ -152,7 +152,7 @@ white_list=(
 	"sys-fs/owfs;owftpd.initd-r1;owfs-3.1_p4.ebuild"
 	"sys-fs/owfs;owhttpd.confd;owfs-3.1_p4.ebuild"
 	"sys-fs/owfs;owhttpd.initd-r1;owfs-3.1_p4.ebuild"
-	"x11-misc/bbcd;bbcd-0.3.1_0.3.1a.diff;bbcd-0.3.1-r2.ebuild
+	"x11-misc/bbcd;bbcd-0.3.1_0.3.1a.diff;bbcd-0.3.1-r2.ebuild"
 	"sys-power/phc-intel;phc-intel-0.3.2-rev21-trailing-space-3.10.patch;phc-intel-0.3.2.12.21.ebuild"
 	"sys-power/phc-intel;phc-intel-0.3.2-rev21-trailing-space-3.11.patch;phc-intel-0.3.2.12.21.ebuild"
 	"sys-power/phc-intel;phc-intel-0.3.2-rev21-trailing-space-3.12.patch;phc-intel-0.3.2.12.21.ebuild"
