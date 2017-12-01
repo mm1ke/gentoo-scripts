@@ -32,6 +32,14 @@ WORKDIR="/tmp/simplechecks-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/simplechecks/"
@@ -71,21 +79,6 @@ else
 	fi
 fi
 
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
-
 main() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -107,19 +100,9 @@ main() {
 
 gen_sortings() {
 	# sort by packages
-	f_packages="$(cat ${WORKDIR}/${NAME}/${NAME}.txt| cut -d "${DL}" -f1|sort|uniq)"
-	for i in ${f_packages}; do
-		f_cat="$(echo $i|cut -d'/' -f1)"
-		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WORKDIR}/${NAME}/sort-by-package/${f_cat}
-		grep "${i}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-package/${f_cat}/${f_pak}.txt
-	done
-
-	mkdir -p ${WORKDIR}/${NAME}/sort-by-maintainer/
+	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR}/${NAME}/ ${DL}
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WORKDIR}/${NAME}/${NAME}.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${WORKDIR}/${NAME}/${NAME}.txt > ${WORKDIR}/${NAME}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
+	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
 }
 
 pre_check_mixed_indentation() {
@@ -160,7 +143,6 @@ pre_proxy_maint_check() {
 
 	${ok} || main ${1}
 }
-
 
 export -f main get_main_min
 export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check
@@ -278,50 +260,4 @@ for var in ${_varibales}; do
 	${SCRIPT_MODE} && gen_sortings
 done
 
-
-if ${SCRIPT_MODE}; then
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
-fi
-
-#export NAME="einstall_in_eapi6"
-#find ./${level}  \( \
-#	-path ./scripts/\* -o \
-#	-path ./profiles/\* -o \
-#	-path ./packages/\* -o \
-#	-path ./licenses/\* -o \
-#	-path ./distfiles/\* -o \
-#	-path ./metadata/\* -o \
-#	-path ./eclass/\* -o \
-#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<einstall\>" {} \; | parallel pre_check_eapi6 {}
-#${SCRIPT_MODE} && gen_sortings
-
-#NAME="missing_LICENSE"
-#find ./${level}  \( \
-#	-path ./scripts/\* -o \
-#	-path ./profiles/\* -o \
-#	-path ./packages/\* -o \
-#	-path ./licenses/\* -o \
-#	-path ./distfiles/\* -o \
-#	-path ./metadata/\* -o \
-#	-path ./.git/\* \) -prune -o -type f \( -name "*.ebuild" -o -name "*.eclass" \) -exec grep -L '^LICENSE' {} \; | while read -r line; do
-#	main $line
-#done
-#${SCRIPT_MODE} && gen_sortings
-
-#NAME="missing_SLOT"
-#find ./${level}  \( \
-#	-path ./scripts/\* -o \
-#	-path ./profiles/\* -o \
-#	-path ./packages/\* -o \
-#	-path ./licenses/\* -o \
-#	-path ./distfiles/\* -o \
-#	-path ./metadata/\* -o \
-#	-path ./eclass/\* -o \
-#	-path ./virtual/\* -o \
-#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L '^SLOT' {} \; | while read -r line; do
-#	main $line
-#done
-#${SCRIPT_MODE} && gen_sortings
-#
+${SCRIPT_MODE} && script_mode_copy
