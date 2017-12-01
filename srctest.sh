@@ -30,6 +30,14 @@ WORKDIR="/tmp/srctest-${RANDOM}"
 TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
 DL='|'
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
@@ -39,17 +47,6 @@ touch ${TMPCHECK}
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
 cd ${PORTTREE}
-
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
 
 if [ -z "${1}" ]; then
 	usage
@@ -71,21 +68,6 @@ else
 		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
-
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
 
 main() {
 	get_status() {
@@ -176,21 +158,10 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	# sort by packages, ignoring "good" codes
-	f_packages="$(cat ${WORKDIR}/full_not_available.txt| cut -d "${DL}" -f1|sort|uniq)"
-	for i in ${f_packages}; do
-		f_cat="$(echo $i|cut -d'/' -f1)"
-		f_pak="$(echo $i|cut -d'/' -f2)"
-		mkdir -p ${WORKDIR}/sort-by-package/${f_cat}
-		grep "${i}" ${WORKDIR}/full_not_available.txt > ${WORKDIR}/sort-by-package/${f_cat}/${f_pak}.txt
-	done
-
-	mkdir -p ${WORKDIR}/sort-by-maintainer/
+	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR} ${DL}
 	# sort by maintainer, ignoring "good" codes
-	for a in $(cat ${WORKDIR}/full_not_available.txt |cut -d "${DL}" -f4|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${WORKDIR}/full_not_available.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
+	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
+	# copy files to wwwdir
+	script_mode_copy
 fi
 rm ${TMPCHECK}
