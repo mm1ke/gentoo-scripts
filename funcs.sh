@@ -29,10 +29,12 @@ gen_sort_main(){
 	local dest_dir="${3}"
 	local DL="${4}"
 
-	mkdir -p ${dest_dir}/sort-by-maintainer
-	for a in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		grep "${a}" ${workfile} > ${dest_dir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
+	if [ -e ${1} ]; then
+		mkdir -p ${dest_dir}/sort-by-maintainer
+		for a in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+			grep "${a}" ${workfile} > ${dest_dir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		done
+	fi
 }
 
 gen_sort_pak() {
@@ -41,13 +43,15 @@ gen_sort_pak() {
 	local dest_dir="${3}"
 	local DL="${4}"
 
-	local f_packages="$(cat ${workfile}| cut -d "${DL}" -f${pak_loc} |sort|uniq)"
-	for i in ${f_packages}; do
-		f_cat="$(echo ${i}|cut -d'/' -f1)"
-		f_pak="$(echo ${i}|cut -d'/' -f2)"
-		mkdir -p ${dest_dir}/sort-by-package/${f_cat}
-		grep "${i}" ${workfile} > ${dest_dir}/sort-by-package/${f_cat}/${f_pak}.txt
-	done
+	if [ -e ${1} ]; then
+		local f_packages="$(cat ${workfile}| cut -d "${DL}" -f${pak_loc} |sort|uniq)"
+		for i in ${f_packages}; do
+			f_cat="$(echo ${i}|cut -d'/' -f1)"
+			f_pak="$(echo ${i}|cut -d'/' -f2)"
+			mkdir -p ${dest_dir}/sort-by-package/${f_cat}
+			grep "${i}" ${workfile} > ${dest_dir}/sort-by-package/${f_cat}/${f_pak}.txt
+		done
+	fi
 }
 
 usage() {
@@ -59,6 +63,12 @@ usage() {
 	echo -e "\tCheck against the category app-admin"
 	echo "${0} app-admin/diradm"
 	echo -e "\tCheck against the package app-admin/diradm"
+}
+
+script_mode_copy() {
+	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
+	cp -r ${WORKDIR}/* ${WWWDIR}/
+	rm -rf ${WORKDIR}
 }
 
 get_main_min(){
