@@ -30,24 +30,20 @@ WWWDIR="${HOME}/patchcheck/"
 WORKDIR="/tmp/patchcheck-${RANDOM}/"
 DL='|'
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
 fi
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 cd ${PORTTREE}
-
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
 
 if [ -z "${1}" ]; then
 	usage
@@ -71,21 +67,6 @@ else
 		echo "${PORTTREE}/${1}: Path not found"
 	fi
 fi
-
-get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
-import xml.etree.ElementTree
-import sys
-pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
-e = xml.etree.ElementTree.parse(projxml).getroot()
-c = ""
-for x in e.iterfind("./maintainer/email"):
-	c+=(x.text+':')
-print(c)
-END`
-	echo ${ret// /_}
-}
 
 main(){
 	local package=${1}
@@ -141,11 +122,6 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	for a in $(cat ${WORKDIR}/full-with-maintainers.txt |cut -d "${DL}" -f2|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-		mkdir -p ${WORKDIR}/sort-by-maintainer/
-		grep "${a}" ${WORKDIR}/full-with-maintainers.txt > ${WORKDIR}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
+	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
+	script_mode_copy
 fi
