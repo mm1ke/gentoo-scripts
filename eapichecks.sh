@@ -186,7 +186,5 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 8 || echo 6) ${WORKDIR}/bump_matchingkeywords/ ${DL}
 	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${git_enable} && echo 3 || echo 2) ${WORKDIR}/bump_matchingkeywords/ ${DL}
 
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
+	script_mode_copy
 fi
