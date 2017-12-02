@@ -372,6 +372,9 @@ main(){
 						# check for games-mods eclass which install server.cfg files
 						elif [ "${file}" = "server.cfg" ]; then
 							$(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+						# check for mysql cnf files
+						elif [ "${file%%-*}" = "my.cnf" ]; then
+							$(grep mysql-multilib-r1 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
 						elif [ "${file##*.}" = "conf" ]; then
 							$(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
