@@ -15,6 +15,9 @@ white_list=(
 	"sys-devel/gcc;fix_libtool_files.sh;*"
 	"sys-libs/libcxx;prepare_snapshot.sh;*"
 	"sys-libs/libcxxrt;prepare_snapshot.sh;*"
+	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
+	"net-irc/quassel;quasselcore.conf-r1;*" #639480
+	"net-irc/quassel;quasselcore.init-r1;*" #639480
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
 	"app-emulation/playonlinux;playonlinux.1;playonlinux-4.2.12.ebuild"
 	"app-emulation/playonlinux;playonlinux-pkg.1;playonlinux-4.2.12.ebuild"
@@ -275,4 +278,15 @@ white_list=(
 	"sci-mathematics/gsl-shell;gsl-shell-2.3.0-gdt-cflags.patch;gsl-shell-2.3.0_beta1.ebuild"
 	"media-video/snappy;snappy-1.0-configure1.patch;snappy-1.0-r1.ebuild"
 	"media-video/snappy;snappy-1.0-configure2.patch;snappy-1.0-r1.ebuild"
+	"dev-util/indent;indent-2.2.11-ac_config_headers.patch;indent-2.2.11_p5.ebuild"
+	"dev-util/indent;indent-2.2.11-linguas.patch;indent-2.2.11_p5.ebuild"
+	"x11-misc/xkbset;xkbset-0.5-ldflags.patch;xkbset-0.5_p5_p1.ebuild:xkbset-0.5_p6.ebuild"
+	"dev-ml/xml-light;01_installopt.dpatch;xml-light-2.2-r3.ebuild"
+	"dev-ml/xml-light;02_cmi_depends.dpatch;xml-light-2.2-r3.ebuild"
+	"dev-ml/xml-light;03_cflags.dpatch;xml-light-2.2-r3.ebuild"
+	"dev-ml/xml-light;04_dtd_trace.dpatch;xml-light-2.2-r3.ebuild"
+	"media-libs/ctl;ctl-1.4.1-gcc43.patch;ctl-1.4.1.ebuild"
+	"media-libs/ctl;ctl-1.4.1-gcc47.patch;ctl-1.4.1.ebuild"
+	"media-libs/openexr_ctl;openexr_ctl-1.0.1-configure_gcc43.patch;openexr_ctl-1.0.1-r1.ebuild:openexr_ctl-1.0.1-r2.ebuild"
+	"media-libs/openexr_ctl;openexr_ctl-1.0.1-gcc43.patch;openexr_ctl-1.0.1-r1.ebuild:openexr_ctl-1.0.1-r2.ebuild"
 )
