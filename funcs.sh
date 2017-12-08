@@ -72,7 +72,7 @@ script_mode_copy() {
 }
 
 get_main_min(){
-	local ret=`/usr/bin/python3 - $1 <<END
+	local ret=`/usr/bin/python3 - "${1}" <<END
 import xml.etree.ElementTree
 import sys
 pack = str(sys.argv[1])
@@ -86,4 +86,17 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min
+# python script to get permutations
+get_perm(){
+	local ret=`/usr/bin/python3 - "${1}" <<END
+import itertools
+import sys
+list=sys.argv[1].split(' ')
+for perm in itertools.permutations(list):
+	string= ','.join(perm)
+	print(string)
+END`
+	echo ${ret// /_}
+}
+
+export -f get_main_min get_perm
