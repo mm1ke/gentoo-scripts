@@ -132,8 +132,6 @@ find ./${level}  \( \
 
 if ${SCRIPT_MODE}; then
 	gen_sortings
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
+	script_mode_copy
 fi
 
