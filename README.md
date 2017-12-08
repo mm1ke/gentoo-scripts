@@ -9,17 +9,12 @@ All scripts are actually running once a day on a gentoo VM with following specs:
 * Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
 * 8 GB-RAM
 
+
+Every script uses now ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes its basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
+
 Below are the estimated duration time of every script:
-* eapistats: **11 min**
-* patchcheck: **~35 sec**
-* patchtest: **8 min**
-* simplechecks: **8 min**
-* srctest: **2.5 hour**
-* wwwtest: **1.5 hour**
 
-As a side note, recently every script uses ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes its basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
-
-Script | old | new (parallel)
+Script | without parallel | since parallel
 ------|------|--------------
 eapistats | 30 m | 11 m
 patchcheck | ~50 sec |  ~35 sec
