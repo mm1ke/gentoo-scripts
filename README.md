@@ -1,6 +1,6 @@
 # Gentoo Scripts
 
-This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. The results of the script can be seen on http://gentoo.levelnine.at/
+This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. The results of the scripts can be seen on https://gentoo.levelnine.at/ and with Statistics on https://gentooqa.levelnine.at
 
 ## Duration:
 
