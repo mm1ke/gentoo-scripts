@@ -519,6 +519,7 @@ else
 fi
 
 if ${SCRIPT_MODE}; then
+	mkdir ${WORKDIR}
 	cp ${TMPFILE} ${WORKDIR}/full-with-maintainers.txt
 	rm ${TMPFILE}
 
