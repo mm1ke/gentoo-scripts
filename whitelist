@@ -424,4 +424,7 @@ white_list=(
 	"app-emulation/docker-registry;registry.service;docker-registry-2.6.2-r1.ebuild"
 	"mail-mta/opensmtpd;smtpd.service;opensmtpd-6.0.2_p1.ebuild:opensmtpd-6.0.2_p1-r1.ebuild:opensmtpd-6.0.2_p1-r2.ebuild"
 	"mail-mta/opensmtpd;smtpd.socket;opensmtpd-6.0.2_p1.ebuild:opensmtpd-6.0.2_p1-r1.ebuild:opensmtpd-6.0.2_p1-r2.ebuild"
+	"sys-apps/util-linux;util-linux-2.31-too_generic_symbols_pt1.patch;util-linux-2.31-r1.ebuild"
+	"sys-apps/util-linux;util-linux-2.31-too_generic_symbols_pt2.patch;util-linux-2.31-r1.ebuild"
+	"sys-apps/util-linux;util-linux-2.31-too_generic_symbols_pt3.patch;util-linux-2.31-r1.ebuild"
 )
