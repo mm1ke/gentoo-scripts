@@ -428,4 +428,5 @@ white_list=(
 	"sys-apps/util-linux;util-linux-2.31-too_generic_symbols_pt2.patch;util-linux-2.31-r1.ebuild"
 	"sys-apps/util-linux;util-linux-2.31-too_generic_symbols_pt3.patch;util-linux-2.31-r1.ebuild"
 	"dev-libs/device-atlas-api-c;2.1.2-src-cmakelists.patch;device-atlas-api-c-2.1.2_p1.ebuild;device-atlas-api-c-2.1.2_p2.ebuild"
+	"dev-java/trident;1.3-build.xml.patch;trident-1.3.ebuild"
 )
