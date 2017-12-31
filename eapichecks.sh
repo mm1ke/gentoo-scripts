@@ -134,7 +134,7 @@ main() {
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
 			found_ebuild="${package_path}/${name}-r${i}.ebuild"
 			if [ "$(grep ^EAPI ${found_ebuild} |tr -d '"'|cut -d'=' -f2)" = "6" ]; then
-				if [ "$(grep ^KEYWORDS ${package_path}/${org_name}.ebuild)" = "$(grep ^KEYWORDS ${package_path}/${name}-r${i}.ebuild)" ]; then
+				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
 					output "${ebuild_eapi}${DL}$(get_age "${org_name}")${category}/${package}${DL}${org_name}${DL}6${DL}$(get_age "${name}-r${i}")${category}/${name}-r${i}${DL}${maintainer}" "bump_matchingkeywords"
 
 				else
