@@ -373,8 +373,6 @@ white_list=(
 	"sci-calculators/hexcalc;hexcalc-order.diff;hexcalc-1.11-r3.ebuild"
 	"sci-libs/blas-reference;lapack-reference-3.6.0-fix-build-system.patch;blas-reference-20151113-r1.ebuild"
 	"sci-libs/blas-reference;lapack-reference-3.7.0-fix-build-system.patch;blas-reference-20161223.ebuild"
-	"sci-libs/cblas-reference;lapack-reference-3.6.0-fix-build-system.patch;lapack-reference-3.6.0.ebuild"
-	"sci-libs/cblas-reference;lapack-reference-3.7.0-fix-build-system.patch;lapack-reference-3.7.0.ebuild"
 	"dev-util/gprof2dot;gprof2dot-0_p20130517-py3-xrange.patch;gprof2dot-2013.05.17.ebuild"
 	"app-eselect/eselect-mpost;mpost.eselect-0.3;eselect-mpost-0.3.ebuild"
 	"app-eselect/eselect-pdftex;pdftex.eselect-0.3;eselect-pdftex-0.3.ebuild"
@@ -438,4 +436,6 @@ white_list=(
 	"media-video/ffdiaporama;ffdiaporama-2.2-qt4multimedia.patch;ffdiaporama-2.2_pre20140701.ebuild"
 	"sci-libs/cblas-reference;lapack-reference-3.6.0-fix-build-system.patch;cblas-reference-20151113-r2.ebuild"
 	"sci-libs/cblas-reference;lapack-reference-3.7.0-fix-build-system.patch;cblas-reference-20161223.ebuild"
+	"www-apps/bugzilla;bugzilla.cron.daily;bugzilla-4.4.12-r2.ebuild:bugzilla-5.0.3-r2.ebuild"
+	"www-apps/bugzilla;bugzilla.cron.tab;bugzilla-4.4.12-r2.ebuild:bugzilla-5.0.3-r2.ebuild"
 )
