@@ -436,4 +436,5 @@ white_list=(
 	"sci-libs/cblas-reference;lapack-reference-3.7.0-fix-build-system.patch;cblas-reference-20161223.ebuild"
 	"www-apps/bugzilla;bugzilla.cron.daily;bugzilla-4.4.12-r2.ebuild:bugzilla-5.0.3-r2.ebuild"
 	"www-apps/bugzilla;bugzilla.cron.tab;bugzilla-4.4.12-r2.ebuild:bugzilla-5.0.3-r2.ebuild"
+	"sys-libs/tapi;objcmetadata-800.0.42.1-standalone.patch;tapi-2.0.0.ebuild"
 )
