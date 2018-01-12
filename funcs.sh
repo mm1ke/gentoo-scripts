@@ -23,6 +23,7 @@
 # Discription:
 # this file only provides functions for different scripts
 
+# function which sorts a list by it's maintainer
 gen_sort_main(){
 	local workfile="${1}"
 	local main_loc="${2}"
@@ -37,6 +38,7 @@ gen_sort_main(){
 	fi
 }
 
+# function which sorts a list by it's package
 gen_sort_pak() {
 	local workfile="${1}"
 	local pak_loc="${2}"
@@ -63,6 +65,29 @@ usage() {
 	echo -e "\tCheck against the category app-admin"
 	echo "${0} app-admin/diradm"
 	echo -e "\tCheck against the package app-admin/diradm"
+}
+
+depth_set() {
+	if [ -z "${1}" ]; then
+		usage
+		exit 1
+	else
+		if [ -d "${PORTTREE}/${1}" ]; then
+			level="${1}"
+			MAXD=0
+			MIND=0
+			if [ -z "${1##*/}" ] || [ "${1%%/*}" == "${1##*/}" ]; then
+				MAXD=1
+				MIND=1
+			fi
+		elif [ "${1}" == "full" ]; then
+			level=""
+			MAXD=2
+			MIND=2
+		else
+			echo "${PORTTREE}/${1}: Path not found"
+		fi
+	fi
 }
 
 script_mode_copy() {
