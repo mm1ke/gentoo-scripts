@@ -27,7 +27,7 @@
 ### IMPORTANT SETTINGS START ###
 #
 DEBUG=false
-SCRIPT_NAME="tmpcheck"
+SCRIPT_NAME="badstyle"
 SCRIPT_MODE=false
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
