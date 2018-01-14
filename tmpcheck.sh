@@ -28,7 +28,7 @@
 #
 DEBUG=false
 SCRIPT_NAME="tmpcheck"
-SCRIPT_MODE=true
+SCRIPT_MODE=false
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 PORTTREE="/mnt/data/gentoo"
