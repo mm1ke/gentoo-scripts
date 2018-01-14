@@ -31,7 +31,6 @@ SCRIPT_NAME="tmpcheck"
 SCRIPT_MODE=false
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
-PORTTREE="/mnt/data/gentoo"
 DL='|'
 # set scriptmode=true on host s6
 WWWDIR="${HOME}/${SCRIPT_NAME}/"
