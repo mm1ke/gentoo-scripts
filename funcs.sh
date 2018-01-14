@@ -23,6 +23,17 @@
 # Discription:
 # this file only provides functions for different scripts
 
+# check for porttree features
+ENABLE_GIT=false
+ENABLE_MD5=false
+if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
+	[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
+	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
+else
+	echo "Please check settings. ${PORTTREE} not found"
+fi
+export ENABLE_GIT ENABLE_MD5
+
 # function which sorts a list by it's maintainer
 gen_sort_main(){
 	local workfile="${1}"
@@ -92,6 +103,20 @@ depth_set() {
 	fi
 }
 
+get_age() {
+	local file=${1}
+	local date_today="$(date '+%s' -d today)"
+	if ${ENABLE_GIT}; then
+		fileage="$(expr \( "${date_today}" - \
+			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${category}/${package}/${file} \
+			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
+		echo "${fileage}"
+	else
+		echo ""
+	fi
+}
+
+
 script_mode_copy() {
 	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
 	cp -r ${WORKDIR}/* ${WWWDIR}/
@@ -126,4 +151,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm
+export -f get_main_min get_perm get_age
