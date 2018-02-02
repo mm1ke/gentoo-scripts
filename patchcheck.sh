@@ -44,29 +44,7 @@ if [ "$(hostname)" = s6 ]; then
 fi
 
 cd ${PORTTREE}
-
-if [ -z "${1}" ]; then
-	usage
-	exit 1
-else
-	if [ -d "${PORTTREE}/${1}" ]; then
-		level="${1}"
-		MAXD=0
-		MIND=0
-		_cat=${1%%/*}
-		_pac=${1##*/}
-		if [ -z "${_pac}" ] || [ "${_cat}" == "${_pac}" ]; then
-			MAXD=1
-			MIND=1
-		fi
-	elif [ "${1}" == "full" ]; then
-		level=""
-		MAXD=2
-		MIND=2
-	else
-		echo "${PORTTREE}/${1}: Path not found"
-	fi
-fi
+depth_set ${1}
 
 main(){
 	local package=${1}

@@ -47,27 +47,7 @@ touch ${TMPCHECK}
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
 cd ${PORTTREE}
-
-if [ -z "${1}" ]; then
-	usage
-	exit 1
-else
-	if [ -d "${PORTTREE}/${1}" ]; then
-		level="${1}"
-		MAXD=0
-		MIND=0
-		if [ -z "${1##*/}" ] || [ "${1%%/*}" == "${1##*/}" ]; then
-			MAXD=1
-			MIND=1
-		fi
-	elif [ "${1}" == "full" ]; then
-		level=""
-		MAXD=2
-		MIND=2
-	else
-		echo "${PORTTREE}/${1}: Path not found"
-	fi
-fi
+depth_set ${1}
 
 main() {
 	get_status() {

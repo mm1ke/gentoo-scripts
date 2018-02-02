@@ -45,6 +45,7 @@ if [ "$(hostname)" = s6 ]; then
 fi
 
 cd ${PORTTREE}
+depth_set ${1}
 
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
@@ -62,27 +63,6 @@ if ${SCRIPT_MODE}; then
 	for _dir in maintainer package httpcode filter; do
 		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${_dir}-${filename}.txt
 	done
-fi
-
-if [ -z "${1}" ]; then
-	usage
-	exit 1
-else
-	if [ -d "${PORTTREE}/${1}" ]; then
-		level="${1}"
-		MAXD=0
-		MIND=0
-		if [ -z "${1##*/}" ] || [ "${1%%/*}" == "${1##*/}" ]; then
-			MAXD=1
-			MIND=1
-		fi
-	elif [ "${1}" == "full" ]; then
-		level=""
-		MAXD=2
-		MIND=2
-	else
-		echo "${PORTTREE}/${1}: Path not found"
-	fi
 fi
 
 301check() {
