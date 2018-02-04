@@ -49,6 +49,8 @@ _dirs_to_check="patchcheck \
 	srctest \
 	wwwtest \
 	wwwtest/special/unsync-homepages \
+	wwwtest/special/301_redirections \
+	wwwtest/special/301_slash_https_www \
 	wwwtest/sort-by-filter/berlios.de \
 	wwwtest/sort-by-filter/code.google.com \
 	wwwtest/sort-by-filter/codehaus.org \
