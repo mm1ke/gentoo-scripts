@@ -53,18 +53,6 @@ touch ${TMPCHECK}
 mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
 mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
 
-# TODO:
-# Remove code below and point to a website (github) for the descripton
-if ${SCRIPT_MODE}; then
-	filename="000-DATA-USAGE"
-	echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${filename}.txt
-	echo "PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_slash_https_www_DATA-USAGE.txt
-	echo "REAL-HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} HOMEPAGE ${DL} REAL-HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/special/301_redirections_DATA-USAGE.txt
-	for _dir in maintainer package httpcode filter; do
-		echo "HTTP-CODE ${DL} PACKAGE-CATEGORY ${DL} PACKAGE-NAME ${DL} EBUILD ${DL} HOMEPAGE ${DL} MAINTAINER" > ${WORKDIR}/${_dir}-${filename}.txt
-	done
-fi
-
 301check() {
 	local hp=${1}
 	local cat=${2}
