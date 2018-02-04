@@ -9,6 +9,7 @@ white_list=(
 	"dev-lang/gnat-gpl;fix_libtool_files.sh;*"
 	"dev-lang/ocaml;ocaml-rebuild.sh;*"
 	"dev-libs/collada-dom;take_snapshot.sh;*"
+	"dev-util/android-tools;make-tarballs.sh;*"
 	"media-libs/netpbm;make-tarball.sh;*"
 	"media-tv/kodi;generate.sh;*"
 	"sys-devel/gcc;fix_libtool_files.sh;*"
