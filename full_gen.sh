@@ -56,7 +56,8 @@ _dirs_to_check="patchcheck \
 	wwwtest/sort-by-filter/freecode.com \
 	wwwtest/sort-by-filter/freshmeat.net \
 	wwwtest/sort-by-filter/gitorious.org \
-	wwwtest/sort-by-filter/gna.org"
+	wwwtest/sort-by-filter/gna.org \
+	badstyle"
 
 mkdir -p ${WORKDIR}/full-sort-by-{package,maintainer}
 
