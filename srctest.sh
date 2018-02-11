@@ -75,7 +75,11 @@ main() {
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package=${full_package##*/}
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local md5portage=false
+	local openbugs="$(get_bugs "${category}/${package}")"
+	if ! [ -z "${openbugs}" ]; then
+		openbugs="${DL}${openbugs}"
+	fi
+
 
 #	code_available='HTTP/1.0 200 OK|HTTP/1.1 200 OK'
 	code_available='Remote file exists.'
@@ -100,16 +104,16 @@ main() {
 				for i in $(echo $u | grep -E "^http://|^https://"); do
 					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
-						mode "${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}" "$(echo ${_checktmp} | cut -d' ' -f1)"
+						mode "${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" "$(echo ${_checktmp} | cut -d' ' -f1)"
 					else
 						if $(get_status ${i} "${code_available}"); then
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" available
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" available
 							echo "available ${i}" >> ${TMPCHECK}
 						elif $(get_status ${i} "${maybe_available}"); then
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" maybe_available
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" maybe_available
 							echo "maybe_available ${i}" >> ${TMPCHECK}
 						else
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}" not_available
+							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" not_available
 							echo "not_available ${i}" >> ${TMPCHECK}
 						fi
 					fi
