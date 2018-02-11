@@ -112,6 +112,10 @@ main() {
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package=${full_package##*/}
 	local maintainer="$(get_main_min "${category}/${package}")"
+	local openbugs="$(get_bugs "${category}/${package}")"
+	if ! [ -z "${openbugs}" ]; then
+		openbugs="${DL}${openbugs}"
+	fi
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
@@ -128,16 +132,16 @@ main() {
 				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
+					mode "FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
+					mode "VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 				elif [ -n "${_checktmp}" ]; then
 					# don't check again
-					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4}${DL}${maintainer}"
+					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4}${DL}${maintainer}${openbugs}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}"
+					mode "${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 					echo "${_code} ${i}" >> ${TMPCHECK}
 
 					case ${_code} in
