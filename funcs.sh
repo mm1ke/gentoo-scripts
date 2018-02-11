@@ -74,6 +74,13 @@ get_bugs(){
 	[ -n "${return}" ] && echo ${return::-1}
 }
 
+get_bugs_full(){
+	local value="${1}"
+	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f1,3)"
+	[ -n "${return}" ] && echo ${return}
+}
+
+
 # function which sorts a list by it's maintainer
 gen_sort_main(){
 	local workfile="${1}"
