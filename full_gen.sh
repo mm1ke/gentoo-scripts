@@ -90,7 +90,7 @@ done
 for cat in $(ls ${WORKDIR}/full-sort-by-package/); do
 	for pack in $(ls ${WORKDIR}/full-sort-by-package/${cat}/); do
 		echo "<<< open bugs >>>" >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
-		openbugs="$(get_bugs "${cat}/${pack::-4}")"
+		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
 		echo "${openbugs}" >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
 	done
 done
