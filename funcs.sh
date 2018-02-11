@@ -24,6 +24,7 @@
 # this file only provides functions for different scripts
 
 # check for porttree features
+BUGTMPDIR="/tmp/buglists/"
 ENABLE_GIT=false
 ENABLE_MD5=false
 if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
@@ -32,7 +33,45 @@ if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 else
 	echo "Please check settings. ${PORTTREE} not found"
 fi
-export ENABLE_GIT ENABLE_MD5
+export ENABLE_GIT ENABLE_MD5 BUGTMPDIR
+
+_update_buglists(){
+	local BUG_FILES="UNCONFIRMED CONFIRMED IN_PROGRESS"
+
+	mkdir -p ${BUGTMPDIR}
+	
+	if ! [ -e "${BUGTMPDIR}/full-$(date -I).txt" ]; then
+
+		find ${BUGTMPDIR}/* -mtime +2 -exec rm -f {} \; >/dev/null 2>&1
+	
+		for file in ${BUG_FILES}; do
+			local bugfile="${BUGTMPDIR}/${file}-$(date -I).txt"
+			curl -s https://bugs.gentoo.org/data/cached/buglist-${file}.html > ${bugfile}
+
+			sed -i -e 1,3d ${bugfile}
+			sed -i '$ d' ${bugfile}
+			sed -i "s/<div><ul>//g" ${bugfile}
+			sed -i "s/ /_/g" ${bugfile}
+
+			sed -i "s|<li><a_href='||; \
+				s|'>Bug:| |; \
+				s|_-_\"<em>| |; \
+				s|</em>\"_status:| |; \
+				s|_resolution:| |; \
+				s|_severity:| |; \
+				s|</a></li>||;" \
+				${bugfile}
+
+			cat ${bugfile} >> ${BUGTMPDIR}/full-$(date -I).txt
+		done
+	fi
+}
+_update_buglists
+
+get_bugs(){
+	value=${1}
+	grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':'
+}
 
 # function which sorts a list by it's maintainer
 gen_sort_main(){
@@ -151,4 +190,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age
+export -f get_main_min get_perm get_age get_bugs
