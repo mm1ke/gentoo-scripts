@@ -112,17 +112,11 @@ main() {
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package=${full_package##*/}
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local md5portage=false
-
-	if [ -e "${PORTTREE}/metadata/md5-cache" ]; then
-		md5portage=true
-	fi
-
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		ebuild=$(basename ${eb%.*})
 
-		if ${md5portage}; then
+		if ${ENABLE_MD5}; then
 			_hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
 			_hp="${_hp:9}"
 		else
