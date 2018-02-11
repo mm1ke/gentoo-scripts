@@ -71,13 +71,13 @@ _update_buglists
 get_bugs(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
-	[ -n "${return}" ] && echo ${return::-1}
+	[ -n "${return}" ] && echo "${return::-1}"
 }
 
 get_bugs_full(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f1,3)"
-	[ -n "${return}" ] && echo ${return}
+	[ -n "${return}" ] && echo "${return}"
 }
 
 
