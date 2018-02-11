@@ -69,8 +69,9 @@ _update_buglists(){
 _update_buglists
 
 get_bugs(){
-	value=${1}
-	grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':'
+	local value="${1}"
+	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
+	[ -n "${return}" ] && echo ${return::-1}
 }
 
 # function which sorts a list by it's maintainer
@@ -163,7 +164,7 @@ script_mode_copy() {
 }
 
 get_main_min(){
-	local ret=`/usr/bin/python3 - "${1}" <<END
+	local maint=`/usr/bin/python3 - "${1}" <<END
 import xml.etree.ElementTree
 import sys
 pack = str(sys.argv[1])
@@ -174,7 +175,12 @@ for x in e.iterfind("./maintainer/email"):
 	c+=(x.text+':')
 print(c)
 END`
-	echo ${ret// /_}
+	maint=${maint// /_}
+	if [ -z "${maint}" ]; then
+		echo "maintainer-needed@gentoo.org"
+	else
+		echo ${maint::-1}
+	fi
 }
 
 # python script to get permutations

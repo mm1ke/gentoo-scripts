@@ -78,8 +78,9 @@ main() {
 	local package_path="/${PORTTREE}/${category}/${package}"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
+	local openbugs="$(get_bugs ${category}/${package})"
+	if ! [ -z "${openbugs}" ]; then
+		openbugs="${DL}${openbugs}"
 	fi
 
 	if [ "${name: -3}" = "-r${name: -1}" ]; then
@@ -103,10 +104,12 @@ main() {
 					new_file="$(get_age "${name}-r${i}.ebuild")${DL}"
 				fi
 				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
-					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}" "bump_matchingkeywords"
+					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
+						"bump_matchingkeywords"
 
 				else
-					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}" "bump_nonmatchingkeyword"
+					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
+						"bump_nonmatchingkeyword"
 				fi
 				break 2
 			fi
@@ -115,7 +118,8 @@ main() {
 	if ! [ ${ebuild_eapi} = 5 ]; then
 		other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
 		[ -z "${other_ebuild_eapi}" ] && other_ebuild_eapi=0
-		output "${ebuild_eapi}${DL}$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" "bump_needed"
+		output "${ebuild_eapi}${DL}$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
+			"bump_needed"
 	fi
 }
 
