@@ -23,6 +23,13 @@
 # Discription:
 # create full bug lists per packages and maintainers
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
 
 WWWDIR="/var/www/gentoo.levelnine.at/"
 WORKDIR="/tmp/full-gen-${RANDOM}"
@@ -77,6 +84,13 @@ for check in ${_dirs_to_check}; do
 			echo "<<< ${check} >>>" >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
 			cat ${WWWDIR}/${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
 		done
+	done
+done
+
+for cat in $(ls ${WORKDIR}/full-sort-by-package/); do
+	for pack in $(ls ${WORKDIR}/full-sort-by-package/${cat}/); do
+		echo "<<< open bugs >>>" >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
+		echo "$(get_bugs "${cat}/${pack}")" >> ${WORKDIR}/full-sort-by-package/${cat}/${pack}
 	done
 done
 
