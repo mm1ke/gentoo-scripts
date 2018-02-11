@@ -66,9 +66,6 @@ main() {
 	#local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
 
 	if ${SCRIPT_MODE}; then
 		echo "${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/full.txt

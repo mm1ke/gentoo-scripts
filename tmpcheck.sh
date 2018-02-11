@@ -64,11 +64,7 @@ main() {
 	local packagename="${filename%.*}"
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
-
 	local maintainer="$(get_main_min "${category}/${package}")"
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
 
 	if ${DEBUG}; then
 		# Debug

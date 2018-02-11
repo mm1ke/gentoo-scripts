@@ -81,10 +81,6 @@ main() {
 	code_available='Remote file exists.'
 	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
 
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
-
 	# only works best with the md5-cache
 	if ! [ -e "${PORTTREE}/metadata/md5-cache" ]; then
 		exit 1

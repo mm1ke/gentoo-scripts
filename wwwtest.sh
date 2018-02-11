@@ -114,9 +114,6 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local md5portage=false
 
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
 	if [ -e "${PORTTREE}/metadata/md5-cache" ]; then
 		md5portage=true
 	fi

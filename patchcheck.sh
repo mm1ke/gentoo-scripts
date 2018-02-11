@@ -71,9 +71,6 @@ main(){
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then
 			if ! grep -E ".diff|.patch|FILESDIR|${eclasses}" ${fullpath}/*.ebuild >/dev/null; then
 				main=$(get_main_min "${category}/${package_name}")
-				if [ -z "${main}" ]; then
-					main="maintainer-needed@gentoo.org:"
-				fi
 				if ${SCRIPT_MODE}; then
 					mkdir -p ${WORKDIR}/sort-by-package/${category}
 					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WORKDIR}/sort-by-package/${category}/${package_name}.txt

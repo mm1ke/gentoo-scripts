@@ -55,10 +55,7 @@ main() {
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
-	if [ -z "${maintainer}" ]; then
-			maintainer="maintainer-needed@gentoo.org:"
-	fi
-	
+
 	if ${SCRIPT_MODE}; then
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/full.txt
 	else

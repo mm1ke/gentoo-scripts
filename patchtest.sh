@@ -447,9 +447,6 @@ main(){
 		$DEBUG && echo >&2
 
 		main="$(get_main_min "${category}/${package_name}")"
-		if [ -z "${main}" ]; then
-			main="maintainer-needed@gentoo.org:"
-		fi
 
 		if [ ${#unused_patches[@]} -gt 0 ]; then
 			if ${SCRIPT_MODE}; then
