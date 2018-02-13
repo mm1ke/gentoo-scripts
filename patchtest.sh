@@ -84,13 +84,14 @@ main(){
 			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
 
 			# special naming
-			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=" ${ebuild} >/dev/null); then
+			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=|^X509_VER" ${ebuild} >/dev/null); then
 				# set variables
 				local var_my_pn='${MY_PN}'
 				local var_my_p='${MY_P}'
 				local var_my_pv='${MY_PV}'
 				local var_mod_ver='${MODULE_VERSION}'
 				local var_dist_ver='${DIST_VERSION}'
+				local var_x509_ver='${X509_VER}'
 
 				local package_name_ver="${package_name}-${ebuild_version}"
 
@@ -100,6 +101,7 @@ main(){
 				my_pv_name="$(grep ^MY_PV\= ${ebuild})"
 				my_mod_ver="$(grep ^MODULE_VERSION\= ${ebuild})"
 				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild})"
+				my_x509_ver="$(grep ^X509_VER\= ${ebuild}|cut -d' ' -f1)"
 
 				# i dont know
 				[ -n "${my_pn_name}" ] && \
@@ -113,8 +115,10 @@ main(){
 					eval my_mod_ver="$(echo ${my_mod_ver:15})" >/dev/null 2>&1
 				[ -n "${my_dist_ver}" ] && \
 					eval my_dist_ver="$(echo ${my_dist_ver:13})" >/dev/null 2>&1
+				[ -n "${my_x509_ver}" ] && \
+					eval my_x509_ver="$(echo ${my_x509_ver:9})" >/dev/null 2>&1
 
-				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver"
+				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver"
 
 				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
 				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
@@ -130,6 +134,13 @@ main(){
 					cn+=("${patchfile/${my_dist_ver}/${var_dist_ver}}")
 					n2="${patchfile/${my_dist_ver}/${var_dist_ver}}"
 					cn+=("${n2/${package_name}/${pn}}")
+				fi
+
+				if [ -n "${my_x509_ver}" ]; then
+					cn+=("${patchfile/${my_x509_ver}/${var_x509_ver}}")
+					n2="${patchfile/${my_x509_ver}/${var_x509_ver}}"
+					cn+=("${n2/${package_name}/${pn}}")
+					cn+=("${n2/${package_name}-${ebuild_version}/${p}}")
 				fi
 
 
@@ -242,12 +253,16 @@ main(){
 		done
 
 		# set the maximum permutations number (5-6 works)
-		if [ ${#matches[@]} -le 5 ]; then
-			matches="${matches[@]}"
-			local perm_list=$(get_perm "$matches")
-			for search_patch in $perm_list; do
-				braces_patch_list+=("$(echo $patch-{$search_patch}.patch)")
-			done
+		if [ ${#matches[@]} -eq 1 ]; then
+			braces_patch_list+=("$(echo $patch-${matches[0]}.patch)")
+		else
+			if [ ${#matches[@]} -le 5 ]; then
+				matches="${matches[@]}"
+				local perm_list=$(get_perm "$matches")
+				for search_patch in $perm_list; do
+					braces_patch_list+=("$(echo $patch-{$search_patch}.patch)")
+				done
+			fi
 		fi
 	}
 
