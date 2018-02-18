@@ -68,9 +68,9 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/full.txt
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/full.txt
 	else
-		echo "${category}${DL}${package}${DL}${filename}${DL}${maintainer}"
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -99,7 +99,7 @@ done
 
 if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full.txt 4 ${WORKDIR} ${DL}
-	gen_sort_pak ${WORKDIR}/full.txt 2 ${WORKDIR} ${DL}
+	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
 
 	script_mode_copy
 fi
