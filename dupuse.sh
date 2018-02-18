@@ -104,5 +104,12 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
 	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
 
+	mkdir -p ${WORKDIR/-/_}
+	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR/-/_}/dupuse ${DL}
+	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR/-/_}/dupuse ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/dupuse
+	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+	rm -rf ${WORKDIR/-/_}
+
 	script_mode_copy
 fi
