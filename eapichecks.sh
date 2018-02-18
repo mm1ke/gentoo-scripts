@@ -167,6 +167,7 @@ if ${SCRIPT_MODE}; then
 
 	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
 	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/bump*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 
