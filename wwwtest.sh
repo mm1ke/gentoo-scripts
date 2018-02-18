@@ -191,6 +191,8 @@ if ${SCRIPT_MODE}; then
 		" ${TMPFILE}
 	cp ${TMPFILE} ${WORKDIR}/full-filtered.txt
 
+	mkdir -p ${WORKDIR/-/_}
+
 	# special filters
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 	for site in ${_filters[@]}; do
@@ -198,6 +200,10 @@ if ${SCRIPT_MODE}; then
 		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}/${site}.txt
 		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
 		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
+
+		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/wwwtest-${site}/ ${DL}
+		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/wwwtest-${site}/ ${DL}
+
 	done
 
 	# find different homepages in same packages
@@ -211,20 +217,27 @@ if ${SCRIPT_MODE}; then
 	done
 	# sort unsync homepages by maintainer
 	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR}/special/unsync-homepages/ ${DL}
-
 	# create sortings for 301_redirections
 	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR}/special/301_redirections/ ${DL}
 	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR}/special/301_redirections/ ${DL}
-
 	# create sortings for 301_slash_https_www
 	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR}/special/301_slash_https_www/ ${DL}
 	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR}/special/301_slash_https_www/ ${DL}
-
 	# sort by packages, ignoring "good" codes
 	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR} ${DL}
-
 	# sort by maintainer, ignoring "good" codes
 	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR} ${DL}
+
+	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/wwwtest-unsync-homepages/ ${DL}
+	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/wwwtest-301_redirections/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/wwwtest-301_redirections/ ${DL}
+	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/wwwtest-301_slash_https_www/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/wwwtest-301_slash_https_www/ ${DL}
+	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/wwwtest ${DL}
+	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/wwwtest ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/wwwtest*
+	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+	rm -rf ${WORKDIR/-/_}
 
 	# remove tmpfile
 	rm ${TMPFILE}

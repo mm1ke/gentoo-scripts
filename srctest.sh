@@ -141,6 +141,15 @@ if ${SCRIPT_MODE}; then
 	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR} ${DL}
 	# sort by maintainer, ignoring "good" codes
 	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
+
+	mkdir -p ${WORKDIR/-/_}
+	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/srctest ${DL}
+	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/srctest ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/srctest
+	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+	rm -rf ${WORKDIR/-/_}
+
+
 	# copy files to wwwdir
 	script_mode_copy
 fi

@@ -98,5 +98,12 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
+
+	mkdir -p ${WORKDIR/-/_}
+	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/patchcheck ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/patchcheck
+	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+	rm -rf ${WORKDIR/-/_}
+
 	script_mode_copy
 fi
