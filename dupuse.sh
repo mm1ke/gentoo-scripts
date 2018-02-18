@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Filename: tmpcheck.sh
+# Filename: dupuse.sh
 # Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
-# Date: 12/01/2018
+# Date: 11/02/2018
 
 # Copyright (C) 2018  Michael Mair-Keimberger
 #
@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Discription:
-#	prototype script for new scripts
+#	find duplicate use flag descriptions
 
 #
 ### IMPORTANT SETTINGS START ###
