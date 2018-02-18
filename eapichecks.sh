@@ -159,14 +159,14 @@ if ${SCRIPT_MODE}; then
 
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR/-/_}/bump_needed/full.txt 5 ${WORKDIR/-/_}/bump_needed/ ${DL}
-	gen_sort_pak ${WORKDIR/-/_}/bump_needed/full.txt 3 ${WORKDIR/-/_}/bump_needed/ ${DL}
+	gen_sort_main ${WORKDIR}/bump_needed/full.txt 5 ${WORKDIR/-/_}/bump_needed/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_needed/full.txt 3 ${WORKDIR/-/_}/bump_needed/ ${DL}
 
-	gen_sort_main ${WORKDIR/-/_}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/bump_nonmatchingkeyword/ ${DL}
-	gen_sort_pak ${WORKDIR/-/_}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/bump_nonmatchingkeyword/ ${DL}
+	gen_sort_main ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/bump_nonmatchingkeyword/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/bump_nonmatchingkeyword/ ${DL}
 
-	gen_sort_main ${WORKDIR/-/_}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
-	gen_sort_pak ${WORKDIR/-/_}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
+	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
+	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/bump_matchingkeywords/ ${DL}
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 

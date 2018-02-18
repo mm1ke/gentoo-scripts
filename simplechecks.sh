@@ -69,6 +69,13 @@ gen_sortings() {
 	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR}/${NAME}/ ${DL}
 	# sort by maintainer, ignoring "good" codes
 	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
+
+	mkdir -p ${WORKDIR/-/_}
+	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${NAME}/ ${DL}
+	# sort by maintainer, ignoring "good" codes
+	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${NAME}/ ${DL}
+	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+	rm -rf ${WORKDIR/-/_}
 }
 
 pre_check_mixed_indentation() {
