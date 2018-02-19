@@ -24,11 +24,12 @@
 # simple scirpt to find broken websites
 
 SCRIPT_MODE=false
-WWWDIR="${HOME}/wwwtest/"
-WORKDIR="/tmp/wwwtest-${RANDOM}"
+SCRIPT_NAME="wwwtest"
+WWWDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
-TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
-TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
+TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
+TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -41,7 +42,7 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/wwwtest/"
+	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 fi
 
 cd ${PORTTREE}
@@ -201,8 +202,8 @@ if ${SCRIPT_MODE}; then
 		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
 		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
 
-		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/wwwtest-${site}/ ${DL}
-		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/wwwtest-${site}/ ${DL}
+		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
+		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
 
 	done
 
@@ -228,14 +229,14 @@ if ${SCRIPT_MODE}; then
 	# sort by maintainer, ignoring "good" codes
 	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR} ${DL}
 
-	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/wwwtest-unsync-homepages/ ${DL}
-	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/wwwtest-301_redirections/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/wwwtest-301_redirections/ ${DL}
-	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/wwwtest-301_slash_https_www/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/wwwtest-301_slash_https_www/ ${DL}
-	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/wwwtest ${DL}
-	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/wwwtest ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/wwwtest*
+	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-unsync-homepages/ ${DL}
+	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
+	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
+	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
+	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 

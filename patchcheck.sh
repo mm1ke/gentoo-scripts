@@ -25,9 +25,10 @@
 
 
 SCRIPT_MODE=false
+SCRIPT_NAME="patchtest"
 PORTTREE="/usr/portage"
-WWWDIR="${HOME}/patchcheck/"
-WORKDIR="/tmp/patchcheck-${RANDOM}/"
+WWWDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 DL='|'
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -40,7 +41,7 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/patchcheck/"
+	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 fi
 
 cd ${PORTTREE}
@@ -100,8 +101,8 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/patchcheck ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/patchcheck
+	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 

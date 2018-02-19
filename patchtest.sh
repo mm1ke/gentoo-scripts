@@ -26,10 +26,11 @@
 DEBUG=false
 
 SCRIPT_MODE=false
+SCRIPT_NAME="patchtest"
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/patchtest/"
-WORKDIR="/tmp/patchtest-${RANDOM}/"
-TMPFILE="/tmp/patchtest-$(date +%y%m%d).txt"
+WWWDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
+TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d).txt"
 DL='|'
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -42,7 +43,7 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/patchtest/"
+	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 fi
 
 cd ${PORTTREE}
@@ -519,9 +520,9 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR} ${DL}
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR/-/_}/patchtest ${DL}
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR/-/_}/patchtest ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/patchtest
+	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 

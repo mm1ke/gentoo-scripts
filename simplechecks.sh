@@ -27,8 +27,9 @@
 
 
 SCRIPT_MODE=false
-WWWDIR="${HOME}/simplechecks/"
-WORKDIR="/tmp/simplechecks-${RANDOM}"
+SCRIPT_NAME="simplechecks"
+WWWDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
@@ -42,7 +43,7 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/simplechecks/"
+	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 fi
 
 cd ${PORTTREE}
@@ -71,11 +72,10 @@ gen_sortings() {
 	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${NAME}/ ${DL}
+	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
 	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${NAME}/ ${DL}
-
-	rm -rf /var/www/gentooqa.levelnine.at/results/${NAME}
+	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 }

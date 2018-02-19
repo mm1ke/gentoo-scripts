@@ -24,10 +24,11 @@
 # simple scirpt to find broken SRC_URI links
 
 SCRIPT_MODE=false
+SCRIPT_NAME="srctest"
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/srctest/"
-WORKDIR="/tmp/srctest-${RANDOM}"
-TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
+WWWDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -40,7 +41,7 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/srctest/"
+	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 fi
 
 touch ${TMPCHECK}
@@ -143,9 +144,9 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/srctest ${DL}
-	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/srctest ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/srctest
+	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
 	rm -rf ${WORKDIR/-/_}
 
