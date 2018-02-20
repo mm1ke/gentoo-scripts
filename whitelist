@@ -418,4 +418,5 @@ white_list=(
 	"x11-libs/wxGTK;wxGTK-3.0-gtk3-translation-domain.patch;wxGTK-3.0.3-r300.ebuild"
 	"net-analyzer/tcptrace;tcptrace-6.6.7-cross-compile.patch;tcptrace-6.6.7_p4_p1.ebuild"
 	"dev-lang/php;php-5.6-no-bison-warnings.patch;php-5.6.33.ebuild"
+	"media-sound/lilypond;lilypond-9999-programming_error.patch;lilypond-9999.ebuild"
 )
