@@ -416,4 +416,6 @@ white_list=(
 	"www-apps/bugzilla;bugzilla.cron.tab;bugzilla-4.4.12-r2.ebuild:bugzilla-5.0.3-r2.ebuild"
 	"sys-libs/tapi;objcmetadata-800.0.42.1-standalone.patch;tapi-2.0.0.ebuild"
 	"x11-libs/wxGTK;wxGTK-3.0-gtk3-translation-domain.patch;wxGTK-3.0.3-r300.ebuild"
+	"net-analyzer/tcptrace;tcptrace-6.6.7-cross-compile.patch;tcptrace-6.6.7_p4_p1.ebuild"
+	"dev-lang/php;php-5.6-no-bison-warnings.patch;php-5.6.33.ebuild"
 )
