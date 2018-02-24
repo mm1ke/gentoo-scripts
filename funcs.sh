@@ -68,6 +68,48 @@ _update_buglists(){
 }
 _update_buglists
 
+gen_http_sort_main(){
+
+	local dir="${1}"
+	local date="$(date -I)"
+	local value_maintainer="$(ls ${dir}/sort-by-maintainer/|wc -l)"
+
+read -r -d '' TOP <<- EOM
+<html>
+\t<head>
+\t\t<style type="text/css"> li a { font-family: monospace; display: block; float: left; }</style>
+\t\t<title>testhttp</title>
+\t</head>
+\t<body>
+\t\tList generated on ${date}</br>
+\t\tTotal Maintainers: <b>${value_maintainer}</b><br/><br/>
+\t\t<table frame=box rules=all>
+\t\t\t<tr>
+\t\t\t\t<th>Maintainer</th>
+\t\t\t\t<th>Value</th>
+\t\t\t</tr>
+EOM
+
+read -r -d '' BOTTOM <<- EOM
+\t\t</table>
+\t</body>
+</html>
+EOM
+
+	echo -e "${TOP}"
+	
+	for i in $(ls ${dir}/sort-by-maintainer/); do
+		main="${i}"
+		val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
+		echo "<tr>"
+		echo "<td><a href=\"sort-by-maintainer/${main}\">${main::-4}</a></td>"
+		echo "<td>${val}</td>"
+		echo "</tr>"
+	done
+	
+	echo -e "${BOTTOM}"
+}
+
 get_bugs(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
