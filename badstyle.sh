@@ -98,11 +98,11 @@ for pat in ${pattern[@]}; do
 done
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main ${WORKDIR}/full.txt 4 ${WORKDIR} ${DL}
+	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
 	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
 
 	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR}/full.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
 	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
 	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
 	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
