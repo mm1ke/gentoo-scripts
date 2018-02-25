@@ -28,7 +28,8 @@
 
 SCRIPT_MODE=false
 SCRIPT_NAME="simplechecks"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SCRIPT_SHORT="SIC"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
@@ -43,7 +44,8 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 cd ${PORTTREE}
@@ -59,25 +61,39 @@ main() {
 
 	if ${SCRIPT_MODE}; then
 		mkdir -p /${WORKDIR}/${NAME}/
-		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/${NAME}.txt
+		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/full.txt
 	else
 		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 gen_sortings() {
-	# sort by packages
-	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR}/${NAME}/ ${DL}
-	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
-	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
+	foldername="${NAME}"
+	newpath="${WORKDIR}/${NAME}"
+#	mkdir -p ${newpath}
+
+#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
+	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
+
+
+#	# sort by packages
+#	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR}/${NAME}/ ${DL}
+#	# sort by maintainer, ignoring "good" codes
+#	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
+#
+#	mkdir -p ${WORKDIR/-/_}
+#	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
+#	# sort by maintainer, ignoring "good" codes
+#	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
+#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
+#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+#	rm -rf ${WORKDIR/-/_}
 }
 
 pre_check_mixed_indentation() {
@@ -121,10 +137,10 @@ pre_proxy_maint_check() {
 
 export -f main get_main_min
 export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check
-export PORTTREE WORKDIR SCRIPT_MODE DL
+export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
 
 # find trailing whitespaces
-export NAME="trailing_whitespaces"
+export NAME="${SCRIPT_SHORT}-IMP-trailing_whitespaces"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -136,7 +152,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="mixed_indentation"
+export NAME="${SCRIPT_SHORT}-IMP-mixed_indentation"
 find ./${level} -maxdepth 1 \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -148,7 +164,7 @@ find ./${level} -maxdepth 1 \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_mixed_indentation {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="gentoo_mirror_missuse"
+export NAME="${SCRIPT_SHORT}-BUG-gentoo_mirror_missuse"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -160,7 +176,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'mirror://gentoo' {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="epatch_in_eapi6"
+export NAME="${SCRIPT_SHORT}-BUG-epatch_in_eapi6"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -172,7 +188,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<epatch\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="dohtml_in_eapi6"
+export NAME="${SCRIPT_SHORT}-BUG-dohtml_in_eapi6"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -184,7 +200,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="DESCRIPTION_over_80"
+export NAME="${SCRIPT_SHORT}-BUG-description_over_80"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -196,7 +212,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="proxy-maint-check"
+export NAME="${SCRIPT_SHORT}-BUG-proxy_maint_check"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -208,7 +224,7 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_proxy_maint_check {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="fdo-mime-check"
+export NAME="${SCRIPT_SHORT}-BUG-fdo_mime_check"
 find ./${level}  \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -222,7 +238,7 @@ ${SCRIPT_MODE} && gen_sortings
 
 _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 for var in ${_varibales}; do
-	export NAME="leading_trailing_whitespace_${var}"
+	export NAME="${SCRIPT_SHORT}-IMP-leading_trailing_whitespace_${var}"
 	find ./${level}  \( \
 		-path ./scripts/\* -o \
 		-path ./profiles/\* -o \
@@ -235,4 +251,4 @@ for var in ${_varibales}; do
 	${SCRIPT_MODE} && gen_sortings
 done
 
-${SCRIPT_MODE} && script_mode_copy
+#${SCRIPT_MODE} && script_mode_copy

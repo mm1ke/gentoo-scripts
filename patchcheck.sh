@@ -25,11 +25,15 @@
 
 
 SCRIPT_MODE=false
-SCRIPT_NAME="patchtest"
+SCRIPT_NAME="patchcheck"
+SCRIPT_SHORT="PAC"
+
 PORTTREE="/usr/portage"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 DL='|'
+
+ECLASSES="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -41,19 +45,14 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 cd ${PORTTREE}
 depth_set ${1}
 
-main(){
-	local package=${1}
-
-	local category="$(echo ${package}|cut -d'/' -f2)"
-	local package_name=${package##*/}
-	local fullpath="/${PORTTREE}/${package}"
-
+_gen_whitelist(){
 	if [ -e ${startdir}/whitelist ]; then
 		source ${startdir}/whitelist
 		for i in ${white_list[@]}; do
@@ -64,18 +63,24 @@ main(){
 	fi
 	# remove duplicates
 	mapfile -t whitelist < <(printf '%s\n' "${whitelist[@]}"|sort -u)
+	echo ${whitelist[@]}
+}
 
-	local eclasses="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
-	
+main(){
+	local package=${1}
+
+	local category="$(echo ${package}|cut -d'/' -f2)"
+	local package_name=${package##*/}
+	local fullpath="/${PORTTREE}/${package}"
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then
-			if ! grep -E ".diff|.patch|FILESDIR|${eclasses}" ${fullpath}/*.ebuild >/dev/null; then
+			if ! grep -E ".diff|.patch|FILESDIR|${ECLASSES}" ${fullpath}/*.ebuild >/dev/null; then
 				main=$(get_main_min "${category}/${package_name}")
 				if ${SCRIPT_MODE}; then
-					mkdir -p ${WORKDIR}/sort-by-package/${category}
-					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WORKDIR}/sort-by-package/${category}/${package_name}.txt
-					echo -e "${category}/${package_name}${DL}${main}" >> ${WORKDIR}/full-with-maintainers.txt
+					mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/sort-by-package/${category}
+					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/sort-by-package/${category}/${package_name}.txt
+					echo -e "${category}/${package_name}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/full.txt
 				else
 					echo "${category}/${package_name}${DL}${main}"
 				fi
@@ -85,9 +90,12 @@ main(){
 }
 
 export -f main get_main_min
-export WORKDIR PORTTREE SCRIPT_MODE DL startdir
+export WORKDIR PORTTREE SCRIPT_MODE DL startdir SCRIPT_SHORT ECLASSES
+export whitelist=$(_gen_whitelist)
 
-find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/
+
+find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -98,13 +106,24 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
+#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
+	foldername="${SCRIPT_SHORT}-BUG-unused_patches_short"
+	newpath="${WORKDIR}/${foldername}"
+#	mkdir -p ${newpath}
 
-	script_mode_copy
+#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
+	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
+
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
+
+#	mkdir -p ${WORKDIR/-/_}
+#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
+#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+#	rm -rf ${WORKDIR/-/_}
+
+#	script_mode_copy
 fi

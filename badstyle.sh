@@ -29,14 +29,17 @@
 DEBUG=false
 SCRIPT_NAME="badstyle"
 SCRIPT_MODE=false
+SCRIPT_SHORT="BAS"
+
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 # set scriptmode=true on host s6
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 # get dirpath and load funcs.sh
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -51,7 +54,7 @@ cd ${PORTTREE}
 # set the search depth
 depth_set ${1}
 # export important variables
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG
+export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
 #
 ### IMPORTANT SETTINGS STOP ###
 #
@@ -68,7 +71,7 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/full.txt
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/full.txt
 	else
 		echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
@@ -76,8 +79,7 @@ main() {
 
 export -f main
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}
-
+${SCRIPT_MODE} && mkdir -p "${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/"
 pattern=(
 	"dev-libs/openssl:dev-libs/libressl"
 	)
@@ -98,15 +100,22 @@ for pat in ${pattern[@]}; do
 done
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
-	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
+#	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
+#	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
+	#new generation
+	foldername="${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/"
+	newpath="${WORKDIR}/${foldername}"
+#	mkdir -p ${newpath}
 
-	script_mode_copy
+#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
+	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
+	#end new generation
+
+#	script_mode_copy
 fi

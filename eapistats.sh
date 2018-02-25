@@ -25,14 +25,18 @@
 
 
 SCRIPT_MODE=false
-WWWDIR="${HOME}/eapistats/"
-WORKDIR="/tmp/eapistats-${RANDOM}"
+SCRIPT_NAME="eapistats"
+SCRIPT_SHORT="EAS"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
+
 fi
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -45,7 +49,7 @@ fi
 
 cd ${PORTTREE}
 depth_set ${1}
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/
 
 main() {
 	local full_package=${1}
@@ -57,31 +61,38 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/full.txt
+		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/full.txt
 	else
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 gen_sortings() {
-	for i in $(cut -c-1 ${WORKDIR}/full.txt|sort -u); do
-		mkdir -p ${WORKDIR}/${i}
-		grep ^${i}${DL} ${WORKDIR}/full.txt > ${WORKDIR}/${i}/EAPI${i}.txt
+	foldername="${SCRIPT_SHORT}-STA-eapi_statistics"
+	newpath="${WORKDIR}/${foldername}"
+
+	for i in $(cut -c-1 ${newpath}/full.txt|sort -u); do
+		mkdir -p ${newpath}/${i}
+		grep ^${i}${DL} ${newpath}/full.txt > ${newpath}/${i}/EAPI${i}.txt
 
 		# sort by packages
-		f_packages="$(cat ${WORKDIR}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
+		f_packages="$(cat ${newpath}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
 		for u in ${f_packages}; do
 			f_cat="$(echo $u|cut -d'/' -f1)"
 			f_pak="$(echo $u|cut -d'/' -f2)"
-			mkdir -p ${WORKDIR}/${i}/sort-by-package/${f_cat}
-			grep "${u}" ${WORKDIR}/${i}/EAPI${i}.txt > ${WORKDIR}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
+			mkdir -p ${newpath}/${i}/sort-by-package/${f_cat}
+			grep "${u}" ${newpath}/${i}/EAPI${i}.txt > ${newpath}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
 		done
 	
-		mkdir -p ${WORKDIR}/${i}/sort-by-maintainer/
-		for a in $(cat ${WORKDIR}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-			grep "${a}" ${WORKDIR}/${i}/EAPI${i}.txt > ${WORKDIR}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		mkdir -p ${newpath}/${i}/sort-by-maintainer/
+		for a in $(cat ${newpath}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+			grep "${a}" ${newpath}/${i}/EAPI${i}.txt > ${newpath}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 		done
 	done
+	rm -rf ${SITEDIR}/stats/${foldername}
+	cp -r ${newpath} ${SITEDIR}/stats/
+	rm -rf ${WORKDIR}
+
 }
 
 eapi_pre_check() {
@@ -94,7 +105,7 @@ eapi_pre_check() {
 }
 
 export -f eapi_pre_check main get_main_min
-export SCRIPT_MODE WORKDIR PORTTREE DL
+export SCRIPT_MODE WORKDIR PORTTREE DL SCRIPT_SHORT
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -108,6 +119,5 @@ find ./${level}  \( \
 
 if ${SCRIPT_MODE}; then
 	gen_sortings
-	script_mode_copy
 fi
 

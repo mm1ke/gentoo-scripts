@@ -26,12 +26,15 @@
 
 SCRIPT_MODE=false
 SCRIPT_NAME="eapichecks"
+SCRIPT_SHORT="EAC"
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
+
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	PORTTREE="/mnt/gentootree/gentoo-github"
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
@@ -47,7 +50,7 @@ fi
 
 cd ${PORTTREE}
 depth_set ${1}
-export PORTTREE WORKDIR SCRIPT_MODE DL
+export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
 
 
 output() {
@@ -106,11 +109,11 @@ main() {
 				fi
 				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
 					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
-						"bump_matchingkeywords"
+						"${SCRIPT_SHORT}-STA-removal_candidates"
 
 				else
 					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
-						"bump_nonmatchingkeyword"
+						"${SCRIPT_SHORT}-STA-stable_request_candidates"
 				fi
 				break 2
 			fi
@@ -120,7 +123,7 @@ main() {
 		other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
 		[ -z "${other_ebuild_eapi}" ] && other_ebuild_eapi=0
 		output "${ebuild_eapi}${DL}$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
-			"bump_needed"
+			"${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
 	fi
 }
 
@@ -149,28 +152,30 @@ for e in $(seq 1 5); do
 done
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main ${WORKDIR}/bump_needed/full.txt 5 ${WORKDIR}/bump_needed/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_needed/full.txt 3 ${WORKDIR}/bump_needed/ ${DL}
 
-	gen_sort_main ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR}/bump_nonmatchingkeyword/ ${DL}
+	#new generation
+	i="${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
+	newpath="${WORKDIR}/${i}"
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 3 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/stats/${i}
+	cp -r ${newpath} ${SITEDIR}/stats/
 
-	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR}/bump_matchingkeywords/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR}/bump_matchingkeywords/ ${DL}
+	i="${SCRIPT_SHORT}-STA-removal_candidates"
+	newpath="${WORKDIR}/${i}"
+	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
+	rm -rf ${SITEDIR}/stats/${i}
+	cp -r ${newpath} ${SITEDIR}/stats/
 
+	i="${SCRIPT_SHORT}-STA-stable_request_candidates"
+	newpath="${WORKDIR}/${i}"
+	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
+	rm -rf ${SITEDIR}/stats/${i}
+	cp -r ${newpath} ${SITEDIR}/stats/
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_main ${WORKDIR}/bump_needed/full.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_needed/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_needed/full.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_needed/ ${DL}
+	rm -rf ${WORKDIR}
+	#end new generation
 
-	gen_sort_main ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_nonmatchingkeyword/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_nonmatchingkeyword/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_nonmatchingkeyword/ ${DL}
-
-	gen_sort_main ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_matchingkeywords/ ${DL}
-	gen_sort_pak ${WORKDIR}/bump_matchingkeywords/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${WORKDIR/-/_}/${SCRIPT_NAME}-bump_matchingkeywords/ ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
-
-	script_mode_copy
 fi

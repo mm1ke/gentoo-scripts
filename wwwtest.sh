@@ -25,7 +25,8 @@
 
 SCRIPT_MODE=false
 SCRIPT_NAME="wwwtest"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SCRIPT_SHORT="WWT"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
@@ -42,7 +43,8 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 cd ${PORTTREE}
@@ -51,8 +53,10 @@ depth_set ${1}
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
-mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
-mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
+#mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
+#mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
+mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www
+mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
 
 301check() {
 	local hp=${1}
@@ -79,7 +83,7 @@ mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_w
 		if [ ${_code} = 200 ]; then
 			found=true
 			${SCRIPT_MODE} &&
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt ||
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt ||
 				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 			break
 		fi
@@ -88,7 +92,7 @@ mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_w
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		${SCRIPT_MODE} &&
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/special/301_redirections/301_redirections.txt ||
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections/full.txt ||
 			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 	fi
 }
@@ -159,7 +163,7 @@ main() {
 
 # for parallel execution
 export -f main get_code 301check
-export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL
+export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL SCRIPT_SHORT
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -173,13 +177,14 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 
 if ${SCRIPT_MODE}; then
+	mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-httpcode
 	# sort after http codes
 	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
-		grep "^${i}" ${TMPFILE} > ${WORKDIR}/sort-by-httpcode/${i}.txt
+		grep "^${i}" ${TMPFILE} > ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-httpcode/${i}.txt
 	done
 
 	# copy full log
-	cp ${TMPFILE} ${WORKDIR}/full.txt
+	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt
 	# copy full log, ignoring "good" codes
 	sed -i "/^VAR/d; \
 		/^FTP/d; \
@@ -190,58 +195,92 @@ if ${SCRIPT_MODE}; then
 		/^400/d; \
 		/^503/d; \
 		" ${TMPFILE}
-	cp ${TMPFILE} ${WORKDIR}/full-filtered.txt
+	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-filtered.txt
 
-	mkdir -p ${WORKDIR/-/_}
+#	mkdir -p ${WORKDIR/-/_}
 
 	# special filters
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 	for site in ${_filters[@]}; do
-		mkdir -p ${WORKDIR}/sort-by-filter/${site}
-		grep ${site} ${WORKDIR}/full.txt > ${WORKDIR}/sort-by-filter/${site}/${site}.txt
-		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
-		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR}/sort-by-filter/${site}/ ${DL}
+		foldername="${SCRIPT_SHORT}-BUG-www_upstream_shutdown_${site}"
+		newpath="${WORKDIR}/${foldername}"
 
-		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
-		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
+		mkdir -p ${WORKDIR}/${foldername}
+#		cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_upstream_shutdown_${site}/
+		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt > ${WORKDIR}/${foldername}/full.txt
+
+		gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
+		gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
+
+		rm -rf ${SITEDIR}/checks/${foldername}
+		cp -r ${newpath} ${SITEDIR}/checks/
+		#rm -rf ${WORKDIR}
+
+#		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
+#		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
 
 	done
 
+
+	foldername="${SCRIPT_SHORT}-IMP-unsync_homepages"
+	newpath="${WORKDIR}/${foldername}"
+
 	# find different homepages in same packages
-	for i in $(cat ${WORKDIR}/full.txt | cut -d'|' -f2|sort -u); do
+	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt | cut -d'|' -f2|sort -u); do
 		hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 		if [ "${hp_lines}" -gt 1 ]; then
-			mkdir -p ${WORKDIR}/special/unsync-homepages/sort-by-package/${i%%/*}
-			grep "|${i}|" ${WORKDIR}/full.txt > ${WORKDIR}/special/unsync-homepages/sort-by-package/${i}.txt
-			grep "|${i}|" ${WORKDIR}/full.txt |head -n1| cut -d'|' -f2,5  >> ${WORKDIR}/special/unsync-homepages/full.txt
+			mkdir -p ${WORKDIR}/${foldername}/sort-by-package/${i%%/*}
+			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt > ${newpath}/sort-by-package/${i}.txt
+			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt |head -n1| cut -d'|' -f2,5  >> ${newpath}/full.txt
 		fi
 	done
 	# sort unsync homepages by maintainer
-	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR}/special/unsync-homepages/ ${DL}
+	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+
+	foldername="${SCRIPT_SHORT}-IMP-301_redirections"
+	newpath="${WORKDIR}/${foldername}"
 	# create sortings for 301_redirections
-	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR}/special/301_redirections/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR}/special/301_redirections/ ${DL}
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+
+	foldername="${SCRIPT_SHORT}-IMP-301_slash_https_www"
+	newpath="${WORKDIR}/${foldername}"
+
 	# create sortings for 301_slash_https_www
-	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR}/special/301_slash_https_www/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR}/special/301_slash_https_www/ ${DL}
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+	foldername="${SCRIPT_SHORT}-BUG-www_status_code"
+	newpath="${WORKDIR}/${foldername}"
 	# sort by packages, ignoring "good" codes
-	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR} ${DL}
+	gen_sort_pak ${newpath}/full-filtered.txt 2 ${newpath} ${DL}
 	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR} ${DL}
+	gen_sort_main ${newpath}/full-filtered.txt 5 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
 
-	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-unsync-homepages/ ${DL}
-	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
-	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
-	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
-	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
-
-	# remove tmpfile
-	rm ${TMPFILE}
-	script_mode_copy
+#	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-unsync-homepages/ ${DL}
+#	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
+#	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
+#	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
+#	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
+#	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
+#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+#	rm -rf ${WORKDIR/-/_}
+#
+#	# remove tmpfile
+#	rm ${TMPFILE}
+#	script_mode_copy
 fi
 rm ${TMPCHECK}

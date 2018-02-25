@@ -25,8 +25,9 @@
 
 SCRIPT_MODE=false
 SCRIPT_NAME="srctest"
+SCRIPT_SHORT="SRT"
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
@@ -41,7 +42,8 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 touch ${TMPCHECK}
@@ -65,8 +67,8 @@ main() {
 		local msg=${1}
 		local status=${2}
 		if ${SCRIPT_MODE}; then
-			echo "${msg}" >> "${WORKDIR}/full_${status}.txt"
-			echo "${status}${DL}${msg}" >> "${WORKDIR}/full.txt"
+			echo "${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full_${status}.txt"
+			echo "${status}${DL}${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt"
 		else
 			echo "${status}${DL}${msg}"
 		fi
@@ -125,7 +127,9 @@ main() {
 }
 
 export -f main get_main_min
-export PORTTREE WORKDIR SCRIPT_MODE TMPCHECK DL
+export PORTTREE WORKDIR SCRIPT_MODE TMPCHECK DL SCRIPT_SHORT
+
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -138,20 +142,33 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	# sort by packages, ignoring "good" codes
-	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR} ${DL}
-	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
+	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
+	newpath="${WORKDIR}/${foldername}"
+#	mkdir -p ${newpath}
 
+#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
+	gen_sort_main ${newpath}/full_not_available.txt 4 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full_not_available.txt 1 ${newpath} ${DL}
 
-	# copy files to wwwdir
-	script_mode_copy
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
+
+#	# sort by packages, ignoring "good" codes
+#	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR} ${DL}
+#	# sort by maintainer, ignoring "good" codes
+#	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
+#
+#	mkdir -p ${WORKDIR/-/_}
+#	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
+#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+#	rm -rf ${WORKDIR/-/_}
+#
+#
+#	# copy files to wwwdir
+#	script_mode_copy
 fi
 rm ${TMPCHECK}

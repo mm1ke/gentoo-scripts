@@ -27,10 +27,12 @@ DEBUG=false
 
 SCRIPT_MODE=false
 SCRIPT_NAME="patchtest"
+SCRIPT_SHORT="PAT"
+
 PORTTREE="/usr/portage/"
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
-TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d).txt"
+#TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d).txt"
 DL='|'
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -43,7 +45,8 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
 cd ${PORTTREE}
@@ -467,7 +470,7 @@ main(){
 		if [ ${#unused_patches[@]} -gt 0 ]; then
 			if ${SCRIPT_MODE}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${TMPFILE}
+					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches/full.txt
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
@@ -482,7 +485,9 @@ main(){
 }
 
 export -f main get_perm get_main_min
-export TMPFILE PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir
+export PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir SCRIPT_SHORT
+
+${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches/
 
 # Dont use parallel if DEBUG is enabled
 if ${DEBUG}; then
@@ -510,21 +515,32 @@ else
 fi
 
 if ${SCRIPT_MODE}; then
-	mkdir ${WORKDIR}
-	cp ${TMPFILE} ${WORKDIR}/full-with-maintainers.txt
-	rm ${TMPFILE}
+#	mkdir ${WORKDIR}
+#	cp ${TMPFILE} ${WORKDIR}/full-with-maintainers.txt
+#	rm ${TMPFILE}
+	foldername="${SCRIPT_SHORT}-BUG-unused_patches"
+	newpath="${WORKDIR}/${foldername}"
+#	mkdir -p ${newpath}
 
-	# sort by packages
-	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR} ${DL}
-	# sort by maintainer
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR} ${DL}
+#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
+	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 
-	mkdir -p ${WORKDIR/-/_}
-	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-	rm -rf ${WORKDIR/-/_}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
 
-	script_mode_copy
+#	# sort by packages
+#	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR} ${DL}
+#	# sort by maintainer
+#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR} ${DL}
+#
+#	mkdir -p ${WORKDIR/-/_}
+#	gen_sort_pak ${WORKDIR}/full-with-maintainers.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 3 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
+#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
+#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
+#	rm -rf ${WORKDIR/-/_}
+#
+#	script_mode_copy
 fi
