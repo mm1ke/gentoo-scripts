@@ -108,6 +108,12 @@ pre_check_eapi6() {
 	fi
 }
 
+pre_check_homepage_var() {
+	if ! grep 'HOMEPAGE=.*${HOMEPAGE}' ${1} >/dev/null; then
+		main ${1}
+	fi
+}
+
 pre_check_description_over_80() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -136,7 +142,7 @@ pre_proxy_maint_check() {
 }
 
 export -f main get_main_min
-export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check
+export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check pre_check_homepage_var
 export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
 
 # find trailing whitespaces
@@ -250,5 +256,17 @@ for var in ${_varibales}; do
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
 	${SCRIPT_MODE} && gen_sortings
 done
+
+export NAME="${SCRIPT_SHORT}-BUG-homepage_with_vars"
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
+${SCRIPT_MODE} && gen_sortings
 
 #${SCRIPT_MODE} && script_mode_copy
