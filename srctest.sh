@@ -42,7 +42,6 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
@@ -145,30 +144,12 @@ if ${SCRIPT_MODE}; then
 
 	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
 	newpath="${WORKDIR}/${foldername}"
-#	mkdir -p ${newpath}
 
-#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
 	gen_sort_main ${newpath}/full_not_available.txt 4 ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full_not_available.txt 1 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-
-#	# sort by packages, ignoring "good" codes
-#	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR} ${DL}
-#	# sort by maintainer, ignoring "good" codes
-#	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR} ${DL}
-#
-#	mkdir -p ${WORKDIR/-/_}
-#	gen_sort_pak ${WORKDIR}/full_not_available.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-#	gen_sort_main ${WORKDIR}/full_not_available.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-#	rm -rf ${WORKDIR/-/_}
-#
-#
-#	# copy files to wwwdir
-#	script_mode_copy
 fi
 rm ${TMPCHECK}
