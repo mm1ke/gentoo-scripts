@@ -38,7 +38,6 @@ DL='|'
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 # get dirpath and load funcs.sh
@@ -64,10 +63,6 @@ main() {
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
-	#local packagename="${filename%.*}"
-	#local full_path="${PORTTREE}/${category}/${package}"
-	#local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
-
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
@@ -100,22 +95,13 @@ for pat in ${pattern[@]}; do
 done
 
 if ${SCRIPT_MODE}; then
-#	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
-#	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
-
-	#new generation
 	foldername="${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/"
 	newpath="${WORKDIR}/${foldername}"
-#	mkdir -p ${newpath}
 
-#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
 	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-	#end new generation
-
-#	script_mode_copy
 fi
