@@ -39,7 +39,6 @@ SITEDIR="${HOME}/${SCRIPT_NAME}/"
 # set scriptmode=true on host s6
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 # get dirpath and load funcs.sh
@@ -64,10 +63,6 @@ main() {
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
-#	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
-#	local packagename="${filename%.*}"
-#	local full_path="${PORTTREE}/${category}/${package}"
-#	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	localuses="$(grep "flag name" ${absolute_path} | cut -d'"' -f2)"
@@ -104,22 +99,13 @@ find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-#	gen_sort_main ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
-#	gen_sort_pak ${WORKDIR}/full.txt 1 ${WORKDIR} ${DL}
-
-	#new generation
 	foldername="${SCRIPT_SHORT}-BUG-duplicate_uses/"
 	newpath="${WORKDIR}/${foldername}"
-#	mkdir -p ${newpath}
 
-#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
 	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-	#end new generation
-
-#	script_mode_copy
 fi
