@@ -43,7 +43,6 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
@@ -197,7 +196,6 @@ if ${SCRIPT_MODE}; then
 		" ${TMPFILE}
 	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-filtered.txt
 
-#	mkdir -p ${WORKDIR/-/_}
 
 	# special filters
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
@@ -206,7 +204,6 @@ if ${SCRIPT_MODE}; then
 		newpath="${WORKDIR}/${foldername}"
 
 		mkdir -p ${WORKDIR}/${foldername}
-#		cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_upstream_shutdown_${site}/
 		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt > ${WORKDIR}/${foldername}/full.txt
 
 		gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
@@ -214,11 +211,6 @@ if ${SCRIPT_MODE}; then
 
 		rm -rf ${SITEDIR}/checks/${foldername}
 		cp -r ${newpath} ${SITEDIR}/checks/
-		#rm -rf ${WORKDIR}
-
-#		gen_sort_main ${WORKDIR}/sort-by-filter/${site}/${site}.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
-#		gen_sort_pak ${WORKDIR}/sort-by-filter/${site}/${site}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${site}/ ${DL}
-
 	done
 
 
@@ -267,20 +259,5 @@ if ${SCRIPT_MODE}; then
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-
-#	gen_sort_main ${WORKDIR}/special/unsync-homepages/full.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-unsync-homepages/ ${DL}
-#	gen_sort_pak ${WORKDIR}/special/301_redirections/301_redirections.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
-#	gen_sort_main ${WORKDIR}/special/301_redirections/301_redirections.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_redirections/ ${DL}
-#	gen_sort_pak ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
-#	gen_sort_main ${WORKDIR}/special/301_slash_https_www/301_slash_https_www.txt 4 ${WORKDIR/-/_}/${SCRIPT_NAME}-301_slash_https_www/ ${DL}
-#	gen_sort_pak ${WORKDIR}/full-filtered.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-#	gen_sort_main ${WORKDIR}/full-filtered.txt 5 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-#	rm -rf ${WORKDIR/-/_}
-#
-#	# remove tmpfile
-#	rm ${TMPFILE}
-#	script_mode_copy
 fi
 rm ${TMPCHECK}
