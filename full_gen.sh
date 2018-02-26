@@ -31,45 +31,10 @@ else
 	exit 1
 fi
 
-#WWWDIR="/var/www/gentoo.levelnine.at/"
 WORKDIR="/tmp/full-gen-${RANDOM}"
 SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 
 mkdir -p ${WORKDIR}
-
-#_dirs_to_check="patchcheck \
-#	patchtest \
-#	simplechecks/DESCRIPTION_over_80 \
-#	simplechecks/dohtml_in_eapi6 \
-#	simplechecks/epatch_in_eapi6 \
-#	simplechecks/fdo-mime-check \
-#	simplechecks/gentoo_mirror_missuse \
-#	simplechecks/leading_trailing_whitespace_DEPEND \
-#	simplechecks/leading_trailing_whitespace_DESCRIPTION \
-#	simplechecks/leading_trailing_whitespace_IUSE \
-#	simplechecks/leading_trailing_whitespace_KEYWORDS \
-#	simplechecks/leading_trailing_whitespace_LICENSE \
-#	simplechecks/leading_trailing_whitespace_RDEPEND \
-#	simplechecks/leading_trailing_whitespace_SRC_URI \
-#	simplechecks/mixed_indentation \
-#	simplechecks/proxy-maint-check \
-#	simplechecks/trailing_whitespaces \
-#	srctest \
-#	wwwtest \
-#	wwwtest/special/unsync-homepages \
-#	wwwtest/special/301_redirections \
-#	wwwtest/special/301_slash_https_www \
-#	wwwtest/sort-by-filter/berlios.de \
-#	wwwtest/sort-by-filter/code.google.com \
-#	wwwtest/sort-by-filter/codehaus.org \
-#	wwwtest/sort-by-filter/fedorahosted.org \
-#	wwwtest/sort-by-filter/freecode.com \
-#	wwwtest/sort-by-filter/freshmeat.net \
-#	wwwtest/sort-by-filter/gitorious.org \
-#	wwwtest/sort-by-filter/gna.org \
-#	badstyle
-#	dupuse"
-
 mkdir -p ${WORKDIR}/0_full_list/{sort-by-maintainer,sort-by-package}
 
 for typ in IMP BUG; do
