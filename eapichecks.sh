@@ -96,6 +96,8 @@ main() {
 		org_name=${name}
 	fi
 
+	local i
+
 	# check for maximal 10 reversion
 	for i in $(seq $start 10); do
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
@@ -154,25 +156,25 @@ done
 if ${SCRIPT_MODE}; then
 
 	#new generation
-	i="${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
-	newpath="${WORKDIR}/${i}"
+	foldername="${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
+	newpath="${WORKDIR}/${foldername}"
 	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt 3 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${i}
+	rm -rf ${SITEDIR}/stats/${foldername}
 	cp -r ${newpath} ${SITEDIR}/stats/
 
-	i="${SCRIPT_SHORT}-STA-removal_candidates"
-	newpath="${WORKDIR}/${i}"
+	foldername="${SCRIPT_SHORT}-STA-removal_candidates"
+	newpath="${WORKDIR}/${foldername}"
 	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${i}
+	rm -rf ${SITEDIR}/stats/${foldername}
 	cp -r ${newpath} ${SITEDIR}/stats/
 
-	i="${SCRIPT_SHORT}-STA-stable_request_candidates"
-	newpath="${WORKDIR}/${i}"
+	foldername="${SCRIPT_SHORT}-STA-stable_request_candidates"
+	newpath="${WORKDIR}/${foldername}"
 	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${i}
+	rm -rf ${SITEDIR}/stats/${foldername}
 	cp -r ${newpath} ${SITEDIR}/stats/
 
 	rm -rf ${WORKDIR}
