@@ -45,7 +45,6 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
@@ -106,24 +105,11 @@ find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR} ${DL}
-
 	foldername="${SCRIPT_SHORT}-BUG-unused_patches_short"
 	newpath="${WORKDIR}/${foldername}"
-#	mkdir -p ${newpath}
-
-#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
 	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-
-#	mkdir -p ${WORKDIR/-/_}
-#	gen_sort_main ${WORKDIR}/full-with-maintainers.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME} ${DL}
-#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-#	rm -rf ${WORKDIR/-/_}
-
-#	script_mode_copy
 fi
