@@ -44,7 +44,6 @@ fi
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
@@ -68,32 +67,15 @@ main() {
 }
 
 gen_sortings() {
-
 	foldername="${NAME}"
 	newpath="${WORKDIR}/${NAME}"
-#	mkdir -p ${newpath}
 
-#	cp ${WORKDIR}/full.txt ${newpath}/full.txt
 	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
 	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
-
-
-#	# sort by packages
-#	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR}/${NAME}/ ${DL}
-#	# sort by maintainer, ignoring "good" codes
-#	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR}/${NAME}/ ${DL}
-#
-#	mkdir -p ${WORKDIR/-/_}
-#	gen_sort_pak ${WORKDIR}/${NAME}/${NAME}.txt 1 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
-#	# sort by maintainer, ignoring "good" codes
-#	gen_sort_main ${WORKDIR}/${NAME}/${NAME}.txt 2 ${WORKDIR/-/_}/${SCRIPT_NAME}-${NAME}/ ${DL}
-#	rm -rf /var/www/gentooqa.levelnine.at/results/${SCRIPT_NAME}*
-#	cp -r ${WORKDIR/-/_}/* /var/www/gentooqa.levelnine.at/results/checks/
-#	rm -rf ${WORKDIR/-/_}
 }
 
 pre_check_mixed_indentation() {
@@ -268,5 +250,3 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
 ${SCRIPT_MODE} && gen_sortings
-
-#${SCRIPT_MODE} && script_mode_copy
