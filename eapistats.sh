@@ -34,7 +34,6 @@ DL='|'
 
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-#	WWWDIR="/var/www/gentoo.levelnine.at/eapistats/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 
 fi
