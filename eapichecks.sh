@@ -33,7 +33,6 @@ SITEDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
 	PORTTREE="/mnt/gentootree/gentoo-github"
-#	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
@@ -155,7 +154,6 @@ done
 
 if ${SCRIPT_MODE}; then
 
-	#new generation
 	foldername="${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
 	newpath="${WORKDIR}/${foldername}"
 	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
@@ -178,6 +176,5 @@ if ${SCRIPT_MODE}; then
 	cp -r ${newpath} ${SITEDIR}/stats/
 
 	rm -rf ${WORKDIR}
-	#end new generation
 
 fi
