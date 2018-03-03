@@ -35,72 +35,72 @@ WORKDIR="/tmp/full-gen-${RANDOM}"
 SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 
 mkdir -p ${WORKDIR}
-mkdir -p ${WORKDIR}/0_full_list/{sort-by-maintainer,sort-by-package}
+mkdir -p ${WORKDIR}/full_list/{sort-by-maintainer,sort-by-package}
 
 for typ in IMP BUG; do
 
-	mkdir -p ${WORKDIR}/0_full_list_${typ}/{sort-by-package,sort-by-maintainer}
+	mkdir -p ${WORKDIR}/full_list_${typ}/{sort-by-package,sort-by-maintainer}
 
 	for check in ${SITEDIR}/checks/*-${typ}-*; do
 		for main in $(ls ${check}/sort-by-maintainer/); do
-			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/0_full_list_${typ}/sort-by-maintainer/${main}
-			cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/0_full_list_${typ}/sort-by-maintainer/${main}
+			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/full_list_${typ}/sort-by-maintainer/${main}
+			cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/full_list_${typ}/sort-by-maintainer/${main}
 		done
 	done
 
 	for check in ${SITEDIR}/checks/*-${typ}-*; do
 		for cat in $(ls ${check}/sort-by-package/); do
-			mkdir -p ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}
+			mkdir -p ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}
 			for pack in $(ls ${check}/sort-by-package/${cat}/); do
-				echo "<<< ${check##*/} >>>" >> ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}/${pack}
-				cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}/${pack}
+				echo "<<< ${check##*/} >>>" >> ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}/${pack}
+				cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}/${pack}
 			done
 		done
 	done
 
 	if [ "${typ}" = "BUG" ]; then
-		for cat in $(ls ${WORKDIR}/0_full_list_${typ}/sort-by-package/); do
-			for pack in $(ls ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}/); do
-				echo "<<< open bugs >>>" >> ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}/${pack}
+		for cat in $(ls ${WORKDIR}/full_list_${typ}/sort-by-package/); do
+			for pack in $(ls ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}/); do
+				echo "<<< open bugs >>>" >> ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}/${pack}
 				openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-				echo "${openbugs}" >> ${WORKDIR}/0_full_list_${typ}/sort-by-package/${cat}/${pack}
+				echo "${openbugs}" >> ${WORKDIR}/full_list_${typ}/sort-by-package/${cat}/${pack}
 			done
 		done
 	fi
 
-	[ -n "${SITEDIR}/checks/0_full_list_${typ}" ] && rm -rf ${SITEDIR}/checks/0_full_list_${typ}/
-	cp -r ${WORKDIR}/0_full_list_${typ} ${SITEDIR}/checks/
+	[ -n "${SITEDIR}/full_Lists/full_list_${typ}" ] && rm -rf ${SITEDIR}/full_lists/full_list_${typ}/
+	cp -r ${WORKDIR}/full_list_${typ} ${SITEDIR}/full_lists/
 	rm -rf ${WORKDIR}
 done
 
-mkdir -p ${WORKDIR}/0_full_list/{sort-by-package,sort-by-maintainer}
+mkdir -p ${WORKDIR}/full_list/{sort-by-package,sort-by-maintainer}
 
 for check in ${SITEDIR}/checks/*-*-*; do
 	for main in $(ls ${check}/sort-by-maintainer/); do
-		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/0_full_list/sort-by-maintainer/${main}
-		cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/0_full_list/sort-by-maintainer/${main}
+		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/full_list/sort-by-maintainer/${main}
+		cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/full_list/sort-by-maintainer/${main}
 	done
 done
 
 for check in ${SITEDIR}/checks/*-*-*; do
 	for cat in $(ls ${check}/sort-by-package/); do
-		mkdir -p ${WORKDIR}/0_full_list/sort-by-package/${cat}
+		mkdir -p ${WORKDIR}/full_list/sort-by-package/${cat}
 		for pack in $(ls ${check}/sort-by-package/${cat}/); do
-			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/0_full_list/sort-by-package/${cat}/${pack}
-			cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/0_full_list/sort-by-package/${cat}/${pack}
+			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/full_list/sort-by-package/${cat}/${pack}
+			cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/full_list/sort-by-package/${cat}/${pack}
 		done
 	done
 done
 
-for cat in $(ls ${WORKDIR}/0_full_list/sort-by-package/); do
-	for pack in $(ls ${WORKDIR}/0_full_list/sort-by-package/${cat}/); do
-		echo "<<< open bugs >>>" >> ${WORKDIR}/0_full_list/sort-by-package/${cat}/${pack}
+for cat in $(ls ${WORKDIR}/full_list/sort-by-package/); do
+	for pack in $(ls ${WORKDIR}/full_list/sort-by-package/${cat}/); do
+		echo "<<< open bugs >>>" >> ${WORKDIR}/full_list/sort-by-package/${cat}/${pack}
 		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-		echo "${openbugs}" >> ${WORKDIR}/0_full_list/sort-by-package/${cat}/${pack}
+		echo "${openbugs}" >> ${WORKDIR}/full_list/sort-by-package/${cat}/${pack}
 	done
 done
 
-[ -n "${SITEDIR}/checks/0_full_list" ] && rm -rf ${SITEDIR}/checks/0_full_list/
-cp -r ${WORKDIR}/0_full_list ${SITEDIR}/checks/
+[ -n "${SITEDIR}/full_lists/full_list" ] && rm -rf ${SITEDIR}/full_lists/full_list/
+cp -r ${WORKDIR}/full_list ${SITEDIR}/full_lists/
 rm -rf ${WORKDIR}
 
