@@ -213,6 +213,19 @@ if ${SCRIPT_MODE}; then
 		cp -r ${newpath} ${SITEDIR}/checks/
 	done
 
+	for site in ${_filters[@]}; do
+		foldername="${SCRIPT_SHORT}-BUG-www_upstream_shutdown"
+		newpath="${WORKDIR}/${foldername}"
+
+		mkdir -p ${WORKDIR}/${foldername}
+		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${WORKDIR}/${foldername}/full.txt
+
+		gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
+		gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
+
+		rm -rf ${SITEDIR}/checks/${foldername}
+		cp -r ${newpath} ${SITEDIR}/checks/
+	done
 
 	foldername="${SCRIPT_SHORT}-IMP-unsync_homepages"
 	newpath="${WORKDIR}/${foldername}"
