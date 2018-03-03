@@ -68,44 +68,74 @@ _update_buglists(){
 }
 _update_buglists
 
+
 gen_http_sort_main(){
 
-	local dir="${1}"
-	local date="$(date -I)"
-	local value_maintainer="$(ls ${dir}/sort-by-maintainer/|wc -l)"
+
+
+	local type="${1}"
+	local dir="${2}"
+
+	case ${type} in
+		results)
+			local value_title="${dir##*/}"
+			local value_line="Checks proceeded: <b>$(ls ${dir}|wc -l)"
+			;;
+		main)
+			local value_title="${dir##*/}"
+			local value_line="Total Maintainers: <b>$(ls ${dir}/sort-by-maintainer/|wc -l)"
+			;;
+	esac
+
 
 read -r -d '' TOP <<- EOM
 <html>
 \t<head>
-\t\t<style type="text/css"> li a { font-family: monospace; display: block; float: left; }</style>
-\t\t<title>testhttp</title>
+\t\t<style type="text/css"> li a { font-family: monospace; display:block; float: left; }</style>
+\t\t<title>Gentoo QA: ${value_title}</title>
 \t</head>
-\t<body>
-\t\tList generated on ${date}</br>
-\t\tTotal Maintainers: <b>${value_maintainer}</b><br/><br/>
-\t\t<table frame=box rules=all>
-\t\t\t<tr>
-\t\t\t\t<th>Maintainer</th>
-\t\t\t\t<th>Value</th>
-\t\t\t</tr>
+\t<body text="black" bgcolor="white">
+\t\tList generated on $(date -I)</br>
+\t\t${value_line}</b><br/><br/>
+<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/results/">Home</a></pre>
+\t\t<hr><pre>
 EOM
 
 read -r -d '' BOTTOM <<- EOM
 \t\t</table>
-\t</body>
+\t</pre></hr></body>
 </html>
 EOM
 
+
 	echo -e "${TOP}"
-	
-	for i in $(ls ${dir}/sort-by-maintainer/); do
-		main="${i}"
-		val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
-		echo "<tr>"
-		echo "<td><a href=\"sort-by-maintainer/${main}\">${main::-4}</a></td>"
-		echo "<td>${val}</td>"
-		echo "</tr>"
-	done
+
+	case ${type} in
+		results)
+			echo "QTY     Check"
+			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
+				val="$(cat ${u}/full.txt | wc -l)"
+		
+				a="<a href=\"${u##*/}/${u##*/}.html\">${u##*/}</a>"
+				line='      '
+				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
+			done
+		;;
+
+		main)
+			echo "QTY     Maintainer"
+			for i in $(ls ${dir}/sort-by-maintainer/); do
+				main="${i}"
+				val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
+		
+				a="<a href=\"sort-by-maintainer/${main}\">${main::-4}</a>"
+				line='      '
+				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
+			
+			
+			done
+		;;
+	esac
 	
 	echo -e "${BOTTOM}"
 }
