@@ -56,6 +56,8 @@ touch ${TMPCHECK}
 #mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
 mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www
 mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
+mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www
+mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
 
 301check() {
 	local hp=${1}
@@ -66,13 +68,18 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
 	local lastchar="${hp: -1}"
 
 	_sitemuts=("${hp/http:\/\//https:\/\/}" \
-		"${hp/http:\/\//https:\/\/www.}" \
-		"${hp/https:\/\//https:\/\/www.}" \
-		"${hp/http:\/\//http:\/\/www.}")
+		"${hp/http:\/\//https:\/\/www.}")
+
 	if ! [ "${lastchar}" = "/" ]; then
-		_sitemuts+=("${hp}/" \
-		"${hp/http:\/\//https:\/\/}/" \
-		"${hp/http:\/\//https:\/\/www.}/" \
+		_sitemuts+=("${hp/http:\/\//https:\/\/}/" \
+			"${hp/http:\/\//https:\/\/www.}/")
+	fi
+
+	_sitemuts_v2=("${hp/https:\/\//https:\/\/www.}" \
+		"${hp/http:\/\//http:\/\/www.}")
+
+	if ! [ "${lastchar}" = "/" ]; then
+		_sitemuts_v2+=("${hp}/" \
 		"${hp/https:\/\//https:\/\/www.}/" \
 		"${hp/http:\/\//http:\/\/www.}/")
 	fi
@@ -81,18 +88,39 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
 		local _code="$(get_code ${sitemut})"
 		if [ ${_code} = 200 ]; then
 			found=true
-			${SCRIPT_MODE} &&
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt ||
+			if ${SCRIPT_MODE}; then
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
+				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https/full.txt
+			else
 				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+			fi
 			break
 		fi
 	done
 	if ! ${found}; then
+		for sitemut in ${_sitemuts_v2[@]}; do
+			local _code="$(get_code ${sitemut})"
+			if [ ${_code} = 200 ]; then
+				found=true
+				if ${SCRIPT_MODE}; then
+					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
+					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www/full.txt
+				else
+					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+				fi
+				break
+			fi
+		done
+	fi
+
+	if ! ${found}; then
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
-		${SCRIPT_MODE} &&
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections/full.txt ||
+		if ${SCRIPT_MODE}; then
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections/full.txt
+		else
 			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
+		fi
 	fi
 }
 
@@ -213,19 +241,19 @@ if ${SCRIPT_MODE}; then
 		cp -r ${newpath} ${SITEDIR}/checks/
 	done
 
+
+	foldername="${SCRIPT_SHORT}-BUG-www_upstream_shutdown"
+	newpath="${WORKDIR}/${foldername}"
 	for site in ${_filters[@]}; do
-		foldername="${SCRIPT_SHORT}-BUG-www_upstream_shutdown"
-		newpath="${WORKDIR}/${foldername}"
-
 		mkdir -p ${WORKDIR}/${foldername}
-		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${WORKDIR}/${foldername}/full.txt
+		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt >> ${WORKDIR}/${foldername}/full.txt
 
-		gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
-		gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
-
-		rm -rf ${SITEDIR}/checks/${foldername}
-		cp -r ${newpath} ${SITEDIR}/checks/
 	done
+	gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
 
 	foldername="${SCRIPT_SHORT}-IMP-unsync_homepages"
 	newpath="${WORKDIR}/${foldername}"
@@ -253,6 +281,21 @@ if ${SCRIPT_MODE}; then
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 
+	foldername="${SCRIPT_SHORT}-IMP-redirection_http_to_https"
+	newpath="${WORKDIR}/${foldername}"
+	# create sortings for 301_redirections
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+	foldername="${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"
+	newpath="${WORKDIR}/${foldername}"
+	# create sortings for 301_redirections
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
 
 	foldername="${SCRIPT_SHORT}-IMP-301_slash_https_www"
 	newpath="${WORKDIR}/${foldername}"
