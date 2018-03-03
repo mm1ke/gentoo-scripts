@@ -39,11 +39,11 @@ _update_buglists(){
 	local BUG_FILES="UNCONFIRMED CONFIRMED IN_PROGRESS"
 
 	mkdir -p ${BUGTMPDIR}
-	
+
 	if ! [ -e "${BUGTMPDIR}/full-$(date -I).txt" ]; then
 
 		find ${BUGTMPDIR}/* -mtime +2 -exec rm -f {} \; >/dev/null 2>&1
-	
+
 		for file in ${BUG_FILES}; do
 			local bugfile="${BUGTMPDIR}/${file}-$(date -I).txt"
 			curl -s https://bugs.gentoo.org/data/cached/buglist-${file}.html > ${bugfile}
@@ -70,9 +70,6 @@ _update_buglists
 
 
 gen_http_sort_main(){
-
-
-
 	local type="${1}"
 	local dir="${2}"
 
@@ -115,7 +112,7 @@ EOM
 			echo "QTY     Check"
 			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
 				val="$(cat ${u}/full.txt | wc -l)"
-		
+
 				a="<a href=\"${u##*/}/${u##*/}.html\">${u##*/}</a>"
 				line='      '
 				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
@@ -127,28 +124,28 @@ EOM
 			for i in $(ls ${dir}/sort-by-maintainer/); do
 				main="${i}"
 				val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
-		
+
 				a="<a href=\"sort-by-maintainer/${main}\">${main::-4}</a>"
 				line='      '
 				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
-			
-			
 			done
 		;;
 	esac
-	
+
 	echo -e "${BOTTOM}"
 }
 
 get_bugs(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
+
 	[ -n "${return}" ] && echo "${return::-1}"
 }
 
 get_bugs_full(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f1,3)"
+
 	[ -n "${return}" ] && echo "${return}"
 }
 
@@ -225,6 +222,7 @@ depth_set() {
 get_age() {
 	local file=${1}
 	local date_today="$(date '+%s' -d today)"
+
 	if ${ENABLE_GIT}; then
 		fileage="$(expr \( "${date_today}" - \
 			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${category}/${package}/${file} \
@@ -233,13 +231,6 @@ get_age() {
 	else
 		echo ""
 	fi
-}
-
-
-script_mode_copy() {
-	[ -n "${WWWDIR}" ] && rm -rf ${WWWDIR}/*
-	cp -r ${WORKDIR}/* ${WWWDIR}/
-	rm -rf ${WORKDIR}
 }
 
 get_main_min(){
