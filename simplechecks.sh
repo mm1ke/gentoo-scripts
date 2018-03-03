@@ -60,9 +60,9 @@ main() {
 
 	if ${SCRIPT_MODE}; then
 		mkdir -p /${WORKDIR}/${NAME}/
-		echo "${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/full.txt
+		echo "${VARI}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${NAME}/full.txt
 	else
-		echo "${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${VARI}${NAME}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -250,3 +250,19 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
 ${SCRIPT_MODE} && gen_sortings
+
+_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
+for var in ${_varibales}; do
+	export VARI="${var}${DL}"
+	export NAME="${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"
+	find ./${level}  \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
+	${SCRIPT_MODE} && gen_sortings
+done
