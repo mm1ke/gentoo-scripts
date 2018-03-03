@@ -27,16 +27,20 @@
 ### IMPORTANT SETTINGS START ###
 #
 DEBUG=false
+
 SCRIPT_NAME="tmpcheck"
+SCRIPT_SHORT="TMC"
 SCRIPT_MODE=false
+
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
+
 # set scriptmode=true on host s6
-WWWDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = s6 ]; then
 	SCRIPT_MODE=true
-	WWWDIR="/var/www/gentoo.levelnine.at/${SCRIPT_NAME}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 # get dirpath and load funcs.sh
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -51,7 +55,7 @@ cd ${PORTTREE}
 # set the search depth
 depth_set ${1}
 # export important variables
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG
+export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
 #
 ### IMPORTANT SETTINGS STOP ###
 #
@@ -81,7 +85,7 @@ main() {
 	fi
 
 	if ${SCRIPT_MODE}; then
-		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/full.txt
+		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-tmpcheck/full.txt
 	else
 		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}"
 	fi
@@ -102,8 +106,13 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'dev-libs/openssl.*dev-libs/libressl' {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main ${WORKDIR}/full.txt 5 ${WORKDIR} ${DL}
-	gen_sort_pak ${WORKDIR}/full.txt 3 ${WORKDIR} ${DL}
+	foldername="${SCRIPT_SHORT}-IMP-tmpcheck/"
+	newpath="${WORKDIR}/${foldername}"
 
-	script_mode_copy
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 3 ${newpath} ${DL}
+
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
 fi
