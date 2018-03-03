@@ -183,7 +183,7 @@ if ${SCRIPT_MODE}; then
 	done
 
 	# copy full log
-	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt
+	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt
 	# copy full log, ignoring "good" codes
 	sed -i "/^VAR/d; \
 		/^FTP/d; \
@@ -194,7 +194,7 @@ if ${SCRIPT_MODE}; then
 		/^400/d; \
 		/^503/d; \
 		" ${TMPFILE}
-	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-filtered.txt
+	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt
 
 
 	# special filters
@@ -204,7 +204,7 @@ if ${SCRIPT_MODE}; then
 		newpath="${WORKDIR}/${foldername}"
 
 		mkdir -p ${WORKDIR}/${foldername}
-		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt > ${WORKDIR}/${foldername}/full.txt
+		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${WORKDIR}/${foldername}/full.txt
 
 		gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
 		gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
@@ -218,7 +218,7 @@ if ${SCRIPT_MODE}; then
 	newpath="${WORKDIR}/${foldername}"
 
 	# find different homepages in same packages
-	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt | cut -d'|' -f2|sort -u); do
+	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
 		hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 		if [ "${hp_lines}" -gt 1 ]; then
 			mkdir -p ${WORKDIR}/${foldername}/sort-by-package/${i%%/*}
@@ -253,9 +253,9 @@ if ${SCRIPT_MODE}; then
 	foldername="${SCRIPT_SHORT}-BUG-www_status_code"
 	newpath="${WORKDIR}/${foldername}"
 	# sort by packages, ignoring "good" codes
-	gen_sort_pak ${newpath}/full-filtered.txt 2 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
 	# sort by maintainer, ignoring "good" codes
-	gen_sort_main ${newpath}/full-filtered.txt 5 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}

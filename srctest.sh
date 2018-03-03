@@ -67,7 +67,7 @@ main() {
 		local status=${2}
 		if ${SCRIPT_MODE}; then
 			echo "${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full_${status}.txt"
-			echo "${status}${DL}${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt"
+			echo "${status}${DL}${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full-unfiltered.txt"
 		else
 			echo "${status}${DL}${msg}"
 		fi
@@ -141,12 +141,13 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
+	cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full-unfiltered.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt
 
 	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
 	newpath="${WORKDIR}/${foldername}"
 
-	gen_sort_main ${newpath}/full_not_available.txt 4 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full_not_available.txt 1 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
