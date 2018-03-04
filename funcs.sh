@@ -84,7 +84,7 @@ gen_http_sort_main(){
 			;;
 		main)
 			local value_title="${dir##*/}"
-			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type d|wc -l)"
+			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type f|wc -l)"
 			if [ -e ${dir}/full.txt ];then
 				local value_full="<a href=\"full.txt\">TXT-full.txt</a>"
 			fi
