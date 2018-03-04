@@ -78,6 +78,20 @@ gen_sortings() {
 	rm -rf ${WORKDIR}
 }
 
+gen_sortings_v2() {
+	local package_location=${1}
+	local maintainer_location=${2}
+	foldername="${NAME}"
+	newpath="${WORKDIR}/${NAME}"
+
+	gen_sort_main ${newpath}/full.txt ${maintainer_location} ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt ${package_location} ${newpath} ${DL}
+
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${WORKDIR}
+}
+
 pre_check_mixed_indentation() {
 	if grep $'\t' ${1} >/dev/null; then
 		main ${1}
@@ -264,5 +278,5 @@ for var in ${_varibales}; do
 		-path ./metadata/\* -o \
 		-path ./eclass/\* -o \
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
-	${SCRIPT_MODE} && gen_sortings
 done
+${SCRIPT_MODE} && gen_sortings_v2 2 3

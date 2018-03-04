@@ -113,7 +113,7 @@ EOM
 			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
 				val="$(cat ${u}/full.txt | wc -l)"
 
-				a="<a href=\"${u##*/}/${u##*/}.html\">${u##*/}</a>"
+				a="<a href=\"${u##*/}/index.html\">${u##*/}</a>"
 				line='      '
 				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
 			done

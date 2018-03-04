@@ -141,7 +141,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full-unfiltered.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt
+	cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full_not_available.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt
 
 	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
 	newpath="${WORKDIR}/${foldername}"
