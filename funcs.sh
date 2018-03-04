@@ -177,11 +177,12 @@ gen_sort_main(){
 	local main_loc="${2}"
 	local dest_dir="${3}"
 	local DL="${4}"
+	local main
 
-	if [ -e ${1} ]; then
+	if [ -e ${workfile} ]; then
 		mkdir -p ${dest_dir}/sort-by-maintainer
-		for a in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-			grep "${a}" ${workfile} > ${dest_dir}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+		for main in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
+			grep "${main}" ${workfile} > ${dest_dir}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 		done
 	fi
 }
@@ -192,14 +193,15 @@ gen_sort_pak() {
 	local pak_loc="${2}"
 	local dest_dir="${3}"
 	local DL="${4}"
+	local pack
 
-	if [ -e ${1} ]; then
+	if [ -e ${workfile} ]; then
 		local f_packages="$(cat ${workfile}| cut -d "${DL}" -f${pak_loc} |sort|uniq)"
-		for i in ${f_packages}; do
-			f_cat="$(echo ${i}|cut -d'/' -f1)"
-			f_pak="$(echo ${i}|cut -d'/' -f2)"
+		for pack in ${f_packages}; do
+			f_cat="$(echo ${pack}|cut -d'/' -f1)"
+			f_pak="$(echo ${pack}|cut -d'/' -f2)"
 			mkdir -p ${dest_dir}/sort-by-package/${f_cat}
-			grep "${i}" ${workfile} > ${dest_dir}/sort-by-package/${f_cat}/${f_pak}.txt
+			grep "${pack}" ${workfile} > ${dest_dir}/sort-by-package/${f_cat}/${f_pak}.txt
 		done
 	fi
 }
