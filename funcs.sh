@@ -187,6 +187,28 @@ gen_sort_main(){
 	fi
 }
 
+gen_sort_main_v2(){
+	local workfile="${1}"
+	local main_loc="${2}"
+	local main
+
+	if [ -d ${workfile} ]; then
+		if [ -e "${workfile}/full.txt" ]; then
+			local workfile="${workfile}/full.txt"
+		else
+			return 1
+		fi
+	elif ! [ -e ${workfile} ]; then
+		return 1
+	fi
+
+	mkdir -p ${workfile%/*}/sort-by-maintainer
+	for main in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
+		grep "${main}" ${workfile} > ${workfile%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+	done
+}
+
+
 # function which sorts a list by it's package
 gen_sort_pak() {
 	local workfile="${1}"
@@ -206,6 +228,29 @@ gen_sort_pak() {
 	fi
 }
 
+gen_sort_pak_v2() {
+	local workfile="${1}"
+	local pak_loc="${2}"
+	local pack
+
+	if [ -d ${workfile} ]; then
+		if [ -e "${workfile}/full.txt" ]; then
+			local workfile="${workfile}/full.txt"
+		else
+			return 1
+		fi
+	elif ! [ -e ${workfile} ]; then
+		return 1
+	fi
+
+	local f_packages="$(cat ${workfile}| cut -d "${DL}" -f${pak_loc} |sort -u)"
+	for pack in ${f_packages}; do
+		f_cat="$(echo ${pack}|cut -d'/' -f1)"
+		f_pak="$(echo ${pack}|cut -d'/' -f2)"
+		mkdir -p ${workfile%/*}/sort-by-package/${f_cat}
+		grep "${pack}" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+	done
+}
 usage() {
 	echo "You need at least one argument:"
 	echo
