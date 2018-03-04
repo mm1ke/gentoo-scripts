@@ -96,6 +96,8 @@ gen_http_sort_main(){
 			fi
 			if [ -e ${dir}/sort-by-filter/ ];then
 				local value_filter="<a href=\"sort-by-filter\">TXT-sort-by-filter</a>"
+			elif [ -e ${dir}/sort-by-eapi/ ];then
+				local value_filter="<a href=\"sort-by-eapi\">TXT-sort-by-eapi</a>"
 			fi
 
 			;;

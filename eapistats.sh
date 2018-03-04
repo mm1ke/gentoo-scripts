@@ -48,6 +48,7 @@ fi
 
 cd ${PORTTREE}
 depth_set ${1}
+
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/
 
 main() {
@@ -70,24 +71,16 @@ gen_sortings() {
 	foldername="${SCRIPT_SHORT}-STA-eapi_statistics"
 	newpath="${WORKDIR}/${foldername}"
 
-	for i in $(cut -c-1 ${newpath}/full.txt|sort -u); do
-		mkdir -p ${newpath}/${i}
-		grep ^${i}${DL} ${newpath}/full.txt > ${newpath}/${i}/EAPI${i}.txt
+	# filter after EAPI
+	for eapi in $(cut -c-1 ${newpath}/full.txt|sort -u); do
+		mkdir -p ${newpath}/sort-by-eapi/EAPI${eapi}
+		grep ^${eapi}${DL} ${newpath}/full.txt > ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt
 
-		# sort by packages
-		f_packages="$(cat ${newpath}/${i}/EAPI${i}.txt| cut -d "${DL}" -f2|sort|uniq)"
-		for u in ${f_packages}; do
-			f_cat="$(echo $u|cut -d'/' -f1)"
-			f_pak="$(echo $u|cut -d'/' -f2)"
-			mkdir -p ${newpath}/${i}/sort-by-package/${f_cat}
-			grep "${u}" ${newpath}/${i}/EAPI${i}.txt > ${newpath}/${i}/sort-by-package/${f_cat}/${f_pak}.txt
-		done
-	
-		mkdir -p ${newpath}/${i}/sort-by-maintainer/
-		for a in $(cat ${newpath}/${i}/EAPI${i}.txt |cut -d "${DL}" -f3|tr ':' '\n'|tr ' ' '_'| grep -v "^[[:space:]]*$"|sort|uniq); do
-			grep "${a}" ${newpath}/${i}/EAPI${i}.txt > ${newpath}/${i}/sort-by-maintainer/"$(echo ${a}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-		done
+		gen_sort_pak ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 2 ${newpath}/sort-by-eapi/EAPI${eapi}/ ${DL}
+		gen_sort_main ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 3 ${newpath}/sort-by-eapi/EAPI${eapi}/ ${DL}
 	done
+	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
+
 	rm -rf ${SITEDIR}/stats/${foldername}
 	cp -r ${newpath} ${SITEDIR}/stats/
 	rm -rf ${WORKDIR}
