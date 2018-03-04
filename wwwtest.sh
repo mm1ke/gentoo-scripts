@@ -257,7 +257,6 @@ if ${SCRIPT_MODE}; then
 
 	foldername="${SCRIPT_SHORT}-IMP-unsync_homepages"
 	newpath="${WORKDIR}/${foldername}"
-
 	# find different homepages in same packages
 	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
 		hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
@@ -267,53 +266,46 @@ if ${SCRIPT_MODE}; then
 			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt |head -n1| cut -d'|' -f2,5  >> ${newpath}/full.txt
 		fi
 	done
-	# sort unsync homepages by maintainer
 	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 
 
-	foldername="${SCRIPT_SHORT}-IMP-301_redirections"
-	newpath="${WORKDIR}/${foldername}"
-	# create sortings for 301_redirections
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-
 	foldername="${SCRIPT_SHORT}-IMP-redirection_http_to_https"
 	newpath="${WORKDIR}/${foldername}"
-	# create sortings for 301_redirections
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-
-	foldername="${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"
-	newpath="${WORKDIR}/${foldername}"
-	# create sortings for 301_redirections
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-
-	foldername="${SCRIPT_SHORT}-IMP-301_slash_https_www"
-	newpath="${WORKDIR}/${foldername}"
-
-	# create sortings for 301_slash_https_www
 	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
 	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
 
-	foldername="${SCRIPT_SHORT}-BUG-www_status_code"
+	foldername="${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"
 	newpath="${WORKDIR}/${foldername}"
-	# sort by packages, ignoring "good" codes
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+	foldername="${SCRIPT_SHORT}-IMP-301_slash_https_www"
+	newpath="${WORKDIR}/${foldername}"
+	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
+	foldername="${SCRIPT_SHORT}-IMP-301_redirections"
+	newpath="${WORKDIR}/${foldername}"
 	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	# sort by maintainer, ignoring "good" codes
 	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
+
+	foldername="${SCRIPT_SHORT}-BUG-www_status_code"
+	newpath="${WORKDIR}/${foldername}"
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${foldername}
+	cp -r ${newpath} ${SITEDIR}/checks/
+
 	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
