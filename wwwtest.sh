@@ -263,8 +263,8 @@ if ${SCRIPT_MODE}; then
 		hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 		if [ "${hp_lines}" -gt 1 ]; then
 			mkdir -p ${WORKDIR}/${foldername}/sort-by-package/${i%%/*}
-			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt > ${newpath}/sort-by-package/${i}.txt
-			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt |head -n1| cut -d'|' -f2,5  >> ${newpath}/full.txt
+			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${newpath}/sort-by-package/${i}.txt
+			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt |head -n1| cut -d'|' -f2,5  >> ${newpath}/full.txt
 		fi
 	done
 	# sort unsync homepages by maintainer
