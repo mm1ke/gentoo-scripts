@@ -72,15 +72,32 @@ _update_buglists
 gen_http_sort_main(){
 	local type="${1}"
 	local dir="${2}"
+	local value_pack=""
+	local value_filter=""
+	local value_full=""
+	local value_main=""
 
 	case ${type} in
 		results)
 			local value_title="${dir##*/}"
-			local value_line="Checks proceeded: <b>$(ls ${dir}|wc -l)"
+			local value_line="Checks proceeded: <b>$(find ${dir} -mindepth 1 -maxdepth 1 -type d|wc -l)"
 			;;
 		main)
 			local value_title="${dir##*/}"
-			local value_line="Total Maintainers: <b>$(ls ${dir}/sort-by-maintainer/|wc -l)"
+			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type d|wc -l)"
+			if [ -e ${dir}/full.txt ];then
+				local value_full="<a href=\"full.txt\">TXT-full.txt</a>"
+			fi
+			if [ -e ${dir}/sort-by-maintainer/ ];then
+				local value_main="<a href=\"sort-by-maintainer\">TXT-sort-by-maintainer</a>"
+			fi
+			if [ -e ${dir}/sort-by-package/ ];then
+				local value_pack="<a href=\"sort-by-package\">TXT-sort-by-package</a>"
+			fi
+			if [ -e ${dir}/sort-by-filter/ ];then
+				local value_filter="<a href=\"sort-by-filter\">TXT-sort-by-filter</a>"
+			fi
+
 			;;
 	esac
 
@@ -93,9 +110,13 @@ read -r -d '' TOP <<- EOM
 \t</head>
 \t<body text="black" bgcolor="white">
 \t\tList generated on $(date -I)</br>
-\t\t${value_line}</b><br/><br/>
-<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/results/">Home</a></pre>
-\t\t<hr><pre>
+\t\t${value_line}</b>
+\t<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/results/">Home</a></pre>
+\t\t<pre>${value_full}
+${value_main}
+${value_pack}
+${value_filter}
+\t\t</pre><hr><pre>
 EOM
 
 read -r -d '' BOTTOM <<- EOM
@@ -103,8 +124,6 @@ read -r -d '' BOTTOM <<- EOM
 \t</pre></hr></body>
 </html>
 EOM
-
-
 	echo -e "${TOP}"
 
 	case ${type} in
