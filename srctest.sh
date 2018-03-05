@@ -146,8 +146,8 @@ if ${SCRIPT_MODE}; then
 	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
 	newpath="${WORKDIR}/${foldername}"
 
-	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
+	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
