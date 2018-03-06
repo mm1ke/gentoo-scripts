@@ -67,50 +67,55 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
 	local found=false
 	local lastchar="${hp: -1}"
 
-	_sitemuts=("${hp/http:\/\//https:\/\/}" \
-		"${hp/http:\/\//https:\/\/www.}")
+	if echo ${hp}|grep 'http://' > /dev/null; then
 
-	if ! [ "${lastchar}" = "/" ]; then
-		_sitemuts+=("${hp/http:\/\//https:\/\/}/" \
-			"${hp/http:\/\//https:\/\/www.}/")
-	fi
+		_sitemuts=("${hp/http:\/\//https:\/\/}" \
+			"${hp/http:\/\//https:\/\/www.}")
 
-	_sitemuts_v2=("${hp/https:\/\//https:\/\/www.}" \
-		"${hp/http:\/\//http:\/\/www.}")
-
-	if ! [ "${lastchar}" = "/" ]; then
-		_sitemuts_v2+=("${hp}/" \
-		"${hp/https:\/\//https:\/\/www.}/" \
-		"${hp/http:\/\//http:\/\/www.}/")
-	fi
-
-	for sitemut in ${_sitemuts[@]}; do
-		local _code="$(get_code ${sitemut})"
-		if [ ${_code} = 200 ]; then
-			found=true
-			if ${SCRIPT_MODE}; then
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https/full.txt
-			else
-				echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
-			fi
-			break
+		if ! [ "${lastchar}" = "/" ]; then
+			_sitemuts+=("${hp/http:\/\//https:\/\/}/" \
+				"${hp/http:\/\//https:\/\/www.}/")
 		fi
-	done
-	if ! ${found}; then
-		for sitemut in ${_sitemuts_v2[@]}; do
+
+		for sitemut in ${_sitemuts[@]}; do
 			local _code="$(get_code ${sitemut})"
 			if [ ${_code} = 200 ]; then
 				found=true
 				if ${SCRIPT_MODE}; then
 					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
-					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www/full.txt
+					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https/full.txt
 				else
 					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 				fi
 				break
 			fi
 		done
+	else
+
+		_sitemuts_v2=("${hp/https:\/\//https:\/\/www.}" \
+			"${hp/http:\/\//http:\/\/www.}")
+
+		if ! [ "${lastchar}" = "/" ]; then
+			_sitemuts_v2+=("${hp}/" \
+			"${hp/https:\/\//https:\/\/www.}/" \
+			"${hp/http:\/\//http:\/\/www.}/")
+		fi
+
+		if ! ${found}; then
+			for sitemut in ${_sitemuts_v2[@]}; do
+				local _code="$(get_code ${sitemut})"
+				if [ ${_code} = 200 ]; then
+					found=true
+					if ${SCRIPT_MODE}; then
+						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
+						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www/full.txt
+					else
+						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+					fi
+					break
+				fi
+			done
+		fi
 	fi
 
 	if ! ${found}; then
