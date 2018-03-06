@@ -238,20 +238,20 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* fdo-mime" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
-for var in ${_varibales}; do
-	export NAME="${SCRIPT_SHORT}-IMP-leading_trailing_whitespace_${var}"
-	find ./${level}  \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
-	${SCRIPT_MODE} && gen_sortings
-done
+#_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
+#for var in ${_varibales}; do
+#	export NAME="${SCRIPT_SHORT}-IMP-leading_trailing_whitespace_${var}"
+#	find ./${level}  \( \
+#		-path ./scripts/\* -o \
+#		-path ./profiles/\* -o \
+#		-path ./packages/\* -o \
+#		-path ./licenses/\* -o \
+#		-path ./distfiles/\* -o \
+#		-path ./metadata/\* -o \
+#		-path ./eclass/\* -o \
+#		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
+#	${SCRIPT_MODE} && gen_sortings
+#done
 
 export NAME="${SCRIPT_SHORT}-BUG-homepage_with_vars"
 find ./${level}  \( \
