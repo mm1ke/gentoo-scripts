@@ -132,7 +132,11 @@ EOM
 		results)
 			echo "QTY     Check"
 			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
-				val="$(cat ${u}/full.txt | wc -l)"
+				if ! [ -e ${u}/full.txt ]; then
+					val="0"
+				else
+					val="$(cat ${u}/full.txt | wc -l)"
+				fi
 
 				a="<a href=\"${u##*/}/index.html\">${u##*/}</a>"
 				line='      '
