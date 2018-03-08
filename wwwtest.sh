@@ -209,10 +209,10 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 
 if ${SCRIPT_MODE}; then
-	mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-httpcode
+	mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-filter
 	# sort after http codes
 	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
-		grep "^${i}" ${TMPFILE} > ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-httpcode/${i}.txt
+		grep "^${i}" ${TMPFILE} > ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-filter/${i}.txt
 	done
 
 	# copy full log
