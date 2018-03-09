@@ -104,3 +104,19 @@ done
 cp -r ${WORKDIR}/full_list ${SITEDIR}/full_lists/
 rm -rf ${WORKDIR}
 
+
+# generate html output
+gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/checks > /var/www/gentooqa.levelnine.at/results/checks/index.html
+gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/stats > /var/www/gentooqa.levelnine.at/results/stats/index.html
+gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/full_lists > /var/www/gentooqa.levelnine.at/results/full_lists/index.html
+
+
+for i in $(find /var/www/gentooqa.levelnine.at/results/checks/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_http_sort_main main $i > ${i}/index.html
+done
+for i in $(find /var/www/gentooqa.levelnine.at/results/stats/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_http_sort_main main $i > ${i}/index.html
+done
+for i in $(find /var/www/gentooqa.levelnine.at/results/full_lists/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_http_sort_main main $i > ${i}/index.html
+done
