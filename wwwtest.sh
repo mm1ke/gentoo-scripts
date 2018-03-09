@@ -52,8 +52,6 @@ depth_set ${1}
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
-#mkdir -p ${WORKDIR}/{special,sort-by-{filter,maintainer,package,httpcode}}
-#mkdir -p ${WORKDIR}/special/{unsync-homepages,301_redirections,301_slash_https_www}
 mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www
 mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
 mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www
