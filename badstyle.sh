@@ -34,9 +34,9 @@ SCRIPT_SHORT="BAS"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
-# set scriptmode=true on host s6
+# set scriptmode=true on host vs4
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
-if [ "$(hostname)" = s6 ]; then
+if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi

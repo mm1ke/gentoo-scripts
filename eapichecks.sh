@@ -30,7 +30,7 @@ SCRIPT_SHORT="EAC"
 PORTTREE="/usr/portage/"
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 
-if [ "$(hostname)" = s6 ]; then
+if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	PORTTREE="/mnt/gentootree/gentoo-github"
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"

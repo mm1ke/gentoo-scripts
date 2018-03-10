@@ -37,8 +37,8 @@ PORTTREE="/usr/portage/"
 DL='|'
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 
-# set scriptmode=true on host s6
-if [ "$(hostname)" = s6 ]; then
+# set scriptmode=true on host vs4
+if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi

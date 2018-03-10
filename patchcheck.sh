@@ -43,7 +43,7 @@ else
 	exit 1
 fi
 
-if [ "$(hostname)" = s6 ]; then
+if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi

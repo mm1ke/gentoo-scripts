@@ -32,7 +32,7 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
-if [ "$(hostname)" = s6 ]; then
+if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 
