@@ -418,4 +418,6 @@ white_list=(
 	"net-analyzer/tcptrace;tcptrace-6.6.7-cross-compile.patch;tcptrace-6.6.7_p4_p1.ebuild"
 	"dev-lang/php;php-5.6-no-bison-warnings.patch;php-5.6.33.ebuild"
 	"media-sound/lilypond;lilypond-9999-programming_error.patch;lilypond-9999.ebuild"
+	"app-admin/fam;fam-2.7.0-AM_CONFIG_HEADER.patch;fam-2.7.0_p17_p2.ebuild"
+	"app-admin/fam;fam-2.7.0-patch-header.patch;fam-2.7.0_p17_p2.ebuild"
 )
