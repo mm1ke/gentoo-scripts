@@ -265,7 +265,7 @@ for var in ${_varibales}; do
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
 
 	mkdir -p /${WORKDIR}/${NAME}/sort-by-filter/${var}/
-	grep "^${VARI}${DL}" /${WORKDIR}/${NAME}/full.txt > /${WORKDIR}/${NAME}/sort-by-filter/${var}/full.txt
+	grep "^${VARI}" /${WORKDIR}/${NAME}/full.txt > /${WORKDIR}/${NAME}/sort-by-filter/${var}/full.txt
 	gen_sort_main_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 3
 	gen_sort_pak_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 2
 done
