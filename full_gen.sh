@@ -30,6 +30,12 @@ else
 	echo "Missing funcs.sh"
 	exit 1
 fi
+if [ -e ${startdir}/funcs-httpgen.sh ]; then
+	source ${startdir}/funcs-httpgen.sh
+else
+	echo "Missing funcs-httpgen.sh"
+	exit 1
+fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
 SITEDIR="/var/www/gentooqa.levelnine.at/results/"
@@ -106,17 +112,17 @@ rm -rf ${WORKDIR}
 
 
 # generate html output
-gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/checks > /var/www/gentooqa.levelnine.at/results/checks/index.html
-gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/stats > /var/www/gentooqa.levelnine.at/results/stats/index.html
-gen_http_sort_main results /var/www/gentooqa.levelnine.at/results/full_lists > /var/www/gentooqa.levelnine.at/results/full_lists/index.html
+gen_http_sort_main_v2 results /var/www/gentooqa.levelnine.at/results/checks > /var/www/gentooqa.levelnine.at/results/checks/index.html
+gen_http_sort_main_v2 results /var/www/gentooqa.levelnine.at/results/stats > /var/www/gentooqa.levelnine.at/results/stats/index.html
+gen_http_sort_main_v2 results /var/www/gentooqa.levelnine.at/results/full_lists > /var/www/gentooqa.levelnine.at/results/full_lists/index.html
 
 
 for i in $(find /var/www/gentooqa.levelnine.at/results/checks/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main main $i > ${i}/index.html
+	gen_http_sort_main_v2 main $i > ${i}/index.html
 done
 for i in $(find /var/www/gentooqa.levelnine.at/results/stats/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main main $i > ${i}/index.html
+	gen_http_sort_main_v2 main $i > ${i}/index.html
 done
 for i in $(find /var/www/gentooqa.levelnine.at/results/full_lists/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main main $i > ${i}/index.html
+	gen_http_sort_main_v2 main $i > ${i}/index.html
 done

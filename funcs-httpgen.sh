@@ -24,7 +24,7 @@
 # this file only provides functions for generating html site outputs
 
 
-gen_http_sort_main(){
+gen_http_sort_main_v2(){
 	local type="${1}"
 	local dir="${2}"
 	local value_pack=""
