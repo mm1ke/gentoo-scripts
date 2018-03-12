@@ -114,3 +114,97 @@ EOM
 
 	echo -e "${BOTTOM}"
 }
+
+gen_html_out(){
+	local chart="${1##*/}"
+# local chart="SRT-BUG-src_uri_check"
+
+	local chart_name="${chart##*-}"
+	local database="gentoo_stats_test"
+	local databasename="sSRCtest"
+	local label="Broken SRC_URIs"
+	local title="SRC Uri Test"			#invisible
+	local description="I check for broken SRC_URIs"
+	local data_info1="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+	local data_info2="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+	local data_info2="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+
+	local filename="_data_template.js"
+
+	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
+		cp /root/scripts/${filename} /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
+		sed -i "s|DATABASENAME|${databasename}|; \
+			s|DATABASE|${database}|; \
+			s|CANVASID|${chart_name}|; \
+			s|LABEL|${label}|; \
+			s|TITLE|${title}|;" \
+			/var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
+	fi
+
+read -r -d '' OUT <<- EOM
+\t\t\t<li>
+\t\t\t\t<script type=\"text/javascript\" src=\"js/charts-gen/${chart_name}.js\"></script>
+\t\t\t\t<div id=\"chart-container\">
+\t\t\t\t\t<canvas id=\"${chart_name}\"></canvas>
+\t\t\t\t</div>
+\t\t\t\t<h3><a href=\"results/checks/${chart_name}/\">${chart_name}</a></h3>
+\t\t\t\t<p>${chart_description}</p>
+\t\t\t\t<pre>
+<a href=\"results/checks/${chart}/full.txt\">full</a>     ${data_info1}
+<a href=\"results/checks/${chart}/sort-by-maintainer\">main</a>     ${data_info2}
+<a href=\"results/checks/${chart}/sort-by-package\">pack</a>     ${data_info3}
+\t\t\t\t</pre>
+\t\t\t</li>
+EOM
+
+	echo -e ${OUT}
+}
+
+
+gen_html_top(){
+
+read -r -d '' TOP <<- EOM
+<!DOCTYPE html>
+<html>
+\t<head>
+\t\t<title>Gentoostats</title>
+\t\t<h2>Gentoo QA Stats</h2>
+\t\t<script type=\"text/javascript\" src=\"js/jquery-3.2.1.min.js\"></script>
+\t\t<script type=\"text/javascript\" src=\"js/Chart.min.js\"></script>
+\t\t<style type=\"text/css\">
+\t\t\t#chart-container {
+\t\t\t\twidth: 512px;
+\t\t\t\theight: auto;
+\t\t\t\tmargin-right: 0 15px 0 0;
+\t\t\t\tfloat: left;
+\t\t\t\tmargin-right: 30px;
+\t\t\t}
+\t\t\tul {
+\t\t\t\tlist-style-type: none;
+\t\t\t\twidth: auto;
+\t\t\t}
+\t\t\tli {
+\t\t\t\tpadding: 10px;
+\t\t\t\toverflow: auto;
+\t\t\t}
+\t\t\tli:hover {
+\t\t\t\tbackground: #eee;
+\t\t\t}
+\t\t</style>
+\t</head>
+\t<body>
+\t\t<ul>
+EOM
+
+	echo -e ${TOP}
+}
+
+gen_html_bottom(){
+read -r -d '' BOTTOM <<- EOM
+\t\t</ul>
+\t</body>
+</html>
+EOM
+
+	echo -e ${BOTTOM}
+}
