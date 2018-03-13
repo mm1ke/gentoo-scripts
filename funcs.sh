@@ -48,12 +48,11 @@ _update_buglists(){
 			local bugfile="${BUGTMPDIR}/${file}-$(date -I).txt"
 			curl -s https://bugs.gentoo.org/data/cached/buglist-${file}.html > ${bugfile}
 
-			sed -i -e 1,3d ${bugfile}
-			sed -i '$ d' ${bugfile}
-			sed -i "s/<div><ul>//g" ${bugfile}
-			sed -i "s/ /_/g" ${bugfile}
-
-			sed -i "s|<li><a_href='||; \
+			sed -i 's/ /_/g' ${bugfile}
+			sed -i -e "1,3d; \
+				$ d; \
+				s|<li><a_href='||; \
+				s|<div><ul>||; \
 				s|'>Bug:| |; \
 				s|_-_\"<em>| |; \
 				s|</em>\"_status:| |; \
