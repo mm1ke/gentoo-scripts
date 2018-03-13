@@ -23,6 +23,11 @@
 # Discription:
 # this file only provides functions for generating html site outputs
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if ! [ -e ${startdir}/_vars.sh ]; then
+	echo "Missing _vars.sh"
+	exit 1
+fi
 
 gen_http_sort_main_v2(){
 	local type="${1}"
@@ -117,29 +122,23 @@ EOM
 
 gen_html_out(){
 	local chart="${1##*/}"
+	local chart_name="${chart##*-}"
 # local chart="SRT-BUG-src_uri_check"
 
-	local chart_name="${chart##*-}"
-	local database="gentoo_stats_test"
-	local databasename="sSRCtest"
-	local label="Broken SRC_URIs"
-	local title="SRC Uri Test"			#invisible
-	local description="I check for broken SRC_URIs"
-	local data_info1="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
-	local data_info2="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
-	local data_info3="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+	source ${startdir}/_vars.sh "${chart_name}"
 
 	local filename="_data_template.js"
 
-	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
+#	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
 		cp /root/scripts/${filename} /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
 		sed -i "s|DATABASENAME|${databasename}|; \
+			s|DATABASEVALUE|${databasevalue}|; \
 			s|DATABASE|${database}|; \
 			s|CANVASID|${chart_name}|; \
 			s|LABEL|${label}|; \
 			s|TITLE|${title}|;" \
 			/var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-	fi
+#	fi
 
 read -r -d '' OUT <<- EOM
 \t\t\t<li>
@@ -148,8 +147,7 @@ read -r -d '' OUT <<- EOM
 \t\t\t\t\t<canvas id="${chart_name}"></canvas>
 \t\t\t\t</div>
 \t\t\t\t<h3><a href="results/checks/${chart}/">${chart_name}</a></h3>
-\t\t\t\t<p>${chart_description}</p>
-\t\t\t\t<pre>
+\t\t\t\t<pre><p>${chart_description}</p>
 <a href="results/checks/${chart}/full.txt">full</a>     ${data_info1}
 <a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${data_info2}
 <a href="results/checks/${chart}/sort-by-package">pack</a>     ${data_info3}

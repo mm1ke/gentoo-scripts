@@ -3,7 +3,7 @@ $(document).ready(function(){
 		url: "https://gentooqa.levelnine.at/api/get_data.php",
 		method: "GET",
 		data: {
-			mget: "(select date(sTimeStamp) as sTimeStamp, sValue from DATABASENAME order by sTimeStamp desc limit 40) order by sTimeStamp ASC",
+			mget: "(select date(sTimeStamp) as sTimeStamp, DATABASEVALUE from DATABASENAME order by sTimeStamp desc limit 40) order by sTimeStamp ASC",
 			mdb: "DATABASE"
 		},
 		cache: false,
@@ -19,7 +19,7 @@ $(document).ready(function(){
 			var len = data.length;
 
 			for (var i = 0; i < len; i++) {
-				score.v00.push(data[i].sValue);
+				score.v00.push(data[i].DATABASEVALUE);
 				label.push(data[i].sTimeStamp);
 			}
 
