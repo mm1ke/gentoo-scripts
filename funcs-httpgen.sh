@@ -148,9 +148,9 @@ read -r -d '' OUT <<- EOM
 \t\t\t\t</div>
 \t\t\t\t<h3><a href="results/checks/${chart}/">${chart_name}</a></h3>
 \t\t\t\t<pre><p>${chart_description}</p>
-<a href="results/checks/${chart}/full.txt">full</a>     ${data_info1}
-<a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${data_info2}
-<a href="results/checks/${chart}/sort-by-package">pack</a>     ${data_info3}
+<a href="results/checks/${chart}/full.txt">full</a>     ${info_full}
+<a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${info_main}
+<a href="results/checks/${chart}/sort-by-package">pack</a>     ${info_pack}
 \t\t\t\t</pre>
 \t\t\t</li>
 EOM
