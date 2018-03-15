@@ -125,37 +125,40 @@ gen_html_out(){
 	local chart_name="${chart##*-}"
 # local chart="SRT-BUG-src_uri_check"
 
-	source ${startdir}/_vars.sh "${chart_name}"
+	if [ -e /var/www/gentooqa.levelnine.at/results/checks/${1}/full.txt ]; then
+		source ${startdir}/_vars.sh "${chart_name}"
 
-	local filename="_data_template.js"
+		local filename="_data_template.js"
 
-#	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
-		cp /root/scripts/${filename} /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-		sed -i "s|DATABASENAME|${databasename}|; \
-			s|DATABASEVALUE|${databasevalue}|; \
-			s|DATABASE|${database}|; \
-			s|CANVASID|${chart_name}|; \
-			s|LABEL|${label}|; \
-			s|TITLE|${title}|;" \
-			/var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-#	fi
+		#	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
+				cp /root/scripts/${filename} /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
+				sed -i "s|DATABASENAME|${databasename}|; \
+					s|DATABASEVALUE|${databasevalue}|; \
+					s|DATABASE|${database}|; \
+					s|CANVASID|${chart_name}|; \
+					s|LABEL|${label}|; \
+					s|TITLE|${title}|;" \
+					/var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
+				chmod 755 /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
+		#	fi
 
-read -r -d '' OUT <<- EOM
-\t\t\t<li>
-\t\t\t\t<script type="text/javascript" src="js/charts-gen/${chart_name}.js"></script>
-\t\t\t\t<div id="chart-container">
-\t\t\t\t\t<canvas id="${chart_name}"></canvas>
-\t\t\t\t</div>
-\t\t\t\t<h3><a href="results/checks/${chart}/">${chart_name}</a></h3>
-\t\t\t\t<pre><p>${chart_description}</p>
-<a href="results/checks/${chart}/full.txt">full</a>     ${info_full}
-<a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${info_main}
-<a href="results/checks/${chart}/sort-by-package">pack</a>     ${info_pack}
-\t\t\t\t</pre>
-\t\t\t</li>
-EOM
+		read -r -d '' OUT <<- EOM
+		\t\t\t<li>
+		\t\t\t\t<script type="text/javascript" src="js/charts-gen/${chart_name}.js"></script>
+		\t\t\t\t<div id="chart-container">
+		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
+		\t\t\t\t</div>
+		\t\t\t\t<h3><a href="results/checks/${chart}/">${chart_name}</a></h3>
+		\t\t\t\t<pre><p>${chart_description}</p>
+		<a href="results/checks/${chart}/full.txt">full</a>     ${info_full}
+		<a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${info_main}
+		<a href="results/checks/${chart}/sort-by-package">pack</a>     ${info_pack}
+		\t\t\t\t</pre>
+		\t\t\t</li>
+		EOM
 
-	echo -e "${OUT}"
+		echo -e "${OUT}"
+	fi
 }
 
 
