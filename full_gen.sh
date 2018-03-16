@@ -71,7 +71,7 @@ for typ in IMP BUG FULL; do
 		done
 	done
 
-	if [ "${typ}" = "BUG" ]; then
+	if [ "${typ}" = "BUG" ] || [ "${typ}" = "FULL" ]; then
 		for cat in $(ls ${FULLWORKDIR}/sort-by-package/); do
 			for pack in $(ls ${FULLWORKDIR}/sort-by-package/${cat}/); do
 				echo "<<< open bugs >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
