@@ -15,7 +15,6 @@ $(document).ready(function(){
 			};
 
 			var label = []
-
 			var len = data.length;
 
 			for (var i = 0; i < len; i++) {
@@ -26,7 +25,6 @@ $(document).ready(function(){
 			var ctx = $("#CANVASID");
 
 			var data = {
-				//labels: [ "day1", "day2", "day3", "day4", "day5", "day6" ],
 				labels: label,
 				datasets: [
 					{
@@ -60,7 +58,6 @@ $(document).ready(function(){
 				data : data,
 				options : options
 			});
-
 		},
 
 		error: function(data) {
