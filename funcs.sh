@@ -67,98 +67,6 @@ _update_buglists(){
 }
 _update_buglists
 
-
-gen_http_sort_main(){
-	local type="${1}"
-	local dir="${2}"
-	local value_pack=""
-	local value_filter=""
-	local value_full=""
-	local value_main=""
-
-	case ${type} in
-		results)
-			local value_title="${dir##*/}"
-			local value_line="Checks proceeded: <b>$(find ${dir} -mindepth 1 -maxdepth 1 -type d|wc -l)"
-			;;
-		main)
-			local value_title="${dir##*/}"
-			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type f|wc -l)"
-			if [ -e ${dir}/full.txt ];then
-				local value_full="<a href=\"full.txt\">TXT-full.txt</a>"
-			fi
-			if [ -e ${dir}/sort-by-maintainer/ ];then
-				local value_main="<a href=\"sort-by-maintainer\">TXT-sort-by-maintainer</a>"
-			fi
-			if [ -e ${dir}/sort-by-package/ ];then
-				local value_pack="<a href=\"sort-by-package\">TXT-sort-by-package</a>"
-			fi
-			if [ -e ${dir}/sort-by-filter/ ];then
-				local value_filter="<a href=\"sort-by-filter\">TXT-sort-by-filter</a>"
-			elif [ -e ${dir}/sort-by-eapi/ ];then
-				local value_filter="<a href=\"sort-by-eapi\">TXT-sort-by-eapi</a>"
-			fi
-
-			;;
-	esac
-
-
-read -r -d '' TOP <<- EOM
-<html>
-\t<head>
-\t\t<style type="text/css"> li a { font-family: monospace; display:block; float: left; }</style>
-\t\t<title>Gentoo QA: ${value_title}</title>
-\t</head>
-\t<body text="black" bgcolor="white">
-\t\tList generated on $(date -I)</br>
-\t\t${value_line}</b>
-\t<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/results/">Home</a></pre>
-\t\t<pre>${value_full}
-${value_main}
-${value_pack}
-${value_filter}
-\t\t</pre><hr><pre>
-EOM
-
-read -r -d '' BOTTOM <<- EOM
-\t\t</table>
-\t</pre></hr></body>
-</html>
-EOM
-	echo -e "${TOP}"
-
-	case ${type} in
-		results)
-			echo "QTY     Check"
-			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
-				if ! [ -e ${u}/full.txt ]; then
-					val="0"
-				else
-					val="$(cat ${u}/full.txt | wc -l)"
-				fi
-
-				a="<a href=\"${u##*/}/index.html\">${u##*/}</a>"
-				line='      '
-				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
-			done
-		;;
-
-		main)
-			echo "QTY     Maintainer"
-			for i in $(ls ${dir}/sort-by-maintainer/); do
-				main="${i}"
-				val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
-
-				a="<a href=\"sort-by-maintainer/${main}\">${main::-4}</a>"
-				line='      '
-				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
-			done
-		;;
-	esac
-
-	echo -e "${BOTTOM}"
-}
-
 get_bugs(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
@@ -172,7 +80,6 @@ get_bugs_full(){
 
 	[ -n "${return}" ] && echo "${return}"
 }
-
 
 # function which sorts a list by it's maintainer
 gen_sort_main(){
@@ -210,7 +117,6 @@ gen_sort_main_v2(){
 		grep "${main}" ${workfile} > ${workfile%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 	done
 }
-
 
 # function which sorts a list by it's package
 gen_sort_pak() {
@@ -254,6 +160,7 @@ gen_sort_pak_v2() {
 		grep "${pack}" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 }
+
 usage() {
 	echo "You need at least one argument:"
 	echo
