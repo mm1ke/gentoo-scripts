@@ -42,7 +42,7 @@ SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 
 for typ in IMP BUG FULL; do
 
-	if [ "${typ}" = "FULL"]; then
+	if [ "${typ}" = "FULL" ]; then
 		dir_postfix=""
 		search_pattern="*-*-*"
 	else
