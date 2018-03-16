@@ -122,10 +122,11 @@ EOM
 
 gen_html_out(){
 	local chart="${1##*/}"
+	local type="${2}"
 	local chart_name="${chart##*-}"
 # local chart="SRT-BUG-src_uri_check"
 
-	if [ -e /var/www/gentooqa.levelnine.at/results/checks/${1}/full.txt ]; then
+	if [ -e /var/www/gentooqa.levelnine.at/results/${2}/${1}/full.txt ]; then
 		source ${startdir}/_vars.sh "${chart_name}"
 
 		local filename="_data_template.js"
@@ -148,11 +149,11 @@ gen_html_out(){
 		\t\t\t\t<div id="chart-container">
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
-		\t\t\t\t<h3><a href="results/checks/${chart}/">${chart_name}</a></h3>
+		\t\t\t\t<h3><a href="results/${2}/${chart}/">${chart_name}</a></h3>
 		\t\t\t\t<pre><p>${chart_description}</p>
-		<a href="results/checks/${chart}/full.txt">full</a>     ${info_full}
-		<a href="results/checks/${chart}/sort-by-maintainer">main</a>     ${info_main}
-		<a href="results/checks/${chart}/sort-by-package">pack</a>     ${info_pack}
+		<a href="results/${2}/${chart}/full.txt">full</a>     ${info_full}
+		<a href="results/${2}/${chart}/sort-by-maintainer">main</a>     ${info_main}
+		<a href="results/${2}/${chart}/sort-by-package">pack</a>     ${info_pack}
 		\t\t\t\t</pre>
 		\t\t\t</li>
 		EOM

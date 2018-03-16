@@ -196,17 +196,163 @@ case ${dir} in
 		<a href="leading-trailing-his.html">Leading/Trailing Whitespace History</a>
 		EOM
 		;;
-#	trailing_whitespaces)
-#	www_status_code)
-#	www_upstream_shutdown)
-#	301_redirections
-#	redirection_http_to_https)
-#	redirection_missing_slash_www)
-#	unsync_homepages)
-#	obsolete_eapi_packages)
-#	removal_candidates)
-#	stable_request_candidates)
-#	eapi_statistics)
+	trailing_whitespaces)
+		local database="gentoo_stats_test"				# database
+		local databasename="ssTrailingWhitespace"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Trailing Whitespaces"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		local info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		local info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Simple checks which lists ebuilds who contain trailing whitespaces
+		EOM
+		;;
+	www_status_code)
+		local database="gentoo_stats_test"				# database
+		local databasename="sWWWtest"			# databasetable
+		local databasevalue="sFilteredValue"		# row of interrest
+		local label="Broken Websites"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		local info_main="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		local info_pack="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		read -r -d '' chart_description <<- EOM
+		This checks tests every homepage and gets their http return code. The list contain packages with
+		a bad returncode. Following statuscodes are ignored: VAR, FTP, 200, 301, 302, 307, 400, 503.
+		<a href="www-sites.html">Status Code History</a>
+		EOM
+		;;
+	www_upstream_shutdown)
+		local database="gentoo_stats_test"				# database
+		local databasename="sUpstreamShutdown"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Dead Sites"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		local info_main="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		local info_pack="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
+		read -r -d '' chart_description <<- EOM
+		This checks list ebuilds which still use a homepage of a know dead site.
+		Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
+		<a href="www-sites-his.html">Broken Sites History</a>
+		EOM
+		;;
+	301_redirections)
+		local database="gentoo_stats_test"				# database
+		local databasename="s301Redirctions"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Redirected Sites"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_main="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_pack="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		This lists every ebuild with a Homepage which actually redirects to another or similar sites.
+		The list also includes the statuscode of the real homepage.
+		EOM
+		;;
+	redirection_http_to_https)
+		local database="gentoo_stats_test"				# database
+		local databasename="sRedirHttpToHttps"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Https Redirections"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_main="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_pack="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Lists only ebuids who's homepage redirects to the same site only via HTTPS.
+		Also only lists available sites.
+		EOM
+		;;
+	redirection_missing_slash_www)
+		local database="gentoo_stats_test"				# database
+		local databasename="sRedirSlashWww"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Slash/WWW Redirections"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_main="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		local info_pack="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Lists only ebuild who's homepage redirects to the same site where there is only included a "www" or a missing "/" at the end (or both)
+		Also only lists available sites.
+		EOM
+		;;
+	unsync_homepages)
+		local database="gentoo_stats_test"				# database
+		local databasename="sUnsyncHomepages"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Unsync Homepages"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="CATEGORY/PACKAGE | MAINTAINER(S)"
+		local info_main="CATEGORY/PACKAGE | MAINTAINER(S)"
+		local info_pack="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Lists ebuilds/packages where the homepages are different over it's versions.
+		EOM
+		;;
+	obsolete_eapi_packages)
+		local database="gentoo_stats_test"				# database
+		local databasename="sBumpNeeded"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Unattended ebuilds"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="EAPI | OTHER EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S) | OPENBUGS"
+		local info_main="EAPI | OTHER EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S) | OPENBUGS"
+		local info_pack="EAPI | OTHER EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S) | OPENBUGS"
+		read -r -d '' chart_description <<- EOM
+		This scirpt lists every ebuild with a EAPI 0-4. The first column prints the ebuilds EAPI, the second column
+		prints the EAPI Versions of the packages other version (if available). This should make easier to find packages which
+		can be removed and also package which need some attention.
+		EOM
+		;;
+	removal_candidates)
+		local database="gentoo_stats_test"				# database
+		local databasename="sBumpNeededMatchingKeywords"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Removal canditates"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		local info_main="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		local info_pack="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		read -r -d '' chart_description <<- EOM
+		This script searches for ebuilds with EAPI 0-5 and checks if there is a newer reversion (-r1) which also is at EAPI6.
+		If found it also checks if the KEYWORDS are the same. In this case the older versions is a good canditate to be removed.
+		NV=Newer Version
+		EOM
+		;;
+	stable_request_candidates)
+		local database="gentoo_stats_test"				# database
+		local databasename="sBumpNeededNonMatchingKeywords"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Stable request canditates"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		local info_main="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		local info_pack="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		read -r -d '' chart_description <<- EOM
+		Also checks for ebuilds with EAPI 0-5 and a newer reversion (-r1) at EAPI6.
+		In this the newer version has different KEYWORDS which most likely means it haven't been stabilized, why these ebuilds are good
+		stable request canditates
+		NV=Newer Version
+		EOM
+		;;
+	eapi_statistics)
+		local database="gentoo_stats_test"				# database
+		local databasename="sEapiHistory"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="Eapistats"			# label of graph
+		local title="${label}"					# grapth title (not shown)
+		local info_full="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		local info_main="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		local info_pack="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		A simple list of all packages and it's corresponding EAPI Version. Also includes all maintainers to the package
+		EOM
+		;;
 	*)
 		local database="database"				# database
 		local databasename="sTable"			# databasetable
