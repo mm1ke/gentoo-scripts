@@ -249,7 +249,11 @@ if ${SCRIPT_MODE}; then
 	newpath="${WORKDIR}/${foldername}"
 	# find different homepages in same packages
 	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
-		hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
+		if ${ENABLE_MD5}; then
+			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
+		else
+			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
+		fi
 		if [ "${hp_lines}" -gt 1 ]; then
 			mkdir -p ${WORKDIR}/${foldername}/sort-by-package/${i%%/*}
 			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${newpath}/sort-by-package/${i}.txt
