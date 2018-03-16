@@ -32,6 +32,7 @@ PORTTREE="/usr/portage/"
 TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
+JOBS="50"
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -203,7 +204,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
+	-path ./.git/\* \) -prune -o -type d -print | parallel -j ${JOBS} main {}
 
 
 if ${SCRIPT_MODE}; then
