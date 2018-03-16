@@ -45,6 +45,11 @@ if [ "$(hostname)" = vs4 ]; then
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
+# only works with md5-cache
+if ! ${ENABLE_MD5}; then
+	exit 1
+fi
+
 touch ${TMPCHECK}
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
@@ -82,15 +87,9 @@ main() {
 		openbugs="${DL}${openbugs}"
 	fi
 
-
 #	code_available='HTTP/1.0 200 OK|HTTP/1.1 200 OK'
 	code_available='Remote file exists.'
 	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
-
-	# only works best with the md5-cache
-	if ! [ -e "${PORTTREE}/metadata/md5-cache" ]; then
-		exit 1
-	fi
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 		local ebuild=$(basename ${eb%.*})
