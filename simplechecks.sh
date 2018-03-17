@@ -22,9 +22,8 @@
 
 # Discription:
 # This script finds simple errors in ebuilds and other files. For now it can
-# 	ebuilds: check for trailing whitespaces
-# 	metadata: mixed indentation (mixed tabs & whitespaces)
-
+#  ebuilds: check for trailing whitespaces
+#  metadata: mixed indentation (mixed tabs & whitespaces)
 
 SCRIPT_MODE=false
 SCRIPT_NAME="simplechecks"
@@ -33,6 +32,19 @@ SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
+
+RUNNING_CHECKS=(
+"${SCRIPT_SHORT}-IMP-trailing_whitespaces"					# Index 0
+"${SCRIPT_SHORT}-IMP-mixed_indentation"							# Index 1
+"${SCRIPT_SHORT}-BUG-gentoo_mirror_missuse"					# Index 2
+"${SCRIPT_SHORT}-BUG-epatch_in_eapi6"								# Index 3
+"${SCRIPT_SHORT}-BUG-dohtml_in_eapi6"								# Index 4
+"${SCRIPT_SHORT}-BUG-description_over_80"						# Index 5
+"${SCRIPT_SHORT}-BUG-proxy_maint_check"							# Index 6
+"${SCRIPT_SHORT}-BUG-fdo_mime_check"								# Index 7
+"${SCRIPT_SHORT}-BUG-homepage_with_vars"						# Index 8
+"${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"		# Index 9
+)
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -67,25 +79,17 @@ main() {
 }
 
 gen_sortings() {
-	foldername="${NAME}"
-	newpath="${WORKDIR}/${NAME}"
+	[ -z "${1}" ] &&
+		local package_location="1" ||
+		local package_location="${1}"
+	[ -z "${2}" ] &&
+		local maintainer_location="2" ||
+		local maintainer_location="${2}"
+	local foldername="${NAME}"
+	local newpath="${WORKDIR}/${NAME}"
 
-	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-	rm -rf ${WORKDIR}
-}
-
-gen_sortings_v2() {
-	local package_location=${1}
-	local maintainer_location=${2}
-	foldername="${NAME}"
-	newpath="${WORKDIR}/${NAME}"
-
-	gen_sort_main ${newpath}/full.txt ${maintainer_location} ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt ${package_location} ${newpath} ${DL}
+	gen_sort_main_v2 ${newpath} ${maintainer_location}
+	gen_sort_pak_v2 ${newpath} ${package_location}
 
 	rm -rf ${SITEDIR}/checks/${foldername}
 	cp -r ${newpath} ${SITEDIR}/checks/
@@ -141,9 +145,9 @@ export -f main get_main_min
 export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check pre_check_homepage_var
 export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
 
-# find trailing whitespaces
-export NAME="${SCRIPT_SHORT}-IMP-trailing_whitespaces"
-find ./${level}  \( \
+# trailing_whitespaces
+export NAME="${RUNNING_CHECKS[1]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -154,7 +158,8 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-IMP-mixed_indentation"
+# mixed_indentation
+export NAME="${RUNNING_CHECKS[1]}"
 find ./${level} -maxdepth 1 \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -166,8 +171,9 @@ find ./${level} -maxdepth 1 \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_mixed_indentation {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-gentoo_mirror_missuse"
-find ./${level}  \( \
+# gentoo_mirror_missuse
+export NAME="${RUNNING_CHECKS[2]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -178,8 +184,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'mirror://gentoo' {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-epatch_in_eapi6"
-find ./${level}  \( \
+# epatch_in_eapi6
+export NAME="${RUNNING_CHECKS[3]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -190,8 +197,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<epatch\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-dohtml_in_eapi6"
-find ./${level}  \( \
+# dohtml_in_eapi6
+export NAME="${RUNNING_CHECKS[4]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -202,8 +210,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-description_over_80"
-find ./${level}  \( \
+# description_over_80
+export NAME="${RUNNING_CHECKS[5]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -214,8 +223,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-proxy_maint_check"
-find ./${level}  \( \
+# proxy_maint_check
+export NAME="${RUNNING_CHECKS[6]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -226,8 +236,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_proxy_maint_check {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-fdo_mime_check"
-find ./${level}  \( \
+# fdo_mime_check
+export NAME="${RUNNING_CHECKS[7]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -238,8 +249,9 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* fdo-mime" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings
 
-export NAME="${SCRIPT_SHORT}-BUG-homepage_with_vars"
-find ./${level}  \( \
+# homepage_with_vars
+export NAME="${RUNNING_CHECKS[8]}"
+find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -250,11 +262,12 @@ find ./${level}  \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
 ${SCRIPT_MODE} && gen_sortings
 
+# leading_trailing_whitespace
 _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 for var in ${_varibales}; do
 	export VARI="${var}${DL}"
-	export NAME="${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"
-	find ./${level}  \( \
+	export NAME="${RUNNING_CHECKS[9]}"
+	find ./${level} \( \
 		-path ./scripts/\* -o \
 		-path ./profiles/\* -o \
 		-path ./packages/\* -o \
@@ -264,9 +277,11 @@ for var in ${_varibales}; do
 		-path ./eclass/\* -o \
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
 
-	mkdir -p /${WORKDIR}/${NAME}/sort-by-filter/${var}/
-	grep "^${VARI}" /${WORKDIR}/${NAME}/full.txt > /${WORKDIR}/${NAME}/sort-by-filter/${var}/full.txt
-	gen_sort_main_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 3
-	gen_sort_pak_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 2
+	if ${SCRIPT_MODE}; then
+		mkdir -p /${WORKDIR}/${NAME}/sort-by-filter/${var}/
+		grep "^${VARI}" /${WORKDIR}/${NAME}/full.txt > /${WORKDIR}/${NAME}/sort-by-filter/${var}/full.txt
+		gen_sort_main_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 3
+		gen_sort_pak_v2 /${WORKDIR}/${NAME}/sort-by-filter/${var}/ 2
+	fi
 done
-${SCRIPT_MODE} && gen_sortings_v2 2 3
+${SCRIPT_MODE} && gen_sortings 2 3
