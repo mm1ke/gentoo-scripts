@@ -33,6 +33,15 @@ TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
 JOBS="50"
 
+# need the array in a function in order
+# to be able to export the array
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check"									#Index 0
+	)
+}
+array_names
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -51,8 +60,6 @@ if ! ${ENABLE_MD5}; then
 	exit 1
 fi
 
-touch ${TMPCHECK}
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
 cd ${PORTTREE}
 depth_set ${1}
@@ -69,15 +76,19 @@ main() {
 	}
 
 	mode() {
-		local msg=${1}
-		local status=${2}
+		local check=${1}
+		local msg=${2}
+		local status=${3}
+
 		if ${SCRIPT_MODE}; then
-			echo "${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full_${status}.txt"
-			echo "${status}${DL}${msg}" >> "${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full-unfiltered.txt"
+			echo "${msg}" >> "${check}/full_${status}.txt"
+			echo "${status}${DL}${msg}" >> "${check}/full-unfiltered.txt"
 		else
 			echo "${status}${DL}${msg}"
 		fi
 	}
+
+	array_names
 
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -106,16 +117,24 @@ main() {
 				for i in $(echo $u | grep -E "^http://|^https://"); do
 					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
-						mode "${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" "$(echo ${_checktmp} | cut -d' ' -f1)"
+						mode ${RUNNING_CHECKS[0]} \
+							"${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" \
+							"$(echo ${_checktmp} | cut -d' ' -f1)"
 					else
 						if $(get_status ${i} "${code_available}"); then
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" available
+							mode ${RUNNING_CHECKS[0]} \
+								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								available
 							echo "available ${i}" >> ${TMPCHECK}
 						elif $(get_status ${i} "${maybe_available}"); then
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" maybe_available
+							mode ${RUNNING_CHECKS[0]} \
+								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								maybe_available
 							echo "maybe_available ${i}" >> ${TMPCHECK}
 						else
-							mode "${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" not_available
+							mode ${RUNNING_CHECKS[0]} \
+								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								not_available
 							echo "not_available ${i}" >> ${TMPCHECK}
 						fi
 					fi
@@ -125,10 +144,11 @@ main() {
 	done
 }
 
-export -f main get_main_min
+export -f main get_main_min array_names
 export PORTTREE WORKDIR SCRIPT_MODE TMPCHECK DL SCRIPT_SHORT
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/
+touch ${TMPCHECK}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -140,17 +160,16 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type d -print | parallel -j ${JOBS} main {}
 
+
 if ${SCRIPT_MODE}; then
-	cp ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full_not_available.txt ${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check/full.txt
+	cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt
 
-	foldername="${SCRIPT_SHORT}-BUG-src_uri_check"
-	newpath="${WORKDIR}/${foldername}"
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
