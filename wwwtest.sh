@@ -309,3 +309,4 @@ if ${SCRIPT_MODE}; then
 	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
+rm ${TMPFILE}
