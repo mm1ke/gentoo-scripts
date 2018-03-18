@@ -34,6 +34,20 @@ TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 DL='|'
 JOBS="50"
 
+# need the array in a function in order
+# to be able to export the array
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code"									#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections"									#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"		#Index 2
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https"				#Index 3
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-www_upstream_shutdown"						#Index 4
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-unsync_homepages"									#Index 5
+	)
+}
+array_names
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -53,12 +67,15 @@ depth_set ${1}
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
-mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www
-mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections
-mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www
-mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
+mkdir -p ${RUNNING_CHECKS[1]}
+mkdir -p ${RUNNING_CHECKS[2]}
+mkdir -p ${RUNNING_CHECKS[3]}
 
 301check() {
+
+	# needed to get the names
+	array_names
+
 	local hp=${1}
 	local cat=${2}
 	local pak=${3}
@@ -81,14 +98,14 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
 			if [ ${_code} = 200 ]; then
 				found=true
 				if ${SCRIPT_MODE}; then
-					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
-					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https/full.txt
+					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
 				else
 					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 				fi
 				break
 			fi
 		done
+
 	else
 
 		_sitemuts_v2=("${hp/https:\/\//https:\/\/www.}" \
@@ -106,8 +123,7 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
 				if [ ${_code} = 200 ]; then
 					found=true
 					if ${SCRIPT_MODE}; then
-						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_slash_https_www/full.txt
-						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www/full.txt
+						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
 					else
 						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 					fi
@@ -121,7 +137,7 @@ mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		if ${SCRIPT_MODE}; then
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections/full.txt
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
 			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 		fi
@@ -193,7 +209,7 @@ main() {
 }
 
 # for parallel execution
-export -f main get_code 301check
+export -f main get_code 301check array_names
 export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL SCRIPT_SHORT
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
@@ -208,14 +224,16 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 
 if ${SCRIPT_MODE}; then
-	mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-filter
-	# sort after http codes
+
+	# sort after http codes (including all codes)
+	mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter
 	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
-		grep "^${i}" ${TMPFILE} > ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/sort-by-filter/${i}.txt
+		grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}.txt
 	done
 
 	# copy full log
-	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt
+	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full-unfiltered.txt
+
 	# copy full log, ignoring "good" codes
 	sed -i "/^VAR/d; \
 		/^FTP/d; \
@@ -226,80 +244,67 @@ if ${SCRIPT_MODE}; then
 		/^400/d; \
 		/^503/d; \
 		" ${TMPFILE}
-	cp ${TMPFILE} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full.txt
+	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
-
-	# special filters
+	# special filters - www_upstream_shutdown
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
-
-	foldername="${SCRIPT_SHORT}-BUG-www_upstream_shutdown"
-	newpath="${WORKDIR}/${foldername}"
 	for site in ${_filters[@]}; do
-		mkdir -p "${newpath}/sort-by-filter/${site}"
-		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt >> ${newpath}/full.txt
-		grep ${site} ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt >> ${newpath}/sort-by-filter/${site}/full.txt
-		gen_sort_main ${newpath}/sort-by-filter/${site}/full.txt 5 ${newpath}/sort-by-filter/${site}/ ${DL}
-		gen_sort_pak ${newpath}/sort-by-filter/${site}/full.txt 2 ${newpath}/sort-by-filter/${site}/ ${DL}
+		mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
+		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
+		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
+		gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
 	done
-	gen_sort_main ${newpath}/full.txt 5 ${newpath}/ ${DL}
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath}/ ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[4]##*/}
+	cp -r ${RUNNING_CHECKS[4]} ${SITEDIR}/checks/
 
-	foldername="${SCRIPT_SHORT}-IMP-unsync_homepages"
-	newpath="${WORKDIR}/${foldername}"
+	# unsync_homepages
 	# find different homepages in same packages
-	for i in $(cat ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
+	for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
+		# get all HOMEPAGEs from every package,
+		# lists them and count the lines.
+		# if homepages are sync, the line count should be 1
+		# --- works best with the md5-cache ---
 		if ${ENABLE_MD5}; then
 			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 		else
 			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
 		fi
 		if [ "${hp_lines}" -gt 1 ]; then
-			mkdir -p ${WORKDIR}/${foldername}/sort-by-package/${i%%/*}
-			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt > ${newpath}/sort-by-package/${i}.txt
-			grep "|${i}|" ${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code/full-unfiltered.txt |head -n1| cut -d'|' -f2,5  >> ${newpath}/full.txt
+			mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
+			grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt > ${RUNNING_CHECKS[5]}/sort-by-package/${i}.txt
+			grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5  >> ${RUNNING_CHECKS[5]}/full.txt
 		fi
 	done
-	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[5]##*/}
+	cp -r ${RUNNING_CHECKS[5]} ${SITEDIR}/checks/
 
+	# redirection_http_to_https
+	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
+	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 4
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[3]##*/}
+	cp -r ${RUNNING_CHECKS[3]} ${SITEDIR}/checks/
 
-	foldername="${SCRIPT_SHORT}-IMP-redirection_http_to_https"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	# redirection_missing_slash_www
+	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
+	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[2]##*/}
+	cp -r ${RUNNING_CHECKS[2]} ${SITEDIR}/checks/
 
-	foldername="${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	# 301_redirections
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[1]##*/}
+	cp -r ${RUNNING_CHECKS[1]} ${SITEDIR}/checks/
 
-	foldername="${SCRIPT_SHORT}-IMP-301_slash_https_www"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 4 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-
-	foldername="${SCRIPT_SHORT}-IMP-301_redirections"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
-
-	foldername="${SCRIPT_SHORT}-BUG-www_status_code"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_pak ${newpath}/full.txt 2 ${newpath} ${DL}
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	# www_status_code
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 
 	rm -rf ${WORKDIR}
 fi
