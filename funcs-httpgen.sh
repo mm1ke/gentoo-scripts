@@ -126,7 +126,7 @@ gen_html_out(){
 	local chart_name="${chart##*-}"
 # local chart="SRT-BUG-src_uri_check"
 
-	if [ -e /var/www/gentooqa.levelnine.at/results/${2}/${1}/full.txt ]; then
+	if [ -e /var/www/gentooqa.levelnine.at/results/${type}/${chart}/full.txt ]; then
 		source ${startdir}/_vars.sh "${chart_name}"
 
 		local filename="_data_template.js"
