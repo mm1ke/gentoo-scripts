@@ -351,6 +351,7 @@ case ${dir} in
 		local info_pack="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
 		A simple list of all packages and it's corresponding EAPI Version. Also includes all maintainers to the package
+		<a href=eapi-stats.html>EAPI Statistics</a>
 		EOM
 		;;
 	*)
