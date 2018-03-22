@@ -86,12 +86,18 @@ gen_http_sort_main_v2 results ${SITEDIR}/stats > ${SITEDIR}/stats/index.html
 gen_http_sort_main_v2 results ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index.html
 
 # generate html output (maintainer/results)
-for i in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main_v2 main $i > ${i}/index.html
+gen_html_top > /var/www/gentooqa.levelnine.at/checks.html
+gen_html_top > /var/www/gentooqa.levelnine.at/stats.html
+for ce in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_html_out ${ce##*/} checks >> /var/www/gentooqa.levelnine.at/checks.html
+	gen_http_sort_main_v2 main ${ce} > ${ce}/index.html
 done
-for i in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main_v2 main $i > ${i}/index.html
+for st in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_html_out ${st##*/} stats >> /var/www/gentooqa.levelnine.at/stats.html
+	gen_http_sort_main_v2 main ${st} > ${st}/index.html
 done
-for i in $(find ${SITEDIR}/full_lists/ -mindepth 1 -maxdepth 1 -type d); do
-	gen_http_sort_main_v2 main $i > ${i}/index.html
+for fl in $(find ${SITEDIR}/full_lists/ -mindepth 1 -maxdepth 1 -type d); do
+	gen_http_sort_main_v2 main ${fl} > ${fl}/index.html
 done
+gen_html_bottom >> /var/www/gentooqa.levelnine.at/stats.html
+gen_html_bottom >> /var/www/gentooqa.levelnine.at/checks.html
