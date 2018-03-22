@@ -289,3 +289,4 @@ for var in ${_varibales}; do
 	fi
 done
 ${SCRIPT_MODE} && gen_sortings ${NAME} 2 3
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
