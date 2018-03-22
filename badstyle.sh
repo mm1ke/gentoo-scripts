@@ -34,6 +34,10 @@ SCRIPT_SHORT="BAS"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
+
+RUNNING_CHECKS=(
+"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
+)
 # set scriptmode=true on host vs4
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = vs4 ]; then
@@ -66,7 +70,7 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/full.txt
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
 		echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
@@ -74,7 +78,7 @@ main() {
 
 export -f main
 
-${SCRIPT_MODE} && mkdir -p "${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/"
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 pattern=(
 	"dev-libs/openssl:dev-libs/libressl"
 	)
@@ -95,13 +99,10 @@ for pat in ${pattern[@]}; do
 done
 
 if ${SCRIPT_MODE}; then
-	foldername="${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line/"
-	newpath="${WORKDIR}/${foldername}"
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
 fi
