@@ -38,6 +38,13 @@ if [ "$(hostname)" = vs4 ]; then
 
 fi
 
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/"
+	)
+}
+array_names
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -49,9 +56,10 @@ fi
 cd ${PORTTREE}
 depth_set ${1}
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 
 main() {
+	array_names
 	local full_package=${1}
 	local eapi=${2}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -61,28 +69,25 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> /${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/full.txt
+		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
 		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 gen_sortings() {
-	foldername="${SCRIPT_SHORT}-STA-eapi_statistics"
-	newpath="${WORKDIR}/${foldername}"
-
 	# filter after EAPI
-	for eapi in $(cut -c-1 ${newpath}/full.txt|sort -u); do
-		mkdir -p ${newpath}/sort-by-eapi/EAPI${eapi}
-		grep ^${eapi}${DL} ${newpath}/full.txt > ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt
+	for eapi in $(cut -c-1 ${RUNNING_CHECKS[0]}/full.txt|sort -u); do
+		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}
+		grep ^${eapi}${DL} ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt
 
-		gen_sort_pak ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 2 ${newpath}/sort-by-eapi/EAPI${eapi}/ ${DL}
-		gen_sort_main ${newpath}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 3 ${newpath}/sort-by-eapi/EAPI${eapi}/ ${DL}
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 3
 	done
-	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 
-	rm -rf ${SITEDIR}/stats/${foldername}
-	cp -r ${newpath} ${SITEDIR}/stats/
+	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/stats/
 	rm -rf ${WORKDIR}
 
 }
@@ -96,7 +101,7 @@ eapi_pre_check() {
 	fi
 }
 
-export -f eapi_pre_check main get_main_min
+export -f eapi_pre_check main get_main_min array_names
 export SCRIPT_MODE WORKDIR PORTTREE DL SCRIPT_SHORT
 
 find ./${level}  \( \
@@ -109,7 +114,4 @@ find ./${level}  \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel eapi_pre_check {}
 
-if ${SCRIPT_MODE}; then
-	gen_sortings
-fi
-
+${SCRIPT_MODE} && gen_sortings
