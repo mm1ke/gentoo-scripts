@@ -420,4 +420,6 @@ white_list=(
 	"media-sound/lilypond;lilypond-9999-programming_error.patch;lilypond-9999.ebuild"
 	"app-admin/fam;fam-2.7.0-AM_CONFIG_HEADER.patch;fam-2.7.0_p17_p2.ebuild"
 	"app-admin/fam;fam-2.7.0-patch-header.patch;fam-2.7.0_p17_p2.ebuild"
+	"net-firewall/firewalld;firewalld-0.5.1-errorcodes1.patch;firewalld-0.5.1-r2.ebuild"
+	"net-firewall/firewalld;firewalld-0.5.1-errorcodes2.patch;firewalld-0.5.1-r2.ebuild"
 )
