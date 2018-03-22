@@ -35,9 +35,13 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 
-RUNNING_CHECKS=(
-"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
-)
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
+	)
+}
+array_names
+
 # set scriptmode=true on host vs4
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 if [ "$(hostname)" = vs4 ]; then
@@ -63,6 +67,7 @@ export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
 #
 
 main() {
+	array_names
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
@@ -76,7 +81,7 @@ main() {
 	fi
 }
 
-export -f main
+export -f main array_names
 
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 pattern=(
