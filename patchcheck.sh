@@ -33,7 +33,12 @@ SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 DL='|'
 
-ECLASSES="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short"									#Index 0
+	)
+}
+array_names
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -47,9 +52,6 @@ if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
-
-cd ${PORTTREE}
-depth_set ${1}
 
 _gen_whitelist(){
 	if [ -e ${startdir}/whitelist ]; then
@@ -66,20 +68,21 @@ _gen_whitelist(){
 }
 
 main(){
+	array_names
+	local eclasses="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
 	local package=${1}
-
 	local category="$(echo ${package}|cut -d'/' -f2)"
 	local package_name=${package##*/}
 	local fullpath="/${PORTTREE}/${package}"
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then
-			if ! grep -E ".diff|.patch|FILESDIR|${ECLASSES}" ${fullpath}/*.ebuild >/dev/null; then
+			if ! grep -E ".diff|.patch|FILESDIR|${eclasses}" ${fullpath}/*.ebuild >/dev/null; then
 				main=$(get_main_min "${category}/${package_name}")
 				if ${SCRIPT_MODE}; then
-					mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/sort-by-package/${category}
-					ls ${PORTTREE}/${category}/${package_name}/files/* > ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/sort-by-package/${category}/${package_name}.txt
-					echo -e "${category}/${package_name}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/full.txt
+					mkdir -p ${RUNNING_CHECKS[0]}/sort-by-package/${category}
+					ls ${PORTTREE}/${category}/${package_name}/files/* > ${RUNNING_CHECKS[0]}/sort-by-package/${category}/${package_name}.txt
+					echo -e "${category}/${package_name}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
 				else
 					echo "${category}/${package_name}${DL}${main}"
 				fi
@@ -88,11 +91,12 @@ main(){
 	fi
 }
 
-export -f main get_main_min
-export WORKDIR PORTTREE SCRIPT_MODE DL startdir SCRIPT_SHORT ECLASSES
+depth_set ${1}
+cd ${PORTTREE}
+export -f main get_main_min array_names
+export WORKDIR PORTTREE SCRIPT_MODE DL startdir SCRIPT_SHORT
 export whitelist=$(_gen_whitelist)
-
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches_short/
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 
 find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./scripts/\* -o \
@@ -105,11 +109,9 @@ find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./.git/\* \) -prune -o -type d -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	foldername="${SCRIPT_SHORT}-BUG-unused_patches_short"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_main ${newpath}/full.txt 2 ${newpath} ${DL}
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
 
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
 fi
