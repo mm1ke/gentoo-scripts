@@ -24,7 +24,37 @@
 # this file only provides functions for different scripts
 
 # check for porttree features
+
+#
+# globally vars used in this file (not exported)
+#
 BUGTMPDIR="/tmp/buglists/"
+#
+
+#
+# globally vars - can be used everywhere (exported)
+#
+# enabling debuging (if available)
+DEBUG=false
+DL='|'
+# set the PORTTREE
+if [ -z "${PORTTREE}" ]; then
+	if [ -e /usr/portage/metadata/ ]; then
+		PORTTREE="/usr/portage/"
+	else
+		exit "No portage tree set"
+	fi
+fi
+[ -z "${SCRIPT_MODE}" ] && SCRIPT_MODE=false
+[ -z "${SITEDIR}" ] && SITEDIR="${HOME}/checks-${RANDOM}/"
+
+# set scriptmode=true on host vs4
+if [ "$(hostname)" = vs4 ]; then
+	SCRIPT_MODE=true
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
+	PORTTREE="/mnt/gentootree/gentoo-github"
+fi
+
 ENABLE_GIT=false
 ENABLE_MD5=false
 if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
@@ -33,10 +63,12 @@ if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 else
 	echo "Please check settings. ${PORTTREE} not found"
 fi
-export ENABLE_GIT ENABLE_MD5 BUGTMPDIR
+
+export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL
+#
 
 _update_buglists(){
-	local BUG_FILES="UNCONFIRMED CONFIRMED IN_PROGRESS"
+	local bug_files="UNCONFIRMED CONFIRMED IN_PROGRESS"
 
 	mkdir -p ${BUGTMPDIR}
 
@@ -44,7 +76,7 @@ _update_buglists(){
 
 		find ${BUGTMPDIR}/* -mtime +2 -exec rm -f {} \; >/dev/null 2>&1
 
-		for file in ${BUG_FILES}; do
+		for file in ${bug_files}; do
 			local bugfile="${BUGTMPDIR}/${file}-$(date -I).txt"
 			curl -s https://bugs.gentoo.org/data/cached/buglist-${file}.html > ${bugfile}
 
@@ -164,6 +196,9 @@ depth_set() {
 	fi
 }
 
+# this function get the age (file creation) of a particular ebuild
+# depends on ${ENABLE_GIT}
+# returns the age in days
 get_age() {
 	local file=${1}
 	local date_today="$(date '+%s' -d today)"
@@ -175,6 +210,21 @@ get_age() {
 		echo "${fileage}"
 	else
 		echo ""
+	fi
+}
+
+# this function simply copies all results from the WORKDIR to
+# the SITEDIR
+copy_checks() {
+	local run_chk=${1}
+	local type=${2}
+
+	if [ -n ${SITEDIR}/${type}/ ]; then
+		mkdir -p ${SITEDIR}/${type}
+		cp -r ${run_chk[@]} ${SITEDIR}/${type}/
+	else
+		rm -rf ${SITEDIR}/${type}/${run_chk[@]##*/}
+		cp -r ${run_chk[@]} ${SITEDIR}/${type}/
 	fi
 }
 
