@@ -33,6 +33,12 @@ PORTTREE="/usr/portage/"
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 DL='|'
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches"									#Index 0
+	)
+}
+array_names
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -46,9 +52,6 @@ if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
-
-cd ${PORTTREE}
-depth_set ${1}
 
 main(){
 	check_ebuild(){
@@ -144,8 +147,6 @@ main(){
 					cn+=("${n2/${package_name}/${pn}}")
 					cn+=("${n2/${package_name}-${ebuild_version}/${p}}")
 				fi
-
-
 			fi
 
 			# add special naming if there is a revision
@@ -282,7 +283,7 @@ main(){
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
-		
+
 		# white list checking
 		white_check(){
 			local pfile=${1}
@@ -465,10 +466,11 @@ main(){
 
 		main="$(get_main_min "${category}/${package_name}")"
 
+		array_names
 		if [ ${#unused_patches[@]} -gt 0 ]; then
 			if ${SCRIPT_MODE}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches/full.txt
+					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
@@ -482,10 +484,11 @@ main(){
 	fi
 }
 
-export -f main get_perm get_main_min
+depth_set ${1}
+cd ${PORTTREE}
+export -f main get_perm get_main_min array_names
 export PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir SCRIPT_SHORT
-
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches/
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 
 # Dont use parallel if DEBUG is enabled
 if ${DEBUG}; then
@@ -513,13 +516,10 @@ else
 fi
 
 if ${SCRIPT_MODE}; then
-	foldername="${SCRIPT_SHORT}-BUG-unused_patches"
-	newpath="${WORKDIR}/${foldername}"
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	gen_sort_main ${newpath}/full.txt 3 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 1 ${newpath} ${DL}
-
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
 fi
