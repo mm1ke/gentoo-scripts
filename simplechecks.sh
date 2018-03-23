@@ -59,15 +59,6 @@ if [ "$(hostname)" = vs4 ]; then
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
 
-cd ${PORTTREE}
-depth_set ${1}
-
-if ${SCRIPT_MODE}; then
-	for name in ${RUNNING_CHECKS[@]}; do
-		mkdir -p ${name}
-	done
-fi
-
 main() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
@@ -145,6 +136,9 @@ pre_proxy_maint_check() {
 	${ok} || main ${1}
 }
 
+depth_set ${1}
+cd ${PORTTREE}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f main get_main_min
 export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check pre_check_homepage_var
 export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
