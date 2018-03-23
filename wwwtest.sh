@@ -23,6 +23,10 @@
 # Discription:
 # simple scirpt to find broken websites
 
+#SCRIPT_MODE=true
+#PORTTREE="/usr/portage/"
+#SITEDIR="${HOME}/wwwtest/"
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -31,15 +35,11 @@ else
 	exit 1
 fi
 
-SCRIPT_MODE=false
 SCRIPT_NAME="wwwtest"
 SCRIPT_SHORT="WWT"
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-PORTTREE="/usr/portage/"
 TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
-DL='|'
 JOBS="50"
 
 # need the array in a function in order
@@ -56,24 +56,12 @@ array_names(){
 }
 array_names
 
-
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
-
-cd ${PORTTREE}
-depth_set ${1}
-
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
-mkdir -p ${RUNNING_CHECKS[1]}
-mkdir -p ${RUNNING_CHECKS[2]}
-mkdir -p ${RUNNING_CHECKS[3]}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 301check() {
-
 	# needed to get the names
 	array_names
 
@@ -150,7 +138,6 @@ get_code() {
 	echo ${code}
 }
 
-
 main() {
 	mode() {
 		local msg=${1}
@@ -209,9 +196,11 @@ main() {
 	done
 }
 
+depth_set ${1}
+cd ${PORTTREE}
 # for parallel execution
 export -f main get_code 301check array_names
-export PORTTREE TMPCHECK TMPFILE SCRIPT_MODE WORKDIR DL SCRIPT_SHORT
+export TMPCHECK TMPFILE WORKDIR SCRIPT_SHORT
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
@@ -223,9 +212,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type d -print | parallel -j ${JOBS} main {}
 
-
 if ${SCRIPT_MODE}; then
-
 	# sort after http codes (including all codes)
 	mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter
 	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
@@ -258,8 +245,6 @@ if ${SCRIPT_MODE}; then
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[4]##*/}
-	cp -r ${RUNNING_CHECKS[4]} ${SITEDIR}/checks/
 
 	# unsync_homepages
 	# find different homepages in same packages
@@ -280,34 +265,25 @@ if ${SCRIPT_MODE}; then
 		fi
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[5]##*/}
-	cp -r ${RUNNING_CHECKS[5]} ${SITEDIR}/checks/
 
 	# redirection_http_to_https
 	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
 	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 4
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[3]##*/}
-	cp -r ${RUNNING_CHECKS[3]} ${SITEDIR}/checks/
 
 	# redirection_missing_slash_www
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[2]##*/}
-	cp -r ${RUNNING_CHECKS[2]} ${SITEDIR}/checks/
 
 	# 301_redirections
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[1]##*/}
-	cp -r ${RUNNING_CHECKS[1]} ${SITEDIR}/checks/
 
 	# www_status_code
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 
+	copy_checks checks
 	rm -rf ${WORKDIR}
+	rm ${TMPFILE}
 fi
 rm ${TMPCHECK}
-rm ${TMPFILE}
