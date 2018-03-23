@@ -23,6 +23,15 @@
 # Discription:
 #	find duplicate use flag descriptions
 
+# get dirpath and load funcs.sh
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 #
 ### IMPORTANT SETTINGS START ###
 #
@@ -48,14 +57,7 @@ if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
 fi
-# get dirpath and load funcs.sh
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
-else
-	echo "Missing funcs.sh"
-	exit 1
-fi
+
 #
 ### IMPORTANT SETTINGS STOP ###
 #
