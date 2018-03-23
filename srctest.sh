@@ -23,6 +23,14 @@
 # Discription:
 # simple scirpt to find broken SRC_URI links
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 SCRIPT_MODE=false
 SCRIPT_NAME="srctest"
 SCRIPT_SHORT="SRT"
@@ -42,13 +50,6 @@ array_names(){
 }
 array_names
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
-else
-	echo "Missing funcs.sh"
-	exit 1
-fi
 
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
