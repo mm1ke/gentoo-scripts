@@ -209,17 +209,20 @@ find ./${level} \( \
 ${SCRIPT_MODE} && gen_sortings ${NAME}
 
 # description_over_80
-export NAME="${RUNNING_CHECKS[5]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
-${SCRIPT_MODE} && gen_sortings ${NAME}
+# only works with md5-cache
+if ${ENABLE_MD5}; then
+	export NAME="${RUNNING_CHECKS[5]}"
+	find ./${level} \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
+	${SCRIPT_MODE} && gen_sortings ${NAME}
+fi
 
 # proxy_maint_check
 export NAME="${RUNNING_CHECKS[6]}"
