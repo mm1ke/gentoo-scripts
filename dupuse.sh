@@ -103,6 +103,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	copy_checks ${RUNNING_CHECKS[@]} checks
+	copy_checks checks
 	rm -rf ${WORKDIR}
 fi
