@@ -23,6 +23,11 @@
 # Discription:
 #	find duplicate use flag descriptions
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#PORTTREE=/usr/portage/
+#SCRIPT_MODE=true
+#SITEDIR="${HOME}/dupuse/"
+
 # get dirpath and load funcs.sh
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -35,15 +40,9 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-DEBUG=false
 SCRIPT_NAME="dupuse"
-SCRIPT_MODE=false
 SCRIPT_SHORT="DUU"
-
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-PORTTREE="/usr/portage/"
-DL='|'
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
 
 array_names(){
 	RUNNING_CHECKS=(
@@ -51,13 +50,6 @@ array_names(){
 	)
 }
 array_names
-
-# set scriptmode=true on host vs4
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
-
 #
 ### IMPORTANT SETTINGS STOP ###
 #
@@ -93,7 +85,7 @@ depth_set ${1}
 # switch to the PORTTREE dir
 cd ${PORTTREE}
 # export important variables
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
+export WORKDIR SCRIPT_SHORT
 export -f main array_names
 
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-duplicate_uses
@@ -111,7 +103,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
+	copy_checks ${RUNNING_CHECKS[@]} checks
 	rm -rf ${WORKDIR}
 fi
