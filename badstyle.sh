@@ -23,31 +23,6 @@
 # Discription:
 #	checks for multiple package dependencies in one line
 
-#
-### IMPORTANT SETTINGS START ###
-#
-DEBUG=false
-SCRIPT_NAME="badstyle"
-SCRIPT_MODE=false
-SCRIPT_SHORT="BAS"
-
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-PORTTREE="/usr/portage/"
-DL='|'
-
-array_names(){
-	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
-	)
-}
-array_names
-
-# set scriptmode=true on host vs4
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
 # get dirpath and load funcs.sh
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -56,12 +31,30 @@ else
 	echo "Missing funcs.sh"
 	exit 1
 fi
-# switch to the PORTTREE dir
-cd ${PORTTREE}
-# set the search depth
-depth_set ${1}
-# export important variables
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
+
+#
+### IMPORTANT SETTINGS START ###
+#
+DEBUG=false
+SCRIPT_MODE=false
+
+SCRIPT_NAME="badstyle"
+SCRIPT_SHORT="BAS"
+WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
+	)
+}
+array_names
+# set scriptmode=true on host vs4
+SITEDIR="${HOME}/${SCRIPT_NAME}/"
+if [ "$(hostname)" = vs4 ]; then
+	SCRIPT_MODE=true
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
+fi
+
 #
 ### IMPORTANT SETTINGS STOP ###
 #
@@ -81,9 +74,16 @@ main() {
 	fi
 }
 
+# set the search depth
+depth_set ${1}
+# switch to the PORTTREE dir
+cd ${PORTTREE}
+# export important variables and functions
+export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
 export -f main array_names
+# create all folders
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
 pattern=(
 	"dev-libs/openssl:dev-libs/libressl"
 	)
