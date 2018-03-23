@@ -39,6 +39,15 @@ fi
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 DL='|'
 
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-removal_candidates"					#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-stable_request_candidates"	#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-obsolete_eapi_packages"			#Index 2
+	)
+}
+array_names
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -46,11 +55,6 @@ else
 	echo "Missing funcs.sh"
 	exit 1
 fi
-
-cd ${PORTTREE}
-depth_set ${1}
-export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
-
 
 output() {
 	local text="${1}"
@@ -65,6 +69,7 @@ output() {
 }
 
 main() {
+	array_names
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -110,11 +115,11 @@ main() {
 				fi
 				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
 					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
-						"${SCRIPT_SHORT}-STA-removal_candidates"
+						"${RUNNING_CHECKS[0]##*/}"
 
 				else
 					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
-						"${SCRIPT_SHORT}-STA-stable_request_candidates"
+						"${RUNNING_CHECKS[1]##*/}"
 				fi
 				break 2
 			fi
@@ -124,11 +129,14 @@ main() {
 		other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
 		[ -z "${other_ebuild_eapi}" ] && other_ebuild_eapi=0
 		output "${ebuild_eapi}${DL}$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
-			"${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
+			"${RUNNING_CHECKS[2]##*/}"
 	fi
 }
 
-export -f main output
+depth_set ${1}
+cd ${PORTTREE}
+export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
+export -f main output array_names
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -153,28 +161,20 @@ for e in $(seq 1 5); do
 done
 
 if ${SCRIPT_MODE}; then
+	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
+	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[2]##*/}
+	cp -r ${RUNNING_CHECKS[2]} ${SITEDIR}/stats/
 
-	foldername="${SCRIPT_SHORT}-STA-obsolete_eapi_packages"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 3 ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${foldername}
-	cp -r ${newpath} ${SITEDIR}/stats/
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 3 || echo 2)
+	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/stats/
 
-	foldername="${SCRIPT_SHORT}-STA-removal_candidates"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${foldername}
-	cp -r ${newpath} ${SITEDIR}/stats/
-
-	foldername="${SCRIPT_SHORT}-STA-stable_request_candidates"
-	newpath="${WORKDIR}/${foldername}"
-	gen_sort_main ${newpath}/full.txt $(${ENABLE_GIT} && echo 8 || echo 6) ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt $(${ENABLE_GIT} && echo 3 || echo 2) ${newpath} ${DL}
-	rm -rf ${SITEDIR}/stats/${foldername}
-	cp -r ${newpath} ${SITEDIR}/stats/
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 3 || echo 2)
+	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[1]##*/}
+	cp -r ${RUNNING_CHECKS[1]} ${SITEDIR}/stats/
 
 	rm -rf ${WORKDIR}
-
 fi
