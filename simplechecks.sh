@@ -25,6 +25,14 @@
 #  ebuilds: check for trailing whitespaces
 #  metadata: mixed indentation (mixed tabs & whitespaces)
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 SCRIPT_MODE=false
 SCRIPT_NAME="simplechecks"
 SCRIPT_SHORT="SIC"
@@ -47,13 +55,6 @@ RUNNING_CHECKS=(
 "${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild.egit_repo_uri"						# Index 10
 )
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
-else
-	echo "Missing funcs.sh"
-	exit 1
-fi
 
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
