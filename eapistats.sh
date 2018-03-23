@@ -23,6 +23,13 @@
 # Discription:
 # simple script for generating EAPI statistics
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
 
 SCRIPT_MODE=false
 SCRIPT_NAME="eapistats"
@@ -44,14 +51,6 @@ array_names(){
 	)
 }
 array_names
-
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
-else
-	echo "Missing funcs.sh"
-	exit 1
-fi
 
 cd ${PORTTREE}
 depth_set ${1}
