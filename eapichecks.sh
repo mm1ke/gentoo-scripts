@@ -24,6 +24,14 @@
 # This scripts checks eapi usage. it looks for ebuils with old eapi 
 # and checks if there is a revision/version bump with a newer eapi
 
+startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${startdir}/funcs.sh ]; then
+	source ${startdir}/funcs.sh
+else
+	echo "Missing funcs.sh"
+	exit 1
+fi
+
 SCRIPT_MODE=false
 SCRIPT_NAME="eapichecks"
 SCRIPT_SHORT="EAC"
@@ -48,13 +56,7 @@ array_names(){
 }
 array_names
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
-else
-	echo "Missing funcs.sh"
-	exit 1
-fi
+
 
 output() {
 	local text="${1}"
