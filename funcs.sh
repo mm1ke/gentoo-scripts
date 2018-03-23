@@ -23,18 +23,11 @@
 # Discription:
 # this file only provides functions for different scripts
 
-# check for porttree features
-
-#
-# globally vars used in this file (not exported)
-#
-BUGTMPDIR="/tmp/buglists/"
-#
-
 #
 # globally vars - can be used everywhere (exported)
 #
 # enabling debuging (if available)
+BUGTMPDIR="/tmp/buglists/"
 DEBUG=false
 DL='|'
 # set the PORTTREE
@@ -64,7 +57,7 @@ else
 	echo "Please check settings. ${PORTTREE} not found"
 fi
 
-export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL
+export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR
 #
 
 _update_buglists(){
@@ -216,15 +209,14 @@ get_age() {
 # this function simply copies all results from the WORKDIR to
 # the SITEDIR
 copy_checks() {
-	local run_chk=${1}
-	local type=${2}
+	local type=${1}
 
-	if [ -n ${SITEDIR}/${type}/ ]; then
+	if ! [ -e ${SITEDIR}/${type}/ ]; then
 		mkdir -p ${SITEDIR}/${type}
-		cp -r ${run_chk[@]} ${SITEDIR}/${type}/
+		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
 	else
-		rm -rf ${SITEDIR}/${type}/${run_chk[@]##*/}
-		cp -r ${run_chk[@]} ${SITEDIR}/${type}/
+		rm -rf ${SITEDIR}/${type}/${RUNNING_CHECKS[@]##*/}
+		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
 	fi
 }
 
