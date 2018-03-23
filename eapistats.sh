@@ -40,7 +40,7 @@ fi
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics/"
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics"
 	)
 }
 array_names
