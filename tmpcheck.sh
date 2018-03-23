@@ -31,11 +31,17 @@ DEBUG=false
 SCRIPT_NAME="tmpcheck"
 SCRIPT_SHORT="TMC"
 SCRIPT_MODE=false
-
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 PORTTREE="/usr/portage/"
 DL='|'
 SITEDIR="${HOME}/${SCRIPT_NAME}/"
+
+array_names(){
+	RUNNING_CHECKS=(
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-tmpcheck"									#Index 0
+	)
+}
+array_names
 
 # set scriptmode=true on host vs4
 if [ "$(hostname)" = vs4 ]; then
@@ -50,17 +56,12 @@ else
 	echo "Missing funcs.sh"
 	exit 1
 fi
-# switch to the PORTTREE dir
-cd ${PORTTREE}
-# set the search depth
-depth_set ${1}
-# export important variables
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
 #
 ### IMPORTANT SETTINGS STOP ###
 #
 
 main() {
+	array_names
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
@@ -85,13 +86,19 @@ main() {
 	fi
 
 	if ${SCRIPT_MODE}; then
-		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${WORKDIR}/${SCRIPT_SHORT}-IMP-tmpcheck/full.txt
+		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
 		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
-export -f main
+# set the search depth
+depth_set ${1}
+# switch to the PORTTREE dir
+cd ${PORTTREE}
+# export important variables
+export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
+export -f main array_names
 
 ${SCRIPT_MODE} && mkdir -p ${WORKDIR}
 
@@ -106,13 +113,10 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'dev-libs/openssl.*dev-libs/libressl' {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	foldername="${SCRIPT_SHORT}-IMP-tmpcheck/"
-	newpath="${WORKDIR}/${foldername}"
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 3
 
-	gen_sort_main ${newpath}/full.txt 5 ${newpath} ${DL}
-	gen_sort_pak ${newpath}/full.txt 3 ${newpath} ${DL}
-
-	rm -rf ${SITEDIR}/checks/${foldername}
-	cp -r ${newpath} ${SITEDIR}/checks/
+	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
+	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
 	rm -rf ${WORKDIR}
 fi
