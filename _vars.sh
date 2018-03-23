@@ -152,6 +152,20 @@ case ${dir} in
 		More details and how to fix ebuilds with fdo-mime can be found on <a href="https://wiki.gentoo.org/wiki/Notes_on_ebuilds_with_GUI">Link</a>
 		EOM
 		;;
+	ebuild.egit_repo_uri)
+		local database="gentoo_stats_test"				# database
+		local databasename="ebuildEgitRepoUri"			# databasetable
+		local databasevalue="sValue"		# row of interrest
+		local label="git:// usage"			# label of graph
+		local title="${label}"		# grapth title (not shown)
+		local info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		local info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		local info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Checks if ebuilds using git:// for git repos, which is inscure. Should be replaces with https://
+		Also see: <a href="https://gist.github.com/grawity/4392747">Link</a>
+		EOM
+		;;
 	gentoo_mirror_missuse)
 		local database="gentoo_stats_test"				# database
 		local databasename="ssMirrorMisuse"			# databasetable

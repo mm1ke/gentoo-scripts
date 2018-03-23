@@ -44,6 +44,7 @@ RUNNING_CHECKS=(
 "${WORKDIR}/${SCRIPT_SHORT}-BUG-fdo_mime_check"									# Index 7
 "${WORKDIR}/${SCRIPT_SHORT}-BUG-homepage_with_vars"							# Index 8
 "${WORKDIR}/${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"		# Index 9
+"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild.egit_repo_uri"						# Index 10
 )
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -261,6 +262,19 @@ find ./${level} \( \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
+${SCRIPT_MODE} && gen_sortings ${NAME}
+
+# egit_repo_uri
+export NAME="${RUNNING_CHECKS[10]}"
+find ./${level} \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 ${SCRIPT_MODE} && gen_sortings ${NAME}
 
 # leading_trailing_whitespace
