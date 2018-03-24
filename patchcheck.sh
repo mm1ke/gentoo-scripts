@@ -23,6 +23,10 @@
 # Discription:
 # simple scirpt to find unused scripts directories in the gentoo tree
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#SCRIPT_MODE=true
+#SITEDIR="${HOME}/patchcheck/"
+#PORTTREE=/usr/portage/
 
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -32,14 +36,12 @@ else
 	exit 1
 fi
 
-SCRIPT_MODE=false
+#
+### IMPORTANT SETTINGS START ###
+#
 SCRIPT_NAME="patchcheck"
 SCRIPT_SHORT="PAC"
-
-PORTTREE="/usr/portage"
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
-DL='|'
 
 array_names(){
 	RUNNING_CHECKS=(
@@ -47,12 +49,9 @@ array_names(){
 	)
 }
 array_names
-
-
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
+#
+### IMPORTANT SETTINGS STOP ###
+#
 
 _gen_whitelist(){
 	if [ -e ${startdir}/whitelist ]; then
@@ -95,9 +94,9 @@ main(){
 depth_set ${1}
 cd ${PORTTREE}
 export -f main get_main_min array_names
-export WORKDIR PORTTREE SCRIPT_MODE DL startdir SCRIPT_SHORT
+export WORKDIR startdir SCRIPT_SHORT
 export whitelist=$(_gen_whitelist)
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./scripts/\* -o \
@@ -112,7 +111,6 @@ find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
 
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
+	copy_checks stats
 	rm -rf ${WORKDIR}
 fi
