@@ -24,6 +24,11 @@
 # This scripts checks eapi usage. it looks for ebuils with old eapi 
 # and checks if there is a revision/version bump with a newer eapi
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#SCRIPT_MODE=true
+#SITEDIR="${HOME}/eapichecks/"
+#PORTTREE="/usr/portage/"
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -32,20 +37,12 @@ else
 	exit 1
 fi
 
-SCRIPT_MODE=false
+#
+### IMPORTANT SETTINGS START ###
+#
 SCRIPT_NAME="eapichecks"
 SCRIPT_SHORT="EAC"
-PORTTREE="/usr/portage/"
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
-
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	PORTTREE="/mnt/gentootree/gentoo-github"
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
-
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-DL='|'
 
 array_names(){
 	RUNNING_CHECKS=(
@@ -55,7 +52,9 @@ array_names(){
 	)
 }
 array_names
-
+#
+### IMPORTANT SETTINGS STOP ###
+#
 
 
 output() {
@@ -63,7 +62,6 @@ output() {
 	local type="${2}"
 
 	if ${SCRIPT_MODE}; then
-		mkdir -p /${WORKDIR}/${type}/
 		echo "${text}" >> /${WORKDIR}/${type}/full.txt
 	else
 		echo "${text}${DL}${type}"
@@ -137,8 +135,9 @@ main() {
 
 depth_set ${1}
 cd ${PORTTREE}
-export PORTTREE WORKDIR SCRIPT_MODE DL SCRIPT_SHORT
+export WORKDIR SCRIPT_SHORT
 export -f main output array_names
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find ./${level}  \( \
 	-path ./scripts/\* -o \
@@ -165,18 +164,13 @@ done
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
-	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[2]##*/}
-	cp -r ${RUNNING_CHECKS[2]} ${SITEDIR}/stats/
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 3 || echo 2)
-	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/stats/
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 3 || echo 2)
-	rm -rf ${SITEDIR}/stats/${RUNNING_CHECKS[1]##*/}
-	cp -r ${RUNNING_CHECKS[1]} ${SITEDIR}/stats/
 
+	copy_checks stats
 	rm -rf ${WORKDIR}
 fi
