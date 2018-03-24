@@ -23,6 +23,11 @@
 # Discription:
 #	checks for multiple package dependencies in one line
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#SCRIPT_MODE=false
+#SITEDIR="${HOME}/badstyle/"
+#PORTTREE=/usr/portage/
+
 # get dirpath and load funcs.sh
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
@@ -35,26 +40,16 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-DEBUG=false
-SCRIPT_MODE=false
-
 SCRIPT_NAME="badstyle"
 SCRIPT_SHORT="BAS"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-multiple_deps_on_per_line"					#Index 0
 	)
 }
 array_names
-# set scriptmode=true on host vs4
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
-
 #
 ### IMPORTANT SETTINGS STOP ###
 #
@@ -79,7 +74,7 @@ depth_set ${1}
 # switch to the PORTTREE dir
 cd ${PORTTREE}
 # export important variables and functions
-export PORTTREE WORKDIR SCRIPT_MODE DL DEBUG SCRIPT_SHORT
+export WORKDIR SCRIPT_SHORT
 export -f main array_names
 # create all folders
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
@@ -107,7 +102,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
+	copy_checks checks
 	rm -rf ${WORKDIR}
 fi
