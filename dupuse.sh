@@ -87,8 +87,8 @@ cd ${PORTTREE}
 # export important variables
 export WORKDIR SCRIPT_SHORT
 export -f main array_names
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}/${SCRIPT_SHORT}-BUG-duplicate_uses
 find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
