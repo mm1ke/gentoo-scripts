@@ -23,6 +23,11 @@
 # Discription:
 # simple scirpt to find unused patches in the gentoo portage tree
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#SCRIPT_MODE=true
+#SITEDIR="${HOME}/patchtest/"
+#PORTTREE=/usr/portage/
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -31,28 +36,21 @@ else
 	exit 1
 fi
 
-DEBUG=false
-
-SCRIPT_MODE=false
+#
+### IMPORTANT SETTINGS START ###
+#
 SCRIPT_NAME="patchtest"
 SCRIPT_SHORT="PAT"
-
-PORTTREE="/usr/portage/"
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
-DL='|'
 array_names(){
 	RUNNING_CHECKS=(
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches"									#Index 0
 	)
 }
 array_names
-
-
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
+#
+### IMPORTANT SETTINGS STOP ###
+#
 
 main(){
 	check_ebuild(){
@@ -488,8 +486,8 @@ main(){
 depth_set ${1}
 cd ${PORTTREE}
 export -f main get_perm get_main_min array_names
-export PORTTREE WORKDIR SCRIPT_MODE DEBUG DL startdir SCRIPT_SHORT
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
+export WORKDIR startdir SCRIPT_SHORT
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 # Dont use parallel if DEBUG is enabled
 if ${DEBUG}; then
@@ -520,7 +518,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
+	copy_checks checks
 	rm -rf ${WORKDIR}
 fi
