@@ -32,10 +32,10 @@ else
 fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
-SITEDIR="/var/www/gentooqa.levelnine.at/results/"
+SITEROOT="/var/www/gentooqa.levelnine.at/"
+SITEDIR="${SITEROOT}/results/"
 
 for typ in IMP BUG FULL; do
-
 	if [ "${typ}" = "FULL" ]; then
 		dir_postfix=""
 		search_pattern="*-*-*"
@@ -45,7 +45,6 @@ for typ in IMP BUG FULL; do
 	fi
 
 	FULLWORKDIR="${WORKDIR}/full_list${dir_postfix}"
-
 	mkdir -p ${FULLWORKDIR}/{sort-by-package,sort-by-maintainer}
 
 	for check in ${SITEDIR}/checks/${search_pattern}; do
@@ -77,8 +76,8 @@ for typ in IMP BUG FULL; do
 
 	[ -n "${SITEDIR}/full_Lists/full_list${dir_postfix}" ] && rm -rf ${SITEDIR}/full_lists/full_list${dir_postfix}/
 	cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
-	rm -rf ${WORKDIR}
 done
+rm -rf ${WORKDIR}
 
 # generate html output (overview/results)
 gen_http_sort_main_v2 results ${SITEDIR}/checks > ${SITEDIR}/checks/index.html
@@ -86,18 +85,18 @@ gen_http_sort_main_v2 results ${SITEDIR}/stats > ${SITEDIR}/stats/index.html
 gen_http_sort_main_v2 results ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index.html
 
 # generate html output (maintainer/results)
-gen_html_top > /var/www/gentooqa.levelnine.at/checks.html
-gen_html_top > /var/www/gentooqa.levelnine.at/stats.html
+gen_html_top > ${SITEROOT}/checks.html
+gen_html_top > ${SITEROOT}/stats.html
 for ce in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d|sort); do
-	gen_html_out ${ce##*/} checks >> /var/www/gentooqa.levelnine.at/checks.html
+	gen_html_out ${ce##*/} checks >> ${SITEROOT}/checks.html
 	gen_http_sort_main_v2 main ${ce} > ${ce}/index.html
 done
 for st in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d|sort); do
-	gen_html_out ${st##*/} stats >> /var/www/gentooqa.levelnine.at/stats.html
+	gen_html_out ${st##*/} stats >> ${SITEROOT}/stats.html
 	gen_http_sort_main_v2 main ${st} > ${st}/index.html
 done
 for fl in $(find ${SITEDIR}/full_lists/ -mindepth 1 -maxdepth 1 -type d|sort); do
 	gen_http_sort_main_v2 main ${fl} > ${fl}/index.html
 done
-gen_html_bottom >> /var/www/gentooqa.levelnine.at/stats.html
-gen_html_bottom >> /var/www/gentooqa.levelnine.at/checks.html
+gen_html_bottom >> ${SITEROOT}/stats.html
+gen_html_bottom >> ${SITEROOT}/checks.html
