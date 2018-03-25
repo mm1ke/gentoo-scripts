@@ -29,6 +29,10 @@ if ! [ -e ${startdir}/_vars.sh ]; then
 	exit 1
 fi
 
+SITEROOT="/var/www/gentooqa.levelnine.at/"
+SITEDIR="${SITEROOT}/results/"
+export SITEDIR SITEROOT
+
 gen_http_sort_main_v2(){
 	local type="${1}"
 	local dir="${2}"
@@ -37,6 +41,7 @@ gen_http_sort_main_v2(){
 	local value_full=""
 	local value_main=""
 
+	# set values
 	case ${type} in
 		results)
 			local value_title="${dir##*/}"
@@ -63,7 +68,7 @@ gen_http_sort_main_v2(){
 			;;
 	esac
 
-
+# set top info of html page
 read -r -d '' TOP <<- EOM
 <html>
 \t<head>
@@ -73,7 +78,7 @@ read -r -d '' TOP <<- EOM
 \t<body text="black" bgcolor="white">
 \t\tList generated on $(date -I)</br>
 \t\t${value_line}</b>
-\t<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/results/">Home</a></pre>
+\t<pre><a href="../">../</a>  <a href="#" onclick="history.go(-1)">Back</a>  <a href="https://gentooqa.levelnine.at/">Home</a></pre>
 \t\t<pre>${value_full}
 ${value_main}
 ${value_pack}
@@ -81,11 +86,6 @@ ${value_filter}
 \t\t</pre><hr><pre>
 EOM
 
-read -r -d '' BOTTOM <<- EOM
-\t\t</table>
-\t</pre></hr></body>
-</html>
-EOM
 	echo -e "${TOP}"
 
 	case ${type} in
@@ -117,31 +117,30 @@ EOM
 		;;
 	esac
 
-	echo -e "${BOTTOM}"
+	echo -e "\t\t</table>\n\t</pre></hr></body>\n</html>"
 }
 
 gen_html_out(){
-	local chart="${1##*/}"
-	local type="${2}"
-	local chart_name="${chart##*-}"
-# local chart="SRT-BUG-src_uri_check"
+	local chart="${1##*/}"						# Foldername: SRT-BUG-src_uri_check
+	local type="${2}"									# type: checks/stats
+	local chart_name="${chart##*-}"		# chartname: src_uri_check
 
-	if [ -e /var/www/gentooqa.levelnine.at/results/${type}/${chart}/full.txt ]; then
+	if [ -e ${SITEDIR}/${type}/${chart}/full.txt ]; then
+
+		# get the needed information from the _vars file
 		source ${startdir}/_vars.sh "${chart_name}"
 
-		local filename="_data_template.js"
+		local js_template="/root/scripts/_data_template.js"
+		cp ${js_template} ${SITEROOT}/js/charts-gen/${chart_name}.js
 
-		#	if ! [ -e /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js ]; then
-				cp /root/scripts/${filename} /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-				sed -i "s|DATABASENAME|${databasename}|; \
-					s|DATABASEVALUE|${databasevalue}|; \
-					s|DATABASE|${database}|; \
-					s|CANVASID|${chart_name}|; \
-					s|LABEL|${label}|; \
-					s|TITLE|${title}|;" \
-					/var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-				chmod 755 /var/www/gentooqa.levelnine.at/js/charts-gen/${chart_name}.js
-		#	fi
+		sed -i "s|DATABASENAME|${databasename}|; \
+			s|DATABASEVALUE|${databasevalue}|; \
+			s|DATABASE|${database}|; \
+			s|CANVASID|${chart_name}|; \
+			s|LABEL|${label}|; \
+			s|TITLE|${title}|;" \
+			${SITEROOT}/js/charts-gen/${chart_name}.js
+		chmod 755 ${SITEROOT}/js/charts-gen/${chart_name}.js
 
 		read -r -d '' OUT <<- EOM
 		\t\t\t<li>
@@ -162,9 +161,7 @@ gen_html_out(){
 	fi
 }
 
-
 gen_html_top(){
-
 read -r -d '' TOP <<- EOM
 <!DOCTYPE html>
 <html>
@@ -202,11 +199,5 @@ EOM
 }
 
 gen_html_bottom(){
-read -r -d '' BOTTOM <<- EOM
-\t\t</ul>
-\t</body>
-</html>
-EOM
-
-	echo -e "${BOTTOM}"
+	echo -e "\t\t</table>\n\t</pre></hr></body>\n</html>"
 }

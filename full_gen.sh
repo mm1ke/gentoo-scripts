@@ -32,8 +32,6 @@ else
 fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
-SITEROOT="/var/www/gentooqa.levelnine.at/"
-SITEDIR="${SITEROOT}/results/"
 
 for typ in IMP BUG FULL; do
 	if [ "${typ}" = "FULL" ]; then
