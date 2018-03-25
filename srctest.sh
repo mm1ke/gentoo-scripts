@@ -23,6 +23,11 @@
 # Discription:
 # simple scirpt to find broken SRC_URI links
 
+#override PORTTREE,SCRIPT_MODE,SITEDIR settings
+#PORTTREE=/usr/portage/
+#SCRIPT_MODE=true
+#SITEDIR="${HOME}/srctest/"
+
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
@@ -31,14 +36,13 @@ else
 	exit 1
 fi
 
-SCRIPT_MODE=false
+#
+### IMPORTANT SETTINGS START ###
+#
 SCRIPT_NAME="srctest"
 SCRIPT_SHORT="SRT"
-PORTTREE="/usr/portage/"
-SITEDIR="${HOME}/${SCRIPT_NAME}/"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
-DL='|'
 JOBS="50"
 
 # need the array in a function in order
@@ -49,21 +53,14 @@ array_names(){
 	)
 }
 array_names
-
-
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
-fi
+#
+### IMPORTANT SETTINGS STOP ###
+#
 
 # only works with md5-cache
 if ! ${ENABLE_MD5}; then
 	exit 1
 fi
-
-
-cd ${PORTTREE}
-depth_set ${1}
 
 main() {
 	get_status() {
@@ -145,13 +142,14 @@ main() {
 	done
 }
 
+depth_set ${1}
+cd ${PORTTREE}
 export -f main get_main_min array_names
-export PORTTREE WORKDIR SCRIPT_MODE TMPCHECK DL SCRIPT_SHORT
-
+export WORKDIR TMPCHECK SCRIPT_SHORT
 touch ${TMPCHECK}
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
+find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -168,9 +166,7 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	rm -rf ${SITEDIR}/checks/${RUNNING_CHECKS[0]##*/}
-	cp -r ${RUNNING_CHECKS[0]} ${SITEDIR}/checks/
-
+	copy_checks checks
 	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}
