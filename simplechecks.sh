@@ -52,7 +52,7 @@ RUNNING_CHECKS=(
 "${WORKDIR}/${SCRIPT_SHORT}-BUG-fdo_mime_check"									# Index 7
 "${WORKDIR}/${SCRIPT_SHORT}-BUG-homepage_with_vars"							# Index 8
 "${WORKDIR}/${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"		# Index 9
-"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild.egit_repo_uri"						# Index 10
+"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_egit_repo_uri"						# Index 10
 )
 
 

@@ -152,7 +152,7 @@ case ${dir} in
 		More details and how to fix ebuilds with fdo-mime can be found on <a href="https://wiki.gentoo.org/wiki/Notes_on_ebuilds_with_GUI">Link</a>
 		EOM
 		;;
-	ebuild.egit_repo_uri)
+	ebuild_egit_repo_uri)
 		local database="gentoo_stats_test"				# database
 		local databasename="ebuildEgitRepoUri"			# databasetable
 		local databasevalue="sValue"		# row of interrest
