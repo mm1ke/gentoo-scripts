@@ -237,6 +237,37 @@ case ${dir} in
 		Simple checks which lists ebuilds who contain trailing whitespaces
 		EOM
 		;;
+	mixed_indentation)
+		scriptname="simplechecks.sh"
+		database="gentoo_stats_test"				# database
+		databasename="ssMixedIndentation"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Mixed Indentation"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Checks metadata files (metadata.xml) if it used tabs and whitespaces
+		EOM
+		;;
+	proxy_maint_check)
+		scriptname="simplechecks.sh"
+		database="gentoo_stats_test"				# database
+		databasename="ssProxyMaintainerCheck"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Proxy Maintainers"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Checks the metadata.xml of proxy maintained packages if it includes actually a
+		non gentoo email address (address of proxy maintainer).
+		Reason: There can't be a proxy maintained package without a proxy maintainer in
+		metadata.xml
+		EOM
+		;;
 	www_status_code)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
