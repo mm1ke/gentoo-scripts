@@ -313,6 +313,7 @@ white_list=(
 	"dev-perl/Math-Pari;pari-2.3.5-no-dot-inc.patch;Math-Pari-2.10.809.0.ebuild"
 	"dev-perl/gnome2-perl;Gnome2-1.046-no-dot-inc.patch;gnome2-perl-1.46.0.ebuild"
 	"dev-db/pgadmin3;pgadmin3-gcc6-null-pointer.patch;pgadmin3-1.22.2.ebuild"
+	"dev-db/pgadmin3;pgadmin3-desktop-r1.patch;pgadmin3-1.22.2.ebuild"
 	"dev-db/postgresql;postgresql-10beta2-no-server.patch;postgresql-10.0.ebuild:postgresql-10.0-r1.ebuild:postgresql-10.1.ebuild"
 	"dev-db/postgresql;postgresql-9.2-no-server.patch;postgresql-9.2.19.ebuild:postgresql-9.2.22.ebuild:postgresql-9.2.23.ebuild:postgresql-9.2.23-r1.ebuild:postgresql-9.2.24.ebuild"
 	"dev-db/postgresql;postgresql-9.3-no-server.patch;postgresql-9.3.15.ebuild:postgresql-9.3.18.ebuild:postgresql-9.3.19.ebuild:postgresql-9.3.19-r1.ebuild:postgresql-9.3.20.ebuild"
