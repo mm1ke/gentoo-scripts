@@ -27,6 +27,7 @@ dir="${1}"
 
 case ${dir} in
 	src_uri_check)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"
 		local databasename="sSRCtest"
 		local databasevalue="sNotAvailable"
@@ -41,6 +42,7 @@ case ${dir} in
 		EOM
 		;;
 	multiple_deps_on_per_line)
+		local scriptname="badstyle.sh"
 		local database="gentoo_stats_test"
 		local databasename="sBadstyle"
 		local databasevalue="sValue"
@@ -56,6 +58,7 @@ case ${dir} in
 		EOM
 		;;
 	duplicate_uses)
+		local scriptname="dupuse.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sDupuse"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -70,6 +73,7 @@ case ${dir} in
 		EOM
 		;;
 	unused_patches_short)
+		local scriptname="patchcheck.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sPatchCheck"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -84,6 +88,7 @@ case ${dir} in
 		EOM
 		;;
 	unused_patches)
+		local scriptname="patchtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sPatchTest"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -98,6 +103,7 @@ case ${dir} in
 		EOM
 		;;
 	description_over_80)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssDesOver80"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -111,6 +117,7 @@ case ${dir} in
 		EOM
 		;;
 	dohtml_in_eapi6)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssDohtmlInE6"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -125,6 +132,7 @@ case ${dir} in
 		EOM
 		;;
 	epatch_in_eapi6)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssEpatchInE6"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -139,6 +147,7 @@ case ${dir} in
 		EOM
 		;;
 	fdo_mime_check)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssFdoMimeCheck"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -153,6 +162,7 @@ case ${dir} in
 		EOM
 		;;
 	ebuild_egit_repo_uri)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ebuildEgitRepoUri"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -167,6 +177,7 @@ case ${dir} in
 		EOM
 		;;
 	gentoo_mirror_missuse)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssMirrorMisuse"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -181,6 +192,7 @@ case ${dir} in
 		EOM
 		;;
 	homepage_with_vars)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sHomepagesVars"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -196,6 +208,7 @@ case ${dir} in
 		EOM
 		;;
 	leading_trailing_whitespace)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sLeadingTrailingVars"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -211,6 +224,7 @@ case ${dir} in
 		EOM
 		;;
 	trailing_whitespaces)
+		local scriptname="simplechecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="ssTrailingWhitespace"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -224,6 +238,7 @@ case ${dir} in
 		EOM
 		;;
 	www_status_code)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sWWWtest"			# databasetable
 		local databasevalue="sFilteredValue"		# row of interrest
@@ -239,6 +254,7 @@ case ${dir} in
 		EOM
 		;;
 	www_upstream_shutdown)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sUpstreamShutdown"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -254,6 +270,7 @@ case ${dir} in
 		EOM
 		;;
 	301_redirections)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="s301Redirctions"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -268,6 +285,7 @@ case ${dir} in
 		EOM
 		;;
 	redirection_http_to_https)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sRedirHttpToHttps"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -282,6 +300,7 @@ case ${dir} in
 		EOM
 		;;
 	redirection_missing_slash_www)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sRedirSlashWww"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -296,6 +315,7 @@ case ${dir} in
 		EOM
 		;;
 	unsync_homepages)
+		local scriptname="wwwtest.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sUnsyncHomepages"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -309,6 +329,7 @@ case ${dir} in
 		EOM
 		;;
 	obsolete_eapi_packages)
+		local scriptname="eapichecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sBumpNeeded"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -324,6 +345,7 @@ case ${dir} in
 		EOM
 		;;
 	removal_candidates)
+		local scriptname="eapichecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sBumpNeededMatchingKeywords"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -339,6 +361,7 @@ case ${dir} in
 		EOM
 		;;
 	stable_request_candidates)
+		local scriptname="eapichecks.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sBumpNeededNonMatchingKeywords"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -355,6 +378,7 @@ case ${dir} in
 		EOM
 		;;
 	eapi_statistics)
+		local scriptname="eapistats.sh"
 		local database="gentoo_stats_test"				# database
 		local databasename="sEapiHistory"			# databasetable
 		local databasevalue="sValue"		# row of interrest
@@ -369,11 +393,12 @@ case ${dir} in
 		EOM
 		;;
 	*)
-		local database="database"				# database
-		local databasename="sTable"			# databasetable
-		local databasevalue="sValue"		# row of interrest
-		local label="check ebuilds"			# label of graph
-		local title="${label}"					# grapth title (not shown)
+		local scriptname="scriptname.sh"	# scriptname
+		local database="database"					# database
+		local databasename="sTable"				# databasetable
+		local databasevalue="sValue"			# row of interrest
+		local label="check ebuilds"				# label of graph
+		local title="${label}"						# grapth title (not shown)
 		local info_full="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
 		local info_main="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
 		local info_pack="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
