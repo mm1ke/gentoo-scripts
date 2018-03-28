@@ -42,7 +42,7 @@ fi
 ### IMPORTANT SETTINGS START ###
 #
 SCRIPT_NAME="depcheck"
-SCRIPT_SHORT="TMC"
+SCRIPT_SHORT="DEC"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
