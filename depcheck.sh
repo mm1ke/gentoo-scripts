@@ -98,9 +98,9 @@ main() {
 
 	if ${found}; then
 		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			echo "${category}/${package}/${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 		else
-			echo "${category}/${package}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
+			echo "${category}/${package}/${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
 		fi
 	fi
 }
