@@ -22,7 +22,7 @@
 
 # Discription:
 # simply script to find packages in (R)DEPEND block which
-# doesn't exist anymore (mostly blocks via !category/package)
+# doesn't exist anymore (mainly obsolete blocks via !category/package)
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
 #PORTTREE=/usr/portage/
@@ -61,6 +61,7 @@ if ! ${ENABLE_MD5}; then
 fi
 
 main() {
+
 	array_names
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
@@ -85,18 +86,23 @@ main() {
 		echo
 	fi
 
+	local found=false
+	local obsolete_dep=()
 	local dependencies=( $(grep DEPEND /${PORTTREE}/metadata/md5-cache/${category}/${packagename}|grep -oE "[a-zA-Z0-9-]{2,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
 	for dep in ${dependencies[@]}; do
 		if ! [ -e "${PORTTREE}/${dep}" ]; then
-			echo "${category}/${package} -> ${dep}"
+			obsolete_dep+=( "${dep}" )
+			found=true
 		fi
 	done
 
-#	if ${SCRIPT_MODE}; then
-#		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-#	else
-#		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}"
-#	fi
+	if ${found}; then
+		if ${SCRIPT_MODE}; then
+			echo "${category}/${package}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		else
+			echo "${category}/${package}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
+		fi
+	fi
 }
 
 # set the search depth
@@ -107,9 +113,9 @@ cd ${PORTTREE}
 export WORKDIR SCRIPT_SHORT
 export -f main array_names
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level} \( \
+find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
