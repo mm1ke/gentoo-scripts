@@ -114,11 +114,11 @@ main() {
 					new_file="$(get_age "${name}-r${i}.ebuild")${DL}"
 				fi
 				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
-					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}${old_file}6${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[0]##*/}"
 
 				else
-					output "${ebuild_eapi}${DL}${old_file}${category}/${package}${DL}${org_name}${DL}6${DL}${new_file}${category}/${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}${old_file}6${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[1]##*/}"
 				fi
 				break 2
@@ -166,10 +166,10 @@ if ${SCRIPT_MODE}; then
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 3 || echo 2)
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 5 || echo 3)
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 3 || echo 2)
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 5 || echo 3)
 
 	copy_checks stats
 	rm -rf ${WORKDIR}
