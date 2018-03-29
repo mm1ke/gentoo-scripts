@@ -66,23 +66,22 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${DEBUG}; then
-		# Debug
-		echo "absolute path: ${absolute_path}"
-		echo "full path: ${full_path}"
-		echo "full path ebuild: ${full_path_ebuild}"
-		echo "category: ${category}"
-		echo "package: ${package}"
-		echo "filename: ${filename}"
-		echo "packagename: ${packagename}"
-		echo "fileage: $(get_age "${filename}")"
-		echo "maintainer: ${maintainer}"
+		echo "absolute path: ${absolute_path}"				# path absolute to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
+		echo "full path: ${full_path}"								# full path:										/usr/portage/app-admin/salt
+		echo "full path ebuild: ${full_path_ebuild}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
+		echo "category: ${category}"									# package category:							app-admin
+		echo "package: ${package}"										# package name:									salt
+		echo "filename: ${filename}"									# package filename:							salt-0.5.2.ebuild
+		echo "packagename: ${packagename}"						# package name-version:					salt-0.5.2
+		echo "fileage: $(get_age "${filename}")"			# age of ebuild in days:				145
+		echo "maintainer: ${maintainer}"							# maintainer of package					foo@gentoo.org:bar@gmail.com
 		echo
 	fi
 
 	if ${SCRIPT_MODE}; then
-		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		echo "$(get_age "${filename}")${DL}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "$(get_age "${filename}")${DL}${category}${DL}${package}${DL}${filename}${DL}${maintainer}"
+		echo "$(get_age "${filename}")${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -94,7 +93,7 @@ cd ${PORTTREE}
 export WORKDIR SCRIPT_SHORT
 export -f main array_names
 
-${SCRIPT_MODE} && mkdir -p ${WORKDIR}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find ./${level} \( \
 	-path ./scripts/\* -o \
