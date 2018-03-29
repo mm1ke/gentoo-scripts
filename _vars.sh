@@ -423,6 +423,21 @@ case ${dir} in
 		<a href=eapi-stats.html>EAPI Statistics</a>
 		EOM
 		;;
+	ebuild_nonexist_dependency)
+		scriptname="depcheck.sh"	# scriptname
+		database="gentoo_stats_test"					# database
+		databasename="ebuildNonexistDependency"				# databasetable
+		databasevalue="sValue"			# row of interrest
+		label="Obsolete Dependencies"				# label of graph
+		title="${label}"						# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | OBSOLETE DEPENDENSY(S) | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
+		read -r -d '' chart_description <<- EOM
+		This script checks every ebuilds *DEPEND* BLOCKS for packages which doesn't exist anymore.
+		These are mostly blockers (like !app-admin/foo), which usually can be removed.
+		EOM
+		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
 		database="database"					# database
