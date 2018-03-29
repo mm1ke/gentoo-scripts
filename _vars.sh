@@ -382,9 +382,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Removal canditates"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
-		info_main="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
-		info_pack="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | EBUILD AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This script searches for ebuilds with EAPI 0-5 and checks if there is a newer reversion (-r1) which also is at EAPI6.
 		If found it also checks if the KEYWORDS are the same. In this case the older versions is a good canditate to be removed.
@@ -398,9 +398,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Stable request canditates"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
-		info_main="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
-		info_pack="EAPI | FILE AGE | CATEGORY/PACKAGE | EBUILD | EAPI(NV) | EBUILD AGE(NV) | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | EBUILD AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Also checks for ebuilds with EAPI 0-5 and a newer reversion (-r1) at EAPI6.
 		In this the newer version has different KEYWORDS which most likely means it haven't been stabilized, why these ebuilds are good
