@@ -382,7 +382,7 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Removal canditates"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="EAPI | FILE AGE | EAPI(NV) | EBUILD AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
@@ -398,7 +398,7 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Stable request canditates"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="EAPI | FILE AGE | EAPI(NV) | EBUILD AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
