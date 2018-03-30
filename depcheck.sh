@@ -128,8 +128,8 @@ find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'DEPEND' {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
