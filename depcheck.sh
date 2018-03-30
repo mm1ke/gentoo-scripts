@@ -90,9 +90,11 @@ main() {
 	local obsolete_dep=()
 	local dependencies=( $(grep DEPEND /${PORTTREE}/metadata/md5-cache/${category}/${packagename}|grep -oE "[a-zA-Z0-9-]{2,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
 	for dep in ${dependencies[@]}; do
-		if ! [ -e "${PORTTREE}/${dep}" ]; then
-			obsolete_dep+=( "${dep}" )
-			found=true
+		if $(grep ${dep} ${full_path_ebuild} >/dev/null 2>&1); then
+			if ! [ -e "${PORTTREE}/${dep}" ]; then
+				obsolete_dep+=( "${dep}" )
+				found=true
+			fi
 		fi
 	done
 
