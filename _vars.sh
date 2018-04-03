@@ -41,7 +41,7 @@ case ${dir} in
 		The timeout to try to get a file is 15 seconds.
 		EOM
 		;;
-	multiple_deps_on_per_line)
+	ebuild_multiple_deps_per_line)
 		scriptname="badstyle.sh"
 		database="gentoo_stats_test"
 		databasename="sBadstyle"
