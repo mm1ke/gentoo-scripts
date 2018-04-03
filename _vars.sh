@@ -29,8 +29,8 @@ case ${dir} in
 	src_uri_check)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"
-		databasename="sSRCtest"
-		databasevalue="sNotAvailable"
+		databasename="ebuildSrcUriStatus"
+		databasevalue="sValue"
 		label="Broken SRC_URIs"
 		title="${label}"
 		info_full="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
@@ -271,8 +271,8 @@ case ${dir} in
 	www_status_code)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
-		databasename="sWWWtest"			# databasetable
-		databasevalue="sFilteredValue"		# row of interrest
+		databasename="ebuildHomepageStatus"			# databasetable
+		databasevalue="sValue"		# row of interrest
 		label="Broken Websites"			# label of graph
 		title="${label}"					# grapth title (not shown)
 		info_full="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
