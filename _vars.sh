@@ -27,7 +27,7 @@ dir="${1}"
 
 case ${dir} in
 	src_uri_check)
-		scriptname="simplechecks.sh"
+		scriptname="srctest.sh"
 		database="gentoo_stats_test"
 		databasename="ebuildSrcUriStatus"
 		databasevalue="sValue"
