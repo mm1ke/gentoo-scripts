@@ -27,10 +27,10 @@ dir="${1}"
 
 case ${dir} in
 	src_uri_check)
-		scriptname="simplechecks.sh"
+		scriptname="srctest.sh"
 		database="gentoo_stats_test"
-		databasename="sSRCtest"
-		databasevalue="sNotAvailable"
+		databasename="ebuildSrcUriStatus"
+		databasevalue="sValue"
 		label="Broken SRC_URIs"
 		title="${label}"
 		info_full="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
@@ -41,7 +41,7 @@ case ${dir} in
 		The timeout to try to get a file is 15 seconds.
 		EOM
 		;;
-	multiple_deps_on_per_line)
+	ebuild_multiple_deps_per_line)
 		scriptname="badstyle.sh"
 		database="gentoo_stats_test"
 		databasename="sBadstyle"
@@ -271,8 +271,8 @@ case ${dir} in
 	www_status_code)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
-		databasename="sWWWtest"			# databasetable
-		databasevalue="sFilteredValue"		# row of interrest
+		databasename="ebuildHomepageStatus"			# databasetable
+		databasevalue="sValue"		# row of interrest
 		label="Broken Websites"			# label of graph
 		title="${label}"					# grapth title (not shown)
 		info_full="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
