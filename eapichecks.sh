@@ -46,9 +46,9 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-removal_candidates"					#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-stable_request_candidates"	#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-obsolete_eapi_packages"			#Index 2
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_cleanup_candidates"					#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"	#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"			#Index 2
 	)
 }
 array_names

@@ -359,7 +359,7 @@ case ${dir} in
 		Lists ebuilds/packages where the homepages are different over it's versions.
 		EOM
 		;;
-	obsolete_eapi_packages)
+	ebuild_obsolete_eapi)
 		scriptname="eapichecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sBumpNeeded"			# databasetable
@@ -375,7 +375,7 @@ case ${dir} in
 		can be removed and also package which need some attention.
 		EOM
 		;;
-	removal_candidates)
+	ebuild_cleanup_candidates)
 		scriptname="eapichecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sBumpNeededMatchingKeywords"			# databasetable
@@ -391,7 +391,7 @@ case ${dir} in
 		NV=Newer Version
 		EOM
 		;;
-	stable_request_candidates)
+	ebuild_stable_candidates)
 		scriptname="eapichecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sBumpNeededNonMatchingKeywords"			# databasetable
