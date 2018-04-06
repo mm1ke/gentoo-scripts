@@ -215,7 +215,9 @@ copy_checks() {
 		mkdir -p ${SITEDIR}/${type}
 		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
 	else
-		rm -rf ${SITEDIR}/${type}/${RUNNING_CHECKS[@]##*/}
+		for lcheck in ${RUNNING_CHECKS[@]}; do
+			rm -rf ${SITEDIR}/${type}/${lcheck##*/}
+		done
 		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
 	fi
 }
