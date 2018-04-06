@@ -172,7 +172,7 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		Checks if ebuilds using git:// for git repos, which is inscure. Should be replaces with https://
+		Checks if ebuilds using git:// for git repos, which is insecure. Should be replaced with https://
 		Also see: <a href="https://gist.github.com/grawity/4392747">Link</a>
 		EOM
 		;;
