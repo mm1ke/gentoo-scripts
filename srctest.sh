@@ -97,6 +97,23 @@ main() {
 		openbugs="${DL}${openbugs}"
 	fi
 
+	# ignore the following packagelist for now.
+	# all inheriting the toolchain-{binutils,glibc} eclass which generates the
+	# SRC_URI somehow and probably generates lots of false positives
+	local _ignore_list=(
+	dev-lang/gnat-gpl
+	sys-devel/gcc
+	sys-devel/kgcc64
+	sys-devel/binutils
+	sys-devel/binutils-hppa64
+	sys-libs/glibc
+	)
+	for iglist in ${_ignore_list[@]}; do
+		if [ "${category}/${package}" = "${iglist}" ]; then
+			return 0
+		fi
+	done
+
 #	code_available='HTTP/1.0 200 OK|HTTP/1.1 200 OK'
 	code_available='Remote file exists.'
 	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
