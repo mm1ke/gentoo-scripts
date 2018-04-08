@@ -44,7 +44,7 @@ fi
 # set scriptmode=true on host vs4
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/gentoo/"
 	PORTTREE="/mnt/gentootree/gentoo-github"
 fi
 

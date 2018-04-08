@@ -30,7 +30,8 @@ if ! [ -e ${startdir}/_vars.sh ]; then
 fi
 
 SITEROOT="/var/www/gentooqa.levelnine.at/"
-SITEDIR="${SITEROOT}/results/"
+TREEREPO="gentoo"
+SITEDIR="${SITEROOT}/results/${TREEREPO}/"
 export SITEDIR SITEROOT
 
 gen_http_sort_main_v2(){
@@ -148,11 +149,11 @@ gen_html_out(){
 		\t\t\t\t<div id="chart-container">
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
-		\t\t\t\t<h3><a href="results/${2}/${chart}/">${chart_name}</a></h3>
+		\t\t\t\t<h3><a href="results/${TREEREPO}/${2}/${chart}/">${chart_name}</a></h3>
 		\t\t\t\t<pre><p>${chart_description}</p>
-		<a href="results/${2}/${chart}/full.txt">full</a>     ${info_full}
-		<a href="results/${2}/${chart}/sort-by-maintainer">main</a>     ${info_main}
-		<a href="results/${2}/${chart}/sort-by-package">pack</a>     ${info_pack}
+		<a href="results/${TREEREPO}/${2}/${chart}/full.txt">full</a>     ${info_full}
+		<a href="results/${TREEREPO}/${2}/${chart}/sort-by-maintainer">main</a>     ${info_main}
+		<a href="results/${TREEREPO}/${2}/${chart}/sort-by-package">pack</a>     ${info_pack}
 		\t\t\t\t</pre>
 		\t\t\t</li>
 		EOM
