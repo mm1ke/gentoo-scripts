@@ -49,7 +49,7 @@ JOBS="50"
 # to be able to export the array
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-src_uri_check"									#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_src_uri_check"									#Index 0
 	)
 }
 array_names
