@@ -26,8 +26,9 @@
 startdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${startdir}/funcs-httpgen.sh ]; then
 	source ${startdir}/funcs-httpgen.sh
+	source ${startdir}/funcs.sh
 else
-	echo "Missing funcs-httpgen.sh"
+	echo "Missing funcs{-httpgen}.sh"
 	exit 1
 fi
 
