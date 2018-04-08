@@ -57,7 +57,7 @@ case ${dir} in
 		The checks tries to find such ebuilds.
 		EOM
 		;;
-	ebuild_duplicate_useflag_description)
+	metadata_duplicate_useflag_description)
 		scriptname="dupuse.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sDupuse"			# databasetable
