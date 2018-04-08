@@ -32,7 +32,7 @@ fi
 SITEROOT="/var/www/gentooqa.levelnine.at/"
 TREEREPO="gentoo"
 SITEDIR="${SITEROOT}/results/${TREEREPO}/"
-export SITEDIR SITEROOT
+export SITEDIR SITEROOT TREEREPO
 
 gen_http_sort_main_v2(){
 	local type="${1}"
