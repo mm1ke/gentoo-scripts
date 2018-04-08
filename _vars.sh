@@ -87,7 +87,7 @@ case ${dir} in
 		It's search funtionality is very limited but at least mostly without false positives
 		EOM
 		;;
-	unused_patches)
+	ebuild_unused_patches)
 		scriptname="patchtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sPatchTest"			# databasetable

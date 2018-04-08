@@ -44,7 +44,7 @@ SCRIPT_SHORT="PAT"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-unused_patches"									#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_unused_patches"									#Index 0
 	)
 }
 array_names
