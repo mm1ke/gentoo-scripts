@@ -45,7 +45,7 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-eapi_statistics"
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"
 	)
 }
 array_names

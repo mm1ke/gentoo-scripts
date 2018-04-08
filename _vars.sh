@@ -408,7 +408,7 @@ case ${dir} in
 		NV=Newer Version
 		EOM
 		;;
-	eapi_statistics)
+	ebuild_eapi_statistics)
 		scriptname="eapistats.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sEapiHistory"			# databasetable
