@@ -72,7 +72,7 @@ case ${dir} in
 		a global use flag.
 		EOM
 		;;
-	unused_patches_short)
+	ebuild_unused_patches_simple)
 		scriptname="patchcheck.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sPatchCheck"			# databasetable
@@ -98,7 +98,7 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE | PATCH/FILE | MAINTAINER(S)"
 		info_pack="CATEGORY/PACKAGE | PATCH/FILE | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		Like unused_patches_short this check looks for unused patches in pacakges. While it's much more powerfull
+		Like ebuild_unused_patches_simple this check looks for unused patches in pacakges. While it's much more powerfull
 		it also generates quite often false positive. A seperate whitelist file actually minimizes the output.
 		EOM
 		;;
