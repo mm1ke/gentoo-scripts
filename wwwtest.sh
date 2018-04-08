@@ -46,12 +46,12 @@ JOBS="50"
 # to be able to export the array
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-www_status_code"									#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-301_redirections"									#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_missing_slash_www"		#Index 2
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-redirection_http_to_https"				#Index 3
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-www_upstream_shutdown"						#Index 4
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-unsync_homepages"									#Index 5
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_http_statuscode"									#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_301_redirections"									#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_missing_slash_www"		#Index 2
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_http_to_https"				#Index 3
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_upstream_shutdown"						#Index 4
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_unsync"									#Index 5
 	)
 }
 array_names
@@ -234,7 +234,7 @@ if ${SCRIPT_MODE}; then
 		" ${TMPFILE}
 	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
-	# special filters - www_upstream_shutdown
+	# special filters - ebuild_homepage_upstream_shutdown
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 	for site in ${_filters[@]}; do
 		mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
@@ -246,7 +246,7 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
 
-	# unsync_homepages
+	# ebuild_homepage_unsync
 	# find different homepages in same packages
 	for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
 		# get all HOMEPAGEs from every package,
@@ -266,19 +266,19 @@ if ${SCRIPT_MODE}; then
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
 
-	# redirection_http_to_https
+	# ebuild_homepage_redirection_http_to_https
 	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
 	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 4
 
-	# redirection_missing_slash_www
+	# ebuild_homepage_redirection_missing_slash_www
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
 
-	# 301_redirections
+	# ebuild_homepage_301_redirections
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
 
-	# www_status_code
+	# ebuild_homepage_http_statuscode
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
 

@@ -268,7 +268,7 @@ case ${dir} in
 		metadata.xml
 		EOM
 		;;
-	www_status_code)
+	ebuild_homepage_http_statuscode)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ebuildHomepageStatus"			# databasetable
@@ -284,7 +284,7 @@ case ${dir} in
 		<a href="www-sites.html">Status Code History</a>
 		EOM
 		;;
-	www_upstream_shutdown)
+	ebuild_homepage_upstream_shutdown)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sUpstreamShutdown"			# databasetable
@@ -300,7 +300,7 @@ case ${dir} in
 		<a href="www-sites-his.html">Broken Sites History</a>
 		EOM
 		;;
-	301_redirections)
+	ebuild_homepage_301_redirections)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="s301Redirctions"			# databasetable
@@ -315,7 +315,7 @@ case ${dir} in
 		The list also includes the statuscode of the real homepage.
 		EOM
 		;;
-	redirection_http_to_https)
+	ebuild_homepage_redirection_http_to_https)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sRedirHttpToHttps"			# databasetable
@@ -330,7 +330,7 @@ case ${dir} in
 		Also only lists available sites.
 		EOM
 		;;
-	redirection_missing_slash_www)
+	ebuild_homepage_redirection_missing_slash_www)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sRedirSlashWww"			# databasetable
@@ -345,7 +345,7 @@ case ${dir} in
 		Also only lists available sites.
 		EOM
 		;;
-	unsync_homepages)
+	ebuild_homepage_unsync)
 		scriptname="wwwtest.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sUnsyncHomepages"			# databasetable
