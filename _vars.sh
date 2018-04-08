@@ -102,7 +102,7 @@ case ${dir} in
 		it also generates quite often false positive. A seperate whitelist file actually minimizes the output.
 		EOM
 		;;
-	description_over_80)
+	ebuild_description_over_80)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssDesOver80"			# databasetable
@@ -116,7 +116,7 @@ case ${dir} in
 		This simple check shows results of ebuilds which has a description longer than 80 characters.
 		EOM
 		;;
-	dohtml_in_eapi6)
+	ebuild_dohtml_in_eapi6)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssDohtmlInE6"			# databasetable
@@ -131,7 +131,7 @@ case ${dir} in
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
 		EOM
 		;;
-	epatch_in_eapi6)
+	ebuild_epatch_in_eapi6)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssEpatchInE6"			# databasetable
@@ -146,7 +146,7 @@ case ${dir} in
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
 		EOM
 		;;
-	fdo_mime_check)
+	ebuild_obsolete_fdo_mime_usage)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssFdoMimeCheck"			# databasetable
@@ -161,7 +161,7 @@ case ${dir} in
 		More details and how to fix ebuilds with fdo-mime can be found on <a href="https://wiki.gentoo.org/wiki/Notes_on_ebuilds_with_GUI">Link</a>
 		EOM
 		;;
-	ebuild_egit_repo_uri)
+	ebuild_insecure_git_uri_usage)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ebuildEgitRepoUri"			# databasetable
@@ -176,7 +176,7 @@ case ${dir} in
 		Also see: <a href="https://gist.github.com/grawity/4392747">Link</a>
 		EOM
 		;;
-	gentoo_mirror_missuse)
+	ebuild_obsolete_gentoo_mirror_usage)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssMirrorMisuse"			# databasetable
@@ -191,7 +191,7 @@ case ${dir} in
 		See also: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
 		EOM
 		;;
-	homepage_with_vars)
+	ebuild_variables_in_homepages)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sHomepagesVars"			# databasetable
@@ -207,7 +207,7 @@ case ${dir} in
 		Also see bug: <a href="https://bugs.gentoo.org/562812">Link</a>
 		EOM
 		;;
-	leading_trailing_whitespace)
+	ebuild_leading_trailing_whitespaces_in_variables)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sLeadingTrailingVars"			# databasetable
@@ -223,7 +223,7 @@ case ${dir} in
 		<a href="leading-trailing-his.html">Leading/Trailing Whitespace History</a>
 		EOM
 		;;
-	trailing_whitespaces)
+	ebuild_trailing_whitespaces)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssTrailingWhitespace"			# databasetable
@@ -237,7 +237,7 @@ case ${dir} in
 		Simple checks which lists ebuilds who contain trailing whitespaces
 		EOM
 		;;
-	mixed_indentation)
+	metadata_mixed_indentation)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssMixedIndentation"			# databasetable
@@ -251,7 +251,7 @@ case ${dir} in
 		Checks metadata files (metadata.xml) if it used tabs and whitespaces
 		EOM
 		;;
-	proxy_maint_check)
+	metadata_missing_proxy_maintainer)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"				# database
 		databasename="ssProxyMaintainerCheck"			# databasetable

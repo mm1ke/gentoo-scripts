@@ -47,17 +47,17 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-trailing_whitespaces"						# Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-mixed_indentation"							# Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-gentoo_mirror_missuse"					# Index 2
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-epatch_in_eapi6"								# Index 3
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-dohtml_in_eapi6"								# Index 4
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-description_over_80"						# Index 5
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-proxy_maint_check"							# Index 6
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-fdo_mime_check"									# Index 7
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-homepage_with_vars"							# Index 8
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-leading_trailing_whitespace"		# Index 9
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_egit_repo_uri"						# Index 10
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_trailing_whitespaces"											# Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-metadata_mixed_indentation"												# Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_gentoo_mirror_usage"							# Index 2
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_epatch_in_eapi6"														# Index 3
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_dohtml_in_eapi6"														# Index 4
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_description_over_80"												# Index 5
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-metadata_missing_proxy_maintainer"								# Index 6
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_fdo_mime_usage"										# Index 7
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_variables_in_homepages"										# Index 8
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_leading_trailing_whitespaces_in_variables"	# Index 9
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_insecure_git_uri_usage"										# Index 10
 	)
 }
 array_names
@@ -80,7 +80,7 @@ main() {
 	fi
 }
 
-pre_check_mixed_indentation() {
+pre_check_metadata_mixed_indentation() {
 	if grep $'\t' ${1} >/dev/null; then
 		main ${1}
 	fi
@@ -98,7 +98,7 @@ pre_check_homepage_var() {
 	fi
 }
 
-pre_check_description_over_80() {
+pre_check_ebuild_description_over_80() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
@@ -108,7 +108,7 @@ pre_check_description_over_80() {
 	fi
 }
 
-pre_proxy_maint_check() {
+pre_metadata_missing_proxy_maintainer() {
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -129,10 +129,10 @@ depth_set ${1}
 cd ${PORTTREE}
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f main get_main_min array_names
-export -f pre_check_eapi6 pre_check_mixed_indentation pre_check_description_over_80 pre_proxy_maint_check pre_check_homepage_var
+export -f pre_check_eapi6 pre_check_metadata_mixed_indentation pre_check_ebuild_description_over_80 pre_metadata_missing_proxy_maintainer pre_check_homepage_var
 export WORKDIR SCRIPT_SHORT
 
-# trailing_whitespaces
+# ebuild_trailing_whitespaces
 export NAME="${RUNNING_CHECKS[0]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -144,7 +144,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | parallel main {}
 
-# mixed_indentation
+# metadata_mixed_indentation
 export NAME="${RUNNING_CHECKS[1]}"
 find ./${level} -maxdepth 1 \( \
 	-path ./scripts/\* -o \
@@ -154,9 +154,9 @@ find ./${level} -maxdepth 1 \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_mixed_indentation {}
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_metadata_mixed_indentation {}
 
-# gentoo_mirror_missuse
+# ebuild_obsolete_gentoo_mirror_usage
 export NAME="${RUNNING_CHECKS[2]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -168,7 +168,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'mirror://gentoo' {} \; | parallel main {}
 
-# epatch_in_eapi6
+# ebuild_epatch_in_eapi6
 export NAME="${RUNNING_CHECKS[3]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -180,7 +180,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<epatch\>" {} \; | parallel pre_check_eapi6 {}
 
-# dohtml_in_eapi6
+# ebuild_dohtml_in_eapi6
 export NAME="${RUNNING_CHECKS[4]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -192,7 +192,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
 
-# description_over_80
+# ebuild_description_over_80
 # only works with md5-cache
 if ${ENABLE_MD5}; then
 	export NAME="${RUNNING_CHECKS[5]}"
@@ -204,10 +204,10 @@ if ${ENABLE_MD5}; then
 		-path ./distfiles/\* -o \
 		-path ./metadata/\* -o \
 		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_description_over_80 {}
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_ebuild_description_over_80 {}
 fi
 
-# proxy_maint_check
+# metadata_missing_proxy_maintainer
 export NAME="${RUNNING_CHECKS[6]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -217,9 +217,9 @@ find ./${level} \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_proxy_maint_check {}
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_metadata_missing_proxy_maintainer {}
 
-# fdo_mime_check
+# ebuild_obsolete_fdo_mime_usage
 export NAME="${RUNNING_CHECKS[7]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -231,7 +231,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* fdo-mime" {} \; | parallel main {}
 
-# homepage_with_vars
+# ebuild_variables_in_homepages
 export NAME="${RUNNING_CHECKS[8]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
@@ -255,7 +255,7 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 
-# leading_trailing_whitespace
+# ebuild_leading_trailing_whitespaces_in_variables
 _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 for var in ${_varibales}; do
 	export VARI="${var}${DL}"
