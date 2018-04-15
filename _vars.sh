@@ -208,7 +208,7 @@ case ${dir} in
 		EOM
 		;;
 	ebuild_leading_trailing_whitespaces_in_variables)
-		scriptname="simplechecks.sh"
+		scriptname="trailwhite.sh"
 		database="gentoo_stats_test"				# database
 		databasename="sLeadingTrailingVars"			# databasetable
 		databasevalue="sValue"		# row of interrest

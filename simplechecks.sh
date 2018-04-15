@@ -56,8 +56,7 @@ array_names(){
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-metadata_missing_proxy_maintainer"								# Index 6
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_fdo_mime_usage"										# Index 7
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_variables_in_homepages"										# Index 8
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_leading_trailing_whitespaces_in_variables"	# Index 9
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_insecure_git_uri_usage"										# Index 10
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_insecure_git_uri_usage"										# Index 9
 	)
 }
 array_names
@@ -244,7 +243,7 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
 
 # egit_repo_uri
-export NAME="${RUNNING_CHECKS[10]}"
+export NAME="${RUNNING_CHECKS[9]}"
 find ./${level} \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
@@ -256,27 +255,27 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 
 # ebuild_leading_trailing_whitespaces_in_variables
-_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
-for var in ${_varibales}; do
-	export VARI="${var}${DL}"
-	export NAME="${RUNNING_CHECKS[9]}"
-	find ./${level} \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
-
-	if ${SCRIPT_MODE}; then
-		mkdir -p ${NAME}/sort-by-filter/${var}/
-		grep "^${VARI}" ${NAME}/full.txt > ${NAME}/sort-by-filter/${var}/full.txt
-		gen_sort_main_v2 ${NAME}/sort-by-filter/${var}/ 3
-		gen_sort_pak_v2 ${NAME}/sort-by-filter/${var}/ 2
-	fi
-done
+#_varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
+#for var in ${_varibales}; do
+#	export VARI="${var}${DL}"
+#	export NAME="${RUNNING_CHECKS[9]}"
+#	find ./${level} \( \
+#		-path ./scripts/\* -o \
+#		-path ./profiles/\* -o \
+#		-path ./packages/\* -o \
+#		-path ./licenses/\* -o \
+#		-path ./distfiles/\* -o \
+#		-path ./metadata/\* -o \
+#		-path ./eclass/\* -o \
+#		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
+#
+#	if ${SCRIPT_MODE}; then
+#		mkdir -p ${NAME}/sort-by-filter/${var}/
+#		grep "^${VARI}" ${NAME}/full.txt > ${NAME}/sort-by-filter/${var}/full.txt
+#		gen_sort_main_v2 ${NAME}/sort-by-filter/${var}/ 3
+#		gen_sort_pak_v2 ${NAME}/sort-by-filter/${var}/ 2
+#	fi
+#done
 
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
@@ -306,11 +305,11 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[8]} 2
 	gen_sort_pak_v2 ${RUNNING_CHECKS[8]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[9]} 3
-	gen_sort_pak_v2 ${RUNNING_CHECKS[9]} 2
+#	gen_sort_main_v2 ${RUNNING_CHECKS[9]} 3
+#	gen_sort_pak_v2 ${RUNNING_CHECKS[9]} 2
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[10]} 2
-	gen_sort_pak_v2 ${RUNNING_CHECKS[10]} 1
+	gen_sort_main_v2 ${RUNNING_CHECKS[9]} 2
+	gen_sort_pak_v2 ${RUNNING_CHECKS[9]} 1
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
