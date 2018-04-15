@@ -41,6 +41,37 @@ case ${dir} in
 		The timeout to try to get a file is 15 seconds.
 		EOM
 		;;
+	ebuild_src_uri_offline)
+		scriptname="srctest.sh"
+		database="gentoo_stats_test"
+		databasename="ebuildSrcUriOffline"
+		databasevalue="sValue"
+		label="Offline Packages"
+		title="${label}"
+		info_full="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S) | OPENBUGS"
+		info_pack="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		Checks if a package is offline and has RESTRICT="mirror" in the ebuild.
+		In this case the package is completly offline and it's impossible to install it now.
+		EOM
+		;;
+	ebuild_missing_zip_dependency)
+		scriptname="srctest.sh"
+		database="gentoo_stats_test"
+		databasename="ebuildMissingZipDependency"
+		databasevalue="sValue"
+		label="Missing Zip Dependency"
+		title="${label}"
+		info_full="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S) | OPENBUGS"
+		info_pack="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		This check looks the the SRC_URI files. If there are ZIP Files to be downloaded it
+		also checks if the ebuild has app-arch/unzip in it's dependencies. This is needed
+		because portage won't be able to extract it otherwise.
+		EOM
+		;;
 	ebuild_multiple_deps_per_line)
 		scriptname="badstyle.sh"
 		database="gentoo_stats_test"

@@ -50,6 +50,8 @@ JOBS="50"
 array_names(){
 	RUNNING_CHECKS=(
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_src_uri_check"									#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_src_uri_offline"								#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_missing_zip_dependency"				#Index 2
 	)
 }
 array_names
@@ -130,6 +132,15 @@ main() {
 			for u in ${_src}; do
 				# add ^mirror:// to the grep, somehow we should be able to test them too
 				for i in $(echo $u | grep -E "^http://|^https://"); do
+					# check for zip dependecy first
+					local _fileformat="$(echo ${i: -4})"
+					if [ "${_fileformat}" = ".zip" ]; then
+						if ! $(grep "app-arch/unzip" ${PORTTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
+							mode ${RUNNING_CHECKS[2]} \
+									"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+									missing_zip
+						fi
+					fi
 					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
 						mode ${RUNNING_CHECKS[0]} \
@@ -150,6 +161,11 @@ main() {
 							mode ${RUNNING_CHECKS[0]} \
 								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 								not_available
+							if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
+								mode ${RUNNING_CHECKS[1]} \
+									"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+									offline
+							fi
 							echo "not_available ${i}" >> ${TMPCHECK}
 						fi
 					fi
@@ -179,9 +195,17 @@ find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 
 if ${SCRIPT_MODE}; then
 	cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt
+	cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt
+	cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 4
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 1
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
+	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
