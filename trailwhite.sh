@@ -55,6 +55,8 @@ array_names
 #
 
 main() {
+	array_names
+
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -63,9 +65,9 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${VARI}${category}/${package}/${filename}${DL}${maintainer}" >> ${NAME}/full.txt
+		echo "${VARI}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "${VARI}${NAME##*/}${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${VARI}${RUNNING_CHECKS[0]##*/}${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -79,7 +81,6 @@ export WORKDIR SCRIPT_SHORT
 _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 for var in ${_varibales}; do
 	export VARI="${var}${DL}"
-	export NAME="${RUNNING_CHECKS[9]}"
 	find ./${level} \( \
 		-path ./scripts/\* -o \
 		-path ./profiles/\* -o \
@@ -91,10 +92,10 @@ for var in ${_varibales}; do
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "^${var}=\" |^${var}=\".* \"$" {} \; | parallel main {}
 
 	if ${SCRIPT_MODE}; then
-		mkdir -p ${NAME}/sort-by-filter/${var}/
-		grep "^${VARI}" ${NAME}/full.txt > ${NAME}/sort-by-filter/${var}/full.txt
-		gen_sort_main_v2 ${NAME}/sort-by-filter/${var}/ 3
-		gen_sort_pak_v2 ${NAME}/sort-by-filter/${var}/ 2
+		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/
+		grep "^${VARI}" ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/full.txt
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/ 3
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/ 2
 	fi
 done
 
