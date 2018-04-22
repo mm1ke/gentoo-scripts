@@ -65,7 +65,10 @@ gen_http_sort_main_v2(){
 			elif [ -e ${dir}/sort-by-eapi/ ];then
 				local value_filter="<a href=\"sort-by-eapi\">TXT-sort-by-eapi</a>"
 			fi
-
+			;;
+		fullpak)
+			local value_title="${dir##*/}"
+			local value_line="Packages affected: <b>$(find ${dir}/sort-by-package/ -type f|wc -l)"
 			;;
 	esac
 
@@ -103,19 +106,30 @@ EOM
 				line='      '
 				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
 			done
-		;;
-
+			;;
 		main)
 			echo "QTY     Maintainer"
-			for i in $(ls ${dir}/sort-by-maintainer/); do
-				main="${i}"
+			for i in $(for x in $(ls ${dir}/sort-by-maintainer/); do echo "$(cat ${dir}/sort-by-maintainer/$x|wc -l)|$x"; done|sort -nr); do
+				main="${i##*|}"
 				val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
 
 				a="<a href=\"sort-by-maintainer/${main}\">${main::-4}</a>"
 				line='      '
 				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
 			done
-		;;
+			;;
+		fullpak)
+			echo "QTY     Package"
+			for z in $(for b in $(find ${dir}/sort-by-package/ -type f); do echo "$(grep "<<<" ${b}|wc -l)|${b/${dir}\/sort-by-package\//}"; done|sort -nr); do
+				local tmp_pak="${z##*|}"
+				local pak="${tmp_pak/\//-}"
+				local val="${z%%|*}"
+
+				a="<a href=\"sort-by-package/${tmp_pak}\">${pak::-4}</a>"
+				line='      '
+				printf "%s%s%s\n" "${line:${#val}}" "${val}" "  ${a}"
+			done
+			;;
 	esac
 
 	echo -e "\t\t</table>\n\t</pre></hr></body>\n</html>"

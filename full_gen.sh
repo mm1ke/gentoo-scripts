@@ -75,6 +75,9 @@ for typ in IMP BUG FULL; do
 
 	[ -n "${SITEDIR}/full_Lists/full_list${dir_postfix}" ] && rm -rf ${SITEDIR}/full_lists/full_list${dir_postfix}/
 	cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
+
+	gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list${dir_postfix} > ${SITEDIR}/full_lists/full_list${dir_postfix}/index-pak.html
+
 done
 rm -rf ${WORKDIR}
 
