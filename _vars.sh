@@ -469,6 +469,21 @@ case ${dir} in
 		These are mostly blockers (like !app-admin/foo), which usually can be removed.
 		EOM
 		;;
+	ebuild_obsolete_git_2_usage)
+		scriptname="simplechecks.sh"
+		database="gentoo_stats_test"								# database
+		databasename="ebuidlObsoleteGit2Eclass"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="git-2 usage"			# label of graph
+		title="${label}"		# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		The git-2 eclass is superseeded by the git-r3 eclass, which is why git-2 shouldn't be used anymore.
+		This check looks for packages who still use the git-2 eclass.
+		EOM
+		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
 		database="database"					# database

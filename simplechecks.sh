@@ -57,6 +57,7 @@ array_names(){
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_fdo_mime_usage"										# Index 7
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_variables_in_homepages"										# Index 8
 	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_insecure_git_uri_usage"										# Index 9
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_git_2_usage"											# Index 10
 	)
 }
 array_names
@@ -254,6 +255,19 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 
+# ebuild_obsolete_git_2_usage
+export NAME="${RUNNING_CHECKS[10]}"
+find ./${level} \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* git-2" {} \; | parallel main {}
+
+
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
@@ -284,6 +298,9 @@ if ${SCRIPT_MODE}; then
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[9]} 2
 	gen_sort_pak_v2 ${RUNNING_CHECKS[9]} 1
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[10]} 2
+	gen_sort_pak_v2 ${RUNNING_CHECKS[10]} 1
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
