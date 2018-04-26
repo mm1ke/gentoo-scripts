@@ -472,7 +472,7 @@ case ${dir} in
 	ebuild_obsolete_git_2_usage)
 		scriptname="simplechecks.sh"
 		database="gentoo_stats_test"								# database
-		databasename="ebuidlObsoleteGit2Eclass"			# databasetable
+		databasename="ebuildObsoleteGit2Eclass"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="git-2 usage"			# label of graph
 		title="${label}"		# grapth title (not shown)
