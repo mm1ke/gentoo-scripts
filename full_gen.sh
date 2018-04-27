@@ -92,10 +92,28 @@ gen_html_top > ${SITEROOT}/stats.html
 for ce in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d|sort); do
 	gen_html_out ${ce##*/} checks >> ${SITEROOT}/checks.html
 	gen_http_sort_main_v2 main ${ce} > ${ce}/index.html
+	if [ -e "${ce}/sort-by-filter" ]; then
+		for fce in $(find ${ce}/sort-by-filter/ -mindepth 1 -maxdepth 1 -type d|sort); do
+			gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
+		done
+	elif [ -e "${ce}/sort-by-eapi" ]; then
+		for fce in $(find ${ce}/sort-by-eapi/ -mindepth 1 -maxdepth 1 -type d|sort); do
+			gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
+		done
+	fi
 done
 for st in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d|sort); do
 	gen_html_out ${st##*/} stats >> ${SITEROOT}/stats.html
 	gen_http_sort_main_v2 main ${st} > ${st}/index.html
+	if [ -e "${st}/sort-by-filter" ]; then
+		for fst in $(find ${st}/sort-by-filter/ -mindepth 1 -maxdepth 1 -type d|sort); do
+			gen_http_sort_main_v2 main ${fst} > ${fst}/index.html
+		done
+	elif [ -e "${st}/sort-by-eapi" ]; then
+		for fst in $(find ${st}/sort-by-eapi/ -mindepth 1 -maxdepth 1 -type d|sort); do
+			gen_http_sort_main_v2 main ${fst} > ${fst}/index.html
+		done
+	fi
 done
 for fl in $(find ${SITEDIR}/full_lists/ -mindepth 1 -maxdepth 1 -type d|sort); do
 	gen_http_sort_main_v2 main ${fl} > ${fl}/index.html
