@@ -484,6 +484,36 @@ case ${dir} in
 		This check looks for packages who still use the git-2 eclass.
 		EOM
 		;;
+	ebuild_obsolete_games_usage)
+		scriptname="simplechecks.sh"
+		database="gentoo_stats_test"								# database
+		databasename="ebuildObsoleteGamesEclass"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="games usage"			# label of graph
+		title="${label}"		# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		The games eclass is obsolete and shouldn't be used anymore.
+		This check lists all ebuilds which still uses the games eclass.
+		EOM
+		;;
+	ebuild_obsolete_ltprune_usage)
+		scriptname="simplechecks.sh"
+		database="gentoo_stats_test"								# database
+		databasename="ebuildObsoleteLtpruneEclass"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="ltprune usage"			# label of graph
+		title="${label}"		# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		The ltprune eclass is obsolete and shouldn't be used anymore.
+		This check lists all ebuilds which still uses the ltprune eclass.
+		EOM
+		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
 		database="database"					# database

@@ -58,6 +58,8 @@ array_names(){
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_variables_in_homepages"										# Index 8
 	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_insecure_git_uri_usage"										# Index 9
 	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_git_2_usage"											# Index 10
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_games_usage"											# Index 11
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_obsolete_ltprune_usage"										# Index 12
 	)
 }
 array_names
@@ -267,6 +269,29 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* git-2" {} \; | parallel main {}
 
+# ebuild_obsolete_games_usage
+export NAME="${RUNNING_CHECKS[11]}"
+find ./${level} \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* games" {} \; | parallel main {}
+
+# ebuild_obsolete_ltprune_usage
+export NAME="${RUNNING_CHECKS[12]}"
+find ./${level} \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* ltprune" {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
@@ -301,6 +326,12 @@ if ${SCRIPT_MODE}; then
 
 	gen_sort_main_v2 ${RUNNING_CHECKS[10]} 2
 	gen_sort_pak_v2 ${RUNNING_CHECKS[10]} 1
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[11]} 2
+	gen_sort_pak_v2 ${RUNNING_CHECKS[11]} 1
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[12]} 2
+	gen_sort_pak_v2 ${RUNNING_CHECKS[12]} 1
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
