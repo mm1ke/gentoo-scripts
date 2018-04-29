@@ -45,7 +45,7 @@ fi
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
 	SITEDIR="/var/www/gentooqa.levelnine.at/results/gentoo/"
-	PORTTREE="/mnt/gentootree/gentoo-github"
+	PORTTREE="/mnt/repotrees/gentoo/"
 fi
 
 ENABLE_GIT=false
