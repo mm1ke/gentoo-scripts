@@ -146,7 +146,7 @@ gen_html_out(){
 		source ${startdir}/_vars.sh "${chart_name}"
 
 		local js_template="/root/scripts/_data_template.js"
-		cp ${js_template} ${SITEROOT}/js/charts-gen/${chart_name}.js
+		cp ${js_template} ${SITEDIR}/charts-gen/${chart_name}.js
 
 		sed -i "s|DATABASENAME|${databasename}|; \
 			s|DATABASEVALUE|${databasevalue}|; \
@@ -154,12 +154,12 @@ gen_html_out(){
 			s|CANVASID|${chart_name}|; \
 			s|LABEL|${label}|; \
 			s|TITLE|${title}|;" \
-			${SITEROOT}/js/charts-gen/${chart_name}.js
-		chmod 755 ${SITEROOT}/js/charts-gen/${chart_name}.js
+			${SITEDIR}/charts-gen/${chart_name}.js
+		chmod 755 ${SITEDIR}/charts-gen/${chart_name}.js
 
 		read -r -d '' OUT <<- EOM
 		\t\t\t<li>
-		\t\t\t\t<script type="text/javascript" src="js/charts-gen/${chart_name}.js"></script>
+		\t\t\t\t<script type="text/javascript" src="results/${TREEREPO}/charts-gen/${chart_name}.js"></script>
 		\t\t\t\t<div id="chart-container">
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
