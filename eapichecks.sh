@@ -139,17 +139,17 @@ export WORKDIR SCRIPT_SHORT
 export -f main output array_names
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level}  \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L "^EAPI" {} \; | parallel main {}
+#find ./${level}  \( \
+#	-path ./scripts/\* -o \
+#	-path ./profiles/\* -o \
+#	-path ./packages/\* -o \
+#	-path ./licenses/\* -o \
+#	-path ./distfiles/\* -o \
+#	-path ./metadata/\* -o \
+#	-path ./eclass/\* -o \
+#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L "^EAPI" {} \; | parallel main {}
 
-for e in $(seq 1 5); do
+for e in $(seq 0 5); do
 	find ./${level}  \( \
 		-path ./scripts/\* -o \
 		-path ./profiles/\* -o \
