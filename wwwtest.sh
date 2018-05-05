@@ -169,7 +169,7 @@ main() {
 
 		if [ -n "${_hp}" ]; then
 			for i in ${_hp}; do
-				local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
+				local _checktmp="$(grep "${DL}${i}${DL}" ${TMPCHECK}|head -1)"
 
 				if echo ${i}|grep ^ftp >/dev/null;then
 					mode "FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
@@ -182,7 +182,7 @@ main() {
 					# get http status code
 					_code="$(get_code ${i})"
 					mode "${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
-					echo "${_code} ${i}" >> ${TMPCHECK}
+					echo "${_code}${DL}${i}${DL}" >> ${TMPCHECK}
 
 					case ${_code} in
 						301)
