@@ -56,7 +56,6 @@ array_names
 main() {
 	array_names
 	local full_package=${1}
-	local eapi=${2}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
@@ -64,25 +63,16 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "${eapi}${DL}${category}/${package}/${filename}${DL}${maintainer}"
-	fi
-}
-
-eapi_pre_check() {
-	local var=${1}
-	if grep ^EAPI ${var} >/dev/null; then
-		main ${var} $(grep ^EAPI ${var}|tr -d '"'|cut -d'=' -f2)
-	else
-		main ${var} 0
+		echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}"
 	fi
 }
 
 depth_set ${1}
 cd ${PORTTREE}
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
-export -f eapi_pre_check main get_main_min array_names
+export -f main get_main_min array_names
 export WORKDIR SCRIPT_SHORT
 
 find ./${level}  \( \
@@ -93,7 +83,7 @@ find ./${level}  \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel eapi_pre_check {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
 	# filter after EAPI

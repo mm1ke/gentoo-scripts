@@ -206,6 +206,12 @@ get_age() {
 	fi
 }
 
+# return the EAPI of a given ebuild
+get_eapi() {
+	local file=${1}
+	echo "$(grep ^EAPI ${file}|grep -Eo '[0-9]')"
+}
+
 # this function simply copies all results from the WORKDIR to
 # the SITEDIR
 copy_checks() {
@@ -255,4 +261,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs
+export -f get_main_min get_perm get_age get_bugs get_eapi

@@ -75,12 +75,7 @@ main() {
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
 	local name="${filename%.*}"
-
-	if ! $(cat ${full_package} | grep ^EAPI >/dev/null ); then
-		local ebuild_eapi="0"
-	else
-		local ebuild_eapi="$(grep ^EAPI ${full_package} |tr -d '"'|cut -d'=' -f2|cut -c1-2)"
-	fi
+	local ebuild_eapi="$(get_eapi ${full_package})"
 
 	local date_today="$(date '+%s' -d today)"
 	local package_path="/${PORTTREE}/${category}/${package}"
@@ -106,7 +101,7 @@ main() {
 	for i in $(seq $start 10); do
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
 			local found_ebuild="${package_path}/${name}-r${i}.ebuild"
-			if [ "$(grep ^EAPI ${found_ebuild} |tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+			if [ "$(get_eapi ${found_ebuild})" = "6" ]; then
 				local old_file=""
 				local new_file=""
 				if ${ENABLE_GIT}; then
@@ -138,16 +133,6 @@ cd ${PORTTREE}
 export WORKDIR SCRIPT_SHORT
 export -f main output array_names
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
-
-#find ./${level}  \( \
-#	-path ./scripts/\* -o \
-#	-path ./profiles/\* -o \
-#	-path ./packages/\* -o \
-#	-path ./licenses/\* -o \
-#	-path ./distfiles/\* -o \
-#	-path ./metadata/\* -o \
-#	-path ./eclass/\* -o \
-#	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -L "^EAPI" {} \; | parallel main {}
 
 for e in $(seq 0 5); do
 	find ./${level}  \( \

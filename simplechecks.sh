@@ -89,7 +89,7 @@ pre_check_metadata_mixed_indentation() {
 }
 
 pre_check_eapi6() {
-	if [ "$(grep EAPI ${1}|tr -d '"'|cut -d'=' -f2)" = "6" ]; then
+	if [ "$(get_eapi ${1})" = "6" ]; then
 		main ${1}
 	fi
 }
