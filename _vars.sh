@@ -454,6 +454,20 @@ case ${dir} in
 		<a href=eapi-stats.html>EAPI Statistics</a>
 		EOM
 		;;
+	ebuild_eapi_live_statistics)
+		scriptname="eapistats.sh"
+		database="gentoo_stats_test"				# database
+		databasename="ebuildEapiLiveHistory"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Eapistats"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_pack="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		read -r -d '' chart_description <<- EOM
+		A simple list of all live packages and it's corresponding EAPI Version. Also includes all maintainers to the package.
+		EOM
+		;;
 	ebuild_nonexist_dependency)
 		scriptname="depcheck.sh"	# scriptname
 		database="gentoo_stats_test"					# database

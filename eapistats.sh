@@ -45,7 +45,8 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"			#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_live_stats"			#Index 1
 	)
 }
 array_names
@@ -59,8 +60,17 @@ main() {
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
-
+	local packagename="${filename%.*}"
+	local fileversion="${packagename/${package}-/}"
 	local maintainer="$(get_main_min "${category}/${package}")"
+
+	if [ $(echo ${fileversion}|grep 9999) ]; then
+		if ${SCRIPT_MODE}; then
+			echo "$(get_eapi ${full_package})${DL}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+		else
+			echo "live_stats${DL}$(get_eapi ${full_package})${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+		fi
+	fi
 
 	if ${SCRIPT_MODE}; then
 		echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
@@ -95,6 +105,17 @@ if ${SCRIPT_MODE}; then
 		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 3
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+
+	for eapi in $(cut -c-1 ${RUNNING_CHECKS[1]}/full.txt|sort -u); do
+		mkdir -p ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}
+		grep ^${eapi}${DL} ${RUNNING_CHECKS[1]}/full.txt > ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt
+
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 3
+	done
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
 
 	copy_checks stats
 	rm -rf ${WORKDIR}
