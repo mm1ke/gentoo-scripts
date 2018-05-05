@@ -89,10 +89,10 @@ if ${SCRIPT_MODE}; then
 	# filter after EAPI
 	for eapi in $(cut -c-1 ${RUNNING_CHECKS[0]}/full.txt|sort -u); do
 		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}
-		grep ^${eapi}${DL} ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt
+		grep ^${eapi}${DL} ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt
 
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/EAPI${eapi}.txt 3
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 3
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 
