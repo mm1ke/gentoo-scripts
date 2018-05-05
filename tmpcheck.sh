@@ -56,17 +56,17 @@ array_names
 
 main() {
 	array_names
-	local absolute_path=${1}
-	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
-	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
-	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
+	local relative_path=${1}
+	local category="$(echo ${relative_path}|cut -d'/' -f2)"
+	local package="$(echo ${relative_path}|cut -d'/' -f3)"
+	local filename="$(echo ${relative_path}|cut -d'/' -f4)"
 	local packagename="${filename%.*}"
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${DEBUG}; then
-		echo "absolute path: ${absolute_path}"				# path absolute to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
+		echo "relative path: ${relative_path}"				# path relative to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
 		echo "full path: ${full_path}"								# full path:										/usr/portage/app-admin/salt
 		echo "full path ebuild: ${full_path_ebuild}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
 		echo "category: ${category}"									# package category:							app-admin
