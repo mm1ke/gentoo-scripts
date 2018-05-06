@@ -209,7 +209,18 @@ get_age() {
 # return the EAPI of a given ebuild
 get_eapi() {
 	local file=${1}
-	echo "$(grep ^EAPI ${file}|grep -Eo '[0-9]')"
+	echo "$(grep ^EAPI ${file}|cut -d' ' -f1|grep -Eo '[0-9]')"
+}
+
+# return all eclasses inherited by a ebuild
+get_eclasses() {
+	local file=${1}
+	local eclass_vars="$(grep inherit ${file}|grep -o "\${.*}")"
+	local eclasses="$(grep inherit ${file}|cut -d' ' -f2-|tr '\n' ' '|tr ' ' ':')"
+	if [ -n "${eclass_vars}" ]; then
+		local eclasses=$(echo ${eclasses}|sed "s|:${eclass_vars}||")
+	fi
+	echo "${eclasses::-1}"
 }
 
 # this function simply copies all results from the WORKDIR to
@@ -261,4 +272,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses

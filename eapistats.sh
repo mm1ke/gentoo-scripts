@@ -81,7 +81,7 @@ main() {
 
 depth_set ${1}
 cd ${PORTTREE}
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[0]}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f main get_main_min array_names
 export WORKDIR SCRIPT_SHORT
 

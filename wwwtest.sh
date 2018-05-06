@@ -231,6 +231,7 @@ if ${SCRIPT_MODE}; then
 		/^307/d; \
 		/^400/d; \
 		/^503/d; \
+		/^429/d; \
 		" ${TMPFILE}
 	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
