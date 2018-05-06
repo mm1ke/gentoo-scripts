@@ -66,9 +66,9 @@ main() {
 
 	if [ $(echo ${fileversion}|grep 9999) ]; then
 		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_package})${DL}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+			echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
-			echo "live_stats${DL}$(get_eapi ${full_package})${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+			echo "live_stats${DL}$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}"
 		fi
 	fi
 
@@ -114,8 +114,8 @@ if ${SCRIPT_MODE}; then
 		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 3
 	done
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 3
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 
 	copy_checks stats
 	rm -rf ${WORKDIR}
