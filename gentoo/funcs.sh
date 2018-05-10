@@ -30,6 +30,9 @@
 BUGTMPDIR="/tmp/buglists/"
 DEBUG=false
 DL='|'
+SITEROOT=""
+REPO="gentoo"
+
 # set the PORTTREE
 if [ -z "${PORTTREE}" ]; then
 	if [ -e /usr/portage/metadata/ ]; then
@@ -44,8 +47,9 @@ fi
 # set scriptmode=true on host vs4
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/gentoo/"
-	PORTTREE="/mnt/repotrees/gentoo/"
+	SITEROOT="/var/www/gentooqa.levelnine.at/"
+	SITEDIR="${SITEROOT}/results/${REPO}/"
+	PORTTREE="/mnt/repotrees/${REPO}/"
 fi
 
 ENABLE_GIT=false
@@ -57,7 +61,7 @@ else
 	echo "Please check settings. ${PORTTREE} not found"
 fi
 
-export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR
+export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO SITEROOT
 #
 
 _update_buglists(){

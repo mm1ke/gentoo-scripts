@@ -25,8 +25,8 @@
 
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 if [ -e ${startdir}/funcs-httpgen.sh ]; then
-	source ${startdir}/funcs-httpgen.sh
 	source ${startdir}/funcs.sh
+	source ${startdir}/funcs-httpgen.sh
 else
 	echo "Missing funcs{-httpgen}.sh"
 	exit 1
