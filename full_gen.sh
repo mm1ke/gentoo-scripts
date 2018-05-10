@@ -24,9 +24,10 @@
 # create full bug lists per packages and maintainers
 
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/funcs-httpgen.sh ]; then
+realdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${realdir}/funcs-httpgen.sh ]; then
 	source ${startdir}/funcs.sh
-	source ${startdir}/funcs-httpgen.sh
+	source ${realdir}/funcs-httpgen.sh
 else
 	echo "Missing funcs{-httpgen}.sh"
 	exit 1
@@ -34,16 +35,16 @@ fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
 
-for typ in IMP BUG FULL; do
-	if [ "${typ}" = "FULL" ]; then
-		dir_postfix=""
-		search_pattern="*-*-*"
-	else
-		dir_postfix="_${typ}"
-		search_pattern="*-${typ}-*"
-	fi
-
-	FULLWORKDIR="${WORKDIR}/full_list${dir_postfix}"
+#for typ in IMP BUG FULL; do
+#	if [ "${typ}" = "FULL" ]; then
+#		dir_postfix=""
+#		search_pattern="*-*-*"
+#	else
+#		dir_postfix="_${typ}"
+#		search_pattern="*-${typ}-*"
+#	fi
+	search_pattern="*-*-*"
+	FULLWORKDIR="${WORKDIR}/full_list"
 	mkdir -p ${FULLWORKDIR}/{sort-by-package,sort-by-maintainer}
 
 	for check in ${SITEDIR}/checks/${search_pattern}; do
@@ -63,7 +64,7 @@ for typ in IMP BUG FULL; do
 		done
 	done
 
-	if [ "${typ}" = "BUG" ] || [ "${typ}" = "FULL" ]; then
+#	if [ "${typ}" = "BUG" ] || [ "${typ}" = "FULL" ]; then
 		for cat in $(ls ${FULLWORKDIR}/sort-by-package/); do
 			for pack in $(ls ${FULLWORKDIR}/sort-by-package/${cat}/); do
 				echo "<<< open bugs >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
@@ -71,14 +72,14 @@ for typ in IMP BUG FULL; do
 				echo "${openbugs}" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
 			done
 		done
-	fi
+#	fi
 
-	[ -n "${SITEDIR}/full_Lists/full_list${dir_postfix}" ] && rm -rf ${SITEDIR}/full_lists/full_list${dir_postfix}/
+	[ -e "${SITEDIR}/full_Lists/full_list/" ] && rm -rf ${SITEDIR}/full_lists/full_list/
 	cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
 
-	gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list${dir_postfix} > ${SITEDIR}/full_lists/full_list${dir_postfix}/index-pak.html
+	gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list > ${SITEDIR}/full_lists/full_list/index-pak.html
 
-done
+#done
 rm -rf ${WORKDIR}
 
 # generate html output (overview/results)

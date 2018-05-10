@@ -30,8 +30,10 @@
 BUGTMPDIR="/tmp/buglists/"
 DEBUG=false
 DL='|'
+# needed for putting stats into the a db
 SITEROOT=""
 REPO="gentoo"
+DBNAME="gentoo_stats_test"
 
 # set the PORTTREE
 if [ -z "${PORTTREE}" ]; then
@@ -61,7 +63,7 @@ else
 	echo "Please check settings. ${PORTTREE} not found"
 fi
 
-export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO SITEROOT
+export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO SITEROOT DBNAME
 #
 
 _update_buglists(){

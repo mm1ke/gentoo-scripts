@@ -151,9 +151,11 @@ gen_html_out(){
 		local js_template="/root/scripts/_files/_data_template.js"
 		cp ${js_template} ${SITEDIR}/charts-gen/${chart_name}.js
 
+		# DBNAME comes from funcs.sh
+		# other values comes from _vars.sh
 		sed -i "s|DATABASENAME|${databasename}|; \
 			s|DATABASEVALUE|${databasevalue}|; \
-			s|DATABASE|${database}|; \
+			s|DATABASE|${DBNAME}|; \
 			s|CANVASID|${chart_name}|; \
 			s|LABEL|${label}|; \
 			s|TITLE|${title}|;" \
