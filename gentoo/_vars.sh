@@ -25,10 +25,12 @@
 
 dir="${1}"
 
+# Database
+database="gentoo_stats_test"
+
 case ${dir} in
 	ebuild_src_uri_check)
 		scriptname="srctest.sh"
-		database="gentoo_stats_test"
 		databasename="ebuildSrcUriStatus"
 		databasevalue="sValue"
 		label="Broken SRC_URIs"
@@ -43,7 +45,6 @@ case ${dir} in
 		;;
 	ebuild_src_uri_offline)
 		scriptname="srctest.sh"
-		database="gentoo_stats_test"
 		databasename="ebuildSrcUriOffline"
 		databasevalue="sValue"
 		label="Offline Packages"
@@ -58,7 +59,6 @@ case ${dir} in
 		;;
 	ebuild_missing_zip_dependency)
 		scriptname="srctest.sh"
-		database="gentoo_stats_test"
 		databasename="ebuildMissingZipDependency"
 		databasevalue="sValue"
 		label="Missing Zip Dependency"
@@ -74,7 +74,6 @@ case ${dir} in
 		;;
 	ebuild_multiple_deps_per_line)
 		scriptname="badstyle.sh"
-		database="gentoo_stats_test"
 		databasename="sBadstyle"
 		databasevalue="sValue"
 		label="Badstyle ebuilds"
@@ -90,7 +89,6 @@ case ${dir} in
 		;;
 	metadata_duplicate_useflag_description)
 		scriptname="dupuse.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sDupuse"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Duplicate Uses"			# label of graph
@@ -105,7 +103,6 @@ case ${dir} in
 		;;
 	ebuild_unused_patches_simple)
 		scriptname="patchcheck.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sPatchCheck"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Unused patches"			# label of graph
@@ -120,7 +117,6 @@ case ${dir} in
 		;;
 	ebuild_unused_patches)
 		scriptname="patchtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sPatchTest"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Unused patches"			# label of graph
@@ -135,7 +131,6 @@ case ${dir} in
 		;;
 	ebuild_description_over_80)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssDesOver80"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Description over 80"			# label of graph
@@ -149,7 +144,6 @@ case ${dir} in
 		;;
 	ebuild_dohtml_in_eapi6)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssDohtmlInE6"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="dohtml in EAPI6"			# label of graph
@@ -164,7 +158,6 @@ case ${dir} in
 		;;
 	ebuild_epatch_in_eapi6)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssEpatchInE6"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Epatch in EAPI6"			# label of graph
@@ -179,7 +172,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_fdo_mime_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssFdoMimeCheck"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="fdo-mime usage"			# label of graph
@@ -194,7 +186,6 @@ case ${dir} in
 		;;
 	ebuild_insecure_git_uri_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ebuildEgitRepoUri"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="git:// usage"			# label of graph
@@ -209,7 +200,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_gentoo_mirror_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssMirrorMisuse"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds using mirror://"			# label of graph
@@ -224,7 +214,6 @@ case ${dir} in
 		;;
 	ebuild_variables_in_homepages)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sHomepagesVars"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds with variables in HOMEPAGE"			# label of graph
@@ -240,7 +229,6 @@ case ${dir} in
 		;;
 	ebuild_leading_trailing_whitespaces_in_variables)
 		scriptname="trailwhite.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sLeadingTrailingVars"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds with leading/trailing whitespaces in variables"			# label of graph
@@ -256,7 +244,6 @@ case ${dir} in
 		;;
 	ebuild_trailing_whitespaces)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssTrailingWhitespace"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Trailing Whitespaces"			# label of graph
@@ -270,7 +257,6 @@ case ${dir} in
 		;;
 	metadata_mixed_indentation)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssMixedIndentation"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Mixed Indentation"			# label of graph
@@ -284,7 +270,6 @@ case ${dir} in
 		;;
 	metadata_missing_proxy_maintainer)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ssProxyMaintainerCheck"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Proxy Maintainers"			# label of graph
@@ -301,7 +286,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_http_statuscode)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ebuildHomepageStatus"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Broken Websites"			# label of graph
@@ -317,7 +301,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_upstream_shutdown)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sUpstreamShutdown"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Dead Sites"			# label of graph
@@ -333,7 +316,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_301_redirections)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="s301Redirctions"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Redirected Sites"			# label of graph
@@ -348,7 +330,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_redirection_http_to_https)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sRedirHttpToHttps"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Https Redirections"			# label of graph
@@ -363,7 +344,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_redirection_missing_slash_www)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sRedirSlashWww"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Slash/WWW Redirections"			# label of graph
@@ -378,7 +358,6 @@ case ${dir} in
 		;;
 	ebuild_homepage_unsync)
 		scriptname="wwwtest.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sUnsyncHomepages"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Unsync Homepages"			# label of graph
@@ -392,7 +371,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_eapi)
 		scriptname="eapichecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sBumpNeeded"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Unattended ebuilds"			# label of graph
@@ -408,7 +386,6 @@ case ${dir} in
 		;;
 	ebuild_cleanup_candidates)
 		scriptname="eapichecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sBumpNeededMatchingKeywords"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Removal canditates"			# label of graph
@@ -424,7 +401,6 @@ case ${dir} in
 		;;
 	ebuild_stable_candidates)
 		scriptname="eapichecks.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sBumpNeededNonMatchingKeywords"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Stable request canditates"			# label of graph
@@ -441,7 +417,6 @@ case ${dir} in
 		;;
 	ebuild_eapi_statistics)
 		scriptname="eapistats.sh"
-		database="gentoo_stats_test"				# database
 		databasename="sEapiHistory"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Eapistats"			# label of graph
@@ -456,7 +431,6 @@ case ${dir} in
 		;;
 	ebuild_eapi_live_statistics)
 		scriptname="eapistats.sh"
-		database="gentoo_stats_test"				# database
 		databasename="ebuildEapiLiveHistory"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Eapistats"			# label of graph
@@ -470,7 +444,6 @@ case ${dir} in
 		;;
 	ebuild_nonexist_dependency)
 		scriptname="depcheck.sh"	# scriptname
-		database="gentoo_stats_test"					# database
 		databasename="ebuildNonexistDependency"				# databasetable
 		databasevalue="sValue"			# row of interrest
 		label="Obsolete Dependencies"				# label of graph
@@ -485,7 +458,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_git_2_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"								# database
 		databasename="ebuildObsoleteGit2Eclass"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="git-2 usage"			# label of graph
@@ -500,7 +472,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_games_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"								# database
 		databasename="ebuildObsoleteGamesEclass"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="games usage"			# label of graph
@@ -515,7 +486,6 @@ case ${dir} in
 		;;
 	ebuild_obsolete_ltprune_usage)
 		scriptname="simplechecks.sh"
-		database="gentoo_stats_test"								# database
 		databasename="ebuildObsoleteLtpruneEclass"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="ltprune usage"			# label of graph
@@ -530,7 +500,6 @@ case ${dir} in
 		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
-		database="database"					# database
 		databasename="sTable"				# databasetable
 		databasevalue="sValue"			# row of interrest
 		label="check ebuilds"				# label of graph
