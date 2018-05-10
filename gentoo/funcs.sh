@@ -59,8 +59,6 @@ ENABLE_MD5=false
 if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 	[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
 	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
-else
-	echo "Please check settings. ${PORTTREE} not found"
 fi
 
 export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO SITEROOT DBNAME
