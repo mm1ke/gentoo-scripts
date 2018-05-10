@@ -145,7 +145,7 @@ gen_html_out(){
 		# get the needed information from the _vars file
 		source ${startdir}/_vars.sh "${chart_name}"
 
-		local js_template="/root/scripts/_data_template.js"
+		local js_template="/root/scripts/_files/_data_template.js"
 		cp ${js_template} ${SITEDIR}/charts-gen/${chart_name}.js
 
 		sed -i "s|DATABASENAME|${databasename}|; \
