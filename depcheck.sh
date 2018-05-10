@@ -30,7 +30,7 @@
 #SITEDIR="${HOME}/depcheck/"
 
 # get dirpath and load funcs.sh
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
 else

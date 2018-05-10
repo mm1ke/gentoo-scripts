@@ -28,7 +28,7 @@
 #SITEDIR="${HOME}/patchtest/"
 #PORTTREE=/usr/portage/
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 if [ -e ${startdir}/funcs.sh ]; then
 	source ${startdir}/funcs.sh
 else

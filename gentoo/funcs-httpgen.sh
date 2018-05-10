@@ -23,7 +23,7 @@
 # Discription:
 # this file only provides functions for generating html site outputs
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 if ! [ -e ${startdir}/_vars.sh ]; then
 	echo "Missing _vars.sh"
 	exit 1

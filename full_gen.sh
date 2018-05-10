@@ -23,7 +23,7 @@
 # Discription:
 # create full bug lists per packages and maintainers
 
-startdir="$(dirname $(readlink -f $BASH_SOURCE))"
+startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 if [ -e ${startdir}/funcs-httpgen.sh ]; then
 	source ${startdir}/funcs-httpgen.sh
 	source ${startdir}/funcs.sh
