@@ -147,7 +147,7 @@ gen_sort_pak_v2() {
 		f_cat="$(echo ${pack}|cut -d'/' -f1)"
 		f_pak="$(echo ${pack}|cut -d'/' -f2)"
 		mkdir -p ${workfile%/*}/sort-by-package/${f_cat}
-		grep "${pack}" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+		grep "\<${pack}\>" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
 	done
 }
 
@@ -211,14 +211,29 @@ get_eapi() {
 }
 
 # return all eclasses inherited by a ebuild
-get_eclasses() {
-	local file=${1}
-	local eclass_vars="$(grep inherit ${file}|grep -o "\${.*}")"
-	local eclasses="$(grep inherit ${file}|cut -d' ' -f2-|tr '\n' ' '|tr ' ' ':')"
-	if [ -n "${eclass_vars}" ]; then
-		local eclasses=$(echo ${eclasses}|sed "s|:${eclass_vars}||")
+get_eclasses_real() {
+	local md5_file=${1}
+
+	if ${ENABLE_MD5}; then
+		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
+		echo ${real_eclasses[@]}|tr ' ' ':'
 	fi
-	echo "${eclasses::-1}"
+}
+
+get_eclasses_file() {
+	local md5_file=${1}
+	local real_file=${2}
+
+	if ${ENABLE_MD5}; then
+		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
+		local file_eclasses=( )
+		for ecl in ${real_eclasses[@]}; do
+			if $(grep inherit ${real_file} | grep -q "\<${ecl}\>"); then
+				file_eclasses+=( ${ecl} )
+			fi
+		done
+		echo ${file_eclasses[@]}|tr ' ' ':'
+	fi
 }
 
 # this function simply copies all results from the WORKDIR to
@@ -270,4 +285,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real
