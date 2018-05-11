@@ -25,11 +25,11 @@
 
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${realdir}/funcs-httpgen.sh ]; then
+if [ -e ${realdir}/_funcs-httpgen.sh ]; then
 	source ${startdir}/funcs.sh
-	source ${realdir}/funcs-httpgen.sh
+	source ${realdir}/_funcs-httpgen.sh
 else
-	echo "Missing funcs{-httpgen}.sh"
+	echo "Missing _funcs{-httpgen}.sh"
 	exit 1
 fi
 

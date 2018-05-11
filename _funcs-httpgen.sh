@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Filename: funcs-httpgen.sh
+# Filename: _funcs-httpgen.sh
 # Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
 # Date: 12/03/2018
 
