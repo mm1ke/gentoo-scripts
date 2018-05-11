@@ -31,7 +31,6 @@ BUGTMPDIR="/tmp/buglists/"
 DEBUG=false
 DL='|'
 # needed for putting stats into the a db
-SITEROOT=""
 REPO="gentoo"
 DBNAME="gentoo_stats_test"
 
@@ -49,8 +48,7 @@ fi
 # set scriptmode=true on host vs4
 if [ "$(hostname)" = vs4 ]; then
 	SCRIPT_MODE=true
-	SITEROOT="/var/www/gentooqa.levelnine.at/"
-	SITEDIR="${SITEROOT}/results/${REPO}/"
+	SITEDIR="/var/www/gentooqa.levelnine.at/results/${REPO}/"
 	PORTTREE="/mnt/repotrees/${REPO}/"
 fi
 
@@ -61,7 +59,7 @@ if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
 fi
 
-export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO SITEROOT DBNAME
+export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO DBNAME
 #
 
 _update_buglists(){
