@@ -25,9 +25,6 @@
 
 dir="${1}"
 
-# Database
-#database="gentoo_stats_test"
-
 case ${dir} in
 	ebuild_src_uri_check)
 		scriptname="srctest.sh"
