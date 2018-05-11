@@ -156,15 +156,15 @@ gen_html_out(){
 
 		read -r -d '' OUT <<- EOM
 		\t\t\t<li>
-		\t\t\t\t<script type="text/javascript" src="results/${REPO}/charts-gen/${chart_name}.js"></script>
+		\t\t\t\t<script type="text/javascript" src="charts-gen/${chart_name}.js"></script>
 		\t\t\t\t<div id="chart-container">
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
-		\t\t\t\t<h3><a href="results/${REPO}/${type}/${chart}/">${chart_name}</a></h3>
+		\t\t\t\t<h3><a href="${type}/${chart}/">${chart_name}</a></h3>
 		\t\t\t\t<pre><p>${chart_description}</p>
-		<a href="results/${REPO}/${type}/${chart}/full.txt">full</a>     ${info_full}
-		<a href="results/${REPO}/${type}/${chart}/sort-by-maintainer">main</a>     ${info_main}
-		<a href="results/${REPO}/${type}/${chart}/sort-by-package">pack</a>     ${info_pack}
+		<a href="${type}/${chart}/full.txt">full</a>     ${info_full}
+		<a href="${type}/${chart}/sort-by-maintainer">main</a>     ${info_main}
+		<a href="${type}/${chart}/sort-by-package">pack</a>     ${info_pack}
 		\t\t\t\t</pre>
 		\t\t\t</li>
 		EOM
