@@ -36,39 +36,44 @@ fi
 WORKDIR="/tmp/full-gen-${RANDOM}"
 
 search_pattern="*-*-*"
-FULLWORKDIR="${WORKDIR}/full_list"
-mkdir -p ${FULLWORKDIR}/{sort-by-package,sort-by-maintainer}
+mkdir -p ${WORKDIR}/{sort-by-package,sort-by-maintainer}
 
 for check in ${SITEDIR}/checks/${search_pattern}; do
 	for main in $(ls ${check}/sort-by-maintainer/); do
-		echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-maintainer/${main}
-		cat ${check}/sort-by-maintainer/${main} >> ${FULLWORKDIR}/sort-by-maintainer/${main}
+		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-maintainer/${main}
+		cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/sort-by-maintainer/${main}
 	done
 done
 
 for check in ${SITEDIR}/checks/${search_pattern}; do
 	for cat in $(ls ${check}/sort-by-package/); do
-		mkdir -p ${FULLWORKDIR}/sort-by-package/${cat}
+		mkdir -p ${WORKDIR}/sort-by-package/${cat}
 		for pack in $(ls ${check}/sort-by-package/${cat}/); do
-			echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
-			cat ${check}/sort-by-package/${cat}/${pack} >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
+			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+			cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 		done
 	done
 done
 
-for cat in $(ls ${FULLWORKDIR}/sort-by-package/); do
-	for pack in $(ls ${FULLWORKDIR}/sort-by-package/${cat}/); do
-		echo "<<< open bugs >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
+for cat in $(ls ${WORKDIR}/sort-by-package/); do
+	for pack in $(ls ${WORKDIR}/sort-by-package/${cat}/); do
+		echo "<<< open bugs >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-		echo "${openbugs}" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
+		echo "${openbugs}" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 	done
 done
 
-[ -e "${SITEDIR}/full_Lists/full_list/" ] && rm -rf ${SITEDIR}/full_lists/full_list/
-cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
+if [ -e "${SITEDIR}/full_Lists/" ]; then
+	rm -rf ${SITEDIR}/full_lists/*
+else
+	mkdir -p "${SITEDIR}/full_lists/"
+fi
+cp -r ${WORKDIR} ${SITEDIR}/full_lists/
 rm -rf ${WORKDIR}
 
-gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list > ${SITEDIR}/full_lists/full_list/index-pak.html
+# generate html output for full_lists
+gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index-pak.html
+gen_http_sort_main_v2 main ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index.html
 
 # generate html output (overview/results)
 gen_http_sort_main_v2 results ${SITEDIR}/checks > ${SITEDIR}/checks/index.html
@@ -103,9 +108,6 @@ for st in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d|sort); do
 			gen_http_sort_main_v2 main ${fst} > ${fst}/index.html
 		done
 	fi
-done
-for fl in $(find ${SITEDIR}/full_lists/ -mindepth 1 -maxdepth 1 -type d|sort); do
-	gen_http_sort_main_v2 main ${fl} > ${fl}/index.html
 done
 gen_html_bottom >> ${SITEDIR}/stats.html
 gen_html_bottom >> ${SITEDIR}/checks.html
