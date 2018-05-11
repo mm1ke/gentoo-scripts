@@ -242,7 +242,7 @@ get_main_min(){
 import xml.etree.ElementTree
 import sys
 pack = str(sys.argv[1])
-projxml = "/usr/portage/" + pack + "/metadata.xml"
+projxml = "${PORTTREE}" + pack + "/metadata.xml"
 e = xml.etree.ElementTree.parse(projxml).getroot()
 c = ""
 for x in e.iterfind("./maintainer/email"):
