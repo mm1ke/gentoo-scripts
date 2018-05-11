@@ -29,14 +29,6 @@ if ! [ -e ${startdir}/_vars.sh ]; then
 	exit 1
 fi
 
-# Siteroot must be set in funcs.sh
-[ -z "${SITEROOT}" ] && exit 1
-
-#SITEROOT="/var/www/gentooqa.levelnine.at/"
-#TREEREPO="gentoo"
-#SITEDIR="${SITEROOT}/results/${TREEREPO}/"
-#export SITEDIR SITEROOT TREEREPO
-
 gen_http_sort_main_v2(){
 	local type="${1}"
 	local dir="${2}"
@@ -168,11 +160,11 @@ gen_html_out(){
 		\t\t\t\t<div id="chart-container">
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
-		\t\t\t\t<h3><a href="results/${REPO}/${2}/${chart}/">${chart_name}</a></h3>
+		\t\t\t\t<h3><a href="results/${REPO}/${type}/${chart}/">${chart_name}</a></h3>
 		\t\t\t\t<pre><p>${chart_description}</p>
-		<a href="results/${REPO}/${2}/${chart}/full.txt">full</a>     ${info_full}
-		<a href="results/${REPO}/${2}/${chart}/sort-by-maintainer">main</a>     ${info_main}
-		<a href="results/${REPO}/${2}/${chart}/sort-by-package">pack</a>     ${info_pack}
+		<a href="results/${REPO}/${type}/${chart}/full.txt">full</a>     ${info_full}
+		<a href="results/${REPO}/${type}/${chart}/sort-by-maintainer">main</a>     ${info_main}
+		<a href="results/${REPO}/${type}/${chart}/sort-by-package">pack</a>     ${info_pack}
 		\t\t\t\t</pre>
 		\t\t\t</li>
 		EOM
