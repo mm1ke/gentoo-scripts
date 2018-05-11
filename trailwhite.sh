@@ -29,11 +29,18 @@
 #SCRIPT_MODE=true
 #SITEDIR="${HOME}/trailwhite/"
 
+# load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/funcs.sh ]; then
-	source ${startdir}/funcs.sh
+if [ -e ${startdir}/repo ]; then
+	source ${startdir}/repo
+fi
+
+# get dirpath and load funcs.sh
+realdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -e ${realdir}/_funcs.sh ]; then
+	source ${realdir}/_funcs.sh
 else
-	echo "Missing funcs.sh"
+	echo "Missing _funcs.sh"
 	exit 1
 fi
 

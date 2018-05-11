@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Filename: funcs.sh
+# Filename: _funcs.sh
 # Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
 # Date: 26/11/2017
 
@@ -30,27 +30,23 @@
 BUGTMPDIR="/tmp/buglists/"
 DEBUG=false
 DL='|'
-# needed for putting stats into the a db
-REPO="gentoo"
-DBNAME="gentoo_stats_test"
 
 # set the PORTTREE
 if [ -z "${PORTTREE}" ]; then
 	if [ -e /usr/portage/metadata/ ]; then
 		PORTTREE="/usr/portage/"
+		export PORTTREE
 	else
 		exit "No portage tree set"
+		exit 1
 	fi
 fi
-[ -z "${SCRIPT_MODE}" ] && SCRIPT_MODE=false
-[ -z "${SITEDIR}" ] && SITEDIR="${HOME}/checks-${RANDOM}/"
-
-# set scriptmode=true on host vs4
-if [ "$(hostname)" = vs4 ]; then
-	SCRIPT_MODE=true
-	SITEDIR="/var/www/gentooqa.levelnine.at/results/${REPO}/"
-	PORTTREE="/mnt/repotrees/${REPO}/"
-fi
+[ -z "${SCRIPT_MODE}" ] && \
+	SCRIPT_MODE=false && \
+	export SCRIPT_MODE
+[ -z "${SITEDIR}" ] && \
+	SITEDIR="${HOME}/checks-${RANDOM}/" && \
+	export SITEDIR
 
 ENABLE_GIT=false
 ENABLE_MD5=false
@@ -59,7 +55,7 @@ if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
 fi
 
-export ENABLE_GIT ENABLE_MD5 DEBUG SCRIPT_MODE SITEDIR PORTTREE DL BUGTMPDIR REPO DBNAME
+export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR
 #
 
 _update_buglists(){
