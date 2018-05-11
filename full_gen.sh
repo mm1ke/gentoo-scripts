@@ -35,52 +35,40 @@ fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
 
-#for typ in IMP BUG FULL; do
-#	if [ "${typ}" = "FULL" ]; then
-#		dir_postfix=""
-#		search_pattern="*-*-*"
-#	else
-#		dir_postfix="_${typ}"
-#		search_pattern="*-${typ}-*"
-#	fi
-	search_pattern="*-*-*"
-	FULLWORKDIR="${WORKDIR}/full_list"
-	mkdir -p ${FULLWORKDIR}/{sort-by-package,sort-by-maintainer}
+search_pattern="*-*-*"
+FULLWORKDIR="${WORKDIR}/full_list"
+mkdir -p ${FULLWORKDIR}/{sort-by-package,sort-by-maintainer}
 
-	for check in ${SITEDIR}/checks/${search_pattern}; do
-		for main in $(ls ${check}/sort-by-maintainer/); do
-			echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-maintainer/${main}
-			cat ${check}/sort-by-maintainer/${main} >> ${FULLWORKDIR}/sort-by-maintainer/${main}
+for check in ${SITEDIR}/checks/${search_pattern}; do
+	for main in $(ls ${check}/sort-by-maintainer/); do
+		echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-maintainer/${main}
+		cat ${check}/sort-by-maintainer/${main} >> ${FULLWORKDIR}/sort-by-maintainer/${main}
+	done
+done
+
+for check in ${SITEDIR}/checks/${search_pattern}; do
+	for cat in $(ls ${check}/sort-by-package/); do
+		mkdir -p ${FULLWORKDIR}/sort-by-package/${cat}
+		for pack in $(ls ${check}/sort-by-package/${cat}/); do
+			echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
+			cat ${check}/sort-by-package/${cat}/${pack} >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
 		done
 	done
+done
 
-	for check in ${SITEDIR}/checks/${search_pattern}; do
-		for cat in $(ls ${check}/sort-by-package/); do
-			mkdir -p ${FULLWORKDIR}/sort-by-package/${cat}
-			for pack in $(ls ${check}/sort-by-package/${cat}/); do
-				echo "<<< ${check##*/} >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
-				cat ${check}/sort-by-package/${cat}/${pack} >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
-			done
-		done
+for cat in $(ls ${FULLWORKDIR}/sort-by-package/); do
+	for pack in $(ls ${FULLWORKDIR}/sort-by-package/${cat}/); do
+		echo "<<< open bugs >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
+		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
+		echo "${openbugs}" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
 	done
+done
 
-#	if [ "${typ}" = "BUG" ] || [ "${typ}" = "FULL" ]; then
-		for cat in $(ls ${FULLWORKDIR}/sort-by-package/); do
-			for pack in $(ls ${FULLWORKDIR}/sort-by-package/${cat}/); do
-				echo "<<< open bugs >>>" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
-				openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-				echo "${openbugs}" >> ${FULLWORKDIR}/sort-by-package/${cat}/${pack}
-			done
-		done
-#	fi
-
-	[ -e "${SITEDIR}/full_Lists/full_list/" ] && rm -rf ${SITEDIR}/full_lists/full_list/
-	cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
-
-	gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list > ${SITEDIR}/full_lists/full_list/index-pak.html
-
-#done
+[ -e "${SITEDIR}/full_Lists/full_list/" ] && rm -rf ${SITEDIR}/full_lists/full_list/
+cp -r ${FULLWORKDIR} ${SITEDIR}/full_lists/
 rm -rf ${WORKDIR}
+
+gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists/full_list > ${SITEDIR}/full_lists/full_list/index-pak.html
 
 # generate html output (overview/results)
 gen_http_sort_main_v2 results ${SITEDIR}/checks > ${SITEDIR}/checks/index.html
