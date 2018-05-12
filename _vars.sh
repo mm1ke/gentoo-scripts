@@ -236,7 +236,7 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		Checks for a set of variables if those contain a leading or trailing whitespace.
 		For example: SRC_URI=" www.foo.com/bar.tar.gz "
-		<a href="results/gentoo/his/leading-trailing-his.html">Leading/Trailing Whitespace History</a>
+		<a href="his/leading-trailing-his.html">Leading/Trailing Whitespace History</a>
 		EOM
 		;;
 	ebuild_trailing_whitespaces)
@@ -293,7 +293,7 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		This checks tests every homepage and gets their http return code. The list contain packages with
 		a bad returncode. Following statuscodes are ignored: VAR, FTP, 200, 301, 302, 307, 400, 503.
-		<a href="results/gentoo/his/www-sites.html">Status Code History</a>
+		<a href="his/www-sites.html">Status Code History</a>
 		EOM
 		;;
 	ebuild_homepage_upstream_shutdown)
@@ -308,7 +308,7 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		This checks list ebuilds which still use a homepage of a know dead site.
 		Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
-		<a href="results/gentoo/his/www-sites-his.html">Broken Sites History</a>
+		<a href="his/www-sites-his.html">Broken Sites History</a>
 		EOM
 		;;
 	ebuild_homepage_301_redirections)
@@ -423,7 +423,7 @@ case ${dir} in
 		info_pack="EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
 		A simple list of all packages and it's corresponding EAPI Version. Also includes all maintainers to the package
-		<a href=results/gentoo/his/eapi-stats.html>EAPI Statistics</a>
+		<a href=his/eapi-stats.html>EAPI Statistics</a>
 		EOM
 		;;
 	ebuild_eapi_live_statistics)
