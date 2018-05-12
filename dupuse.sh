@@ -24,9 +24,9 @@
 #	find duplicate use flag descriptions
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#PORTTREE=/usr/portage/
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/dupuse/"
+#export PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/dupuse/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
@@ -42,6 +42,10 @@ else
 	echo "Missing _funcs.sh"
 	exit 1
 fi
+
+# don't run on overlays because use.desc at overlays
+# might not exists
+${TREE_IS_MASTER} || exit 1
 
 #
 ### IMPORTANT SETTINGS START ###

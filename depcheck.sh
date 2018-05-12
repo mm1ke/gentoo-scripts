@@ -25,9 +25,9 @@
 # doesn't exist anymore (mainly obsolete blocks via !category/package)
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#PORTTREE=/usr/portage/
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/depcheck/"
+#export PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/depcheck/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
@@ -43,6 +43,10 @@ else
 	echo "Missing _funcs.sh"
 	exit 1
 fi
+
+# don't run on overlays because dependencies are most likely only
+# available at the main tree
+${TREE_IS_MASTER} || exit 1
 
 #
 ### IMPORTANT SETTINGS START ###
