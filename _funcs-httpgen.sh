@@ -180,8 +180,8 @@ read -r -d '' TOP <<- EOM
 \t<head>
 \t\t<title>Gentoostats</title>
 \t\t<h2>Gentoo QA Stats</h2>
-\t\t<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
-\t\t<script type="text/javascript" src="js/Chart.min.js"></script>
+\t\t<script type="text/javascript" src="../../js/jquery-3.2.1.min.js"></script>
+\t\t<script type="text/javascript" src="../../js/Chart.min.js"></script>
 \t\t<style type="text/css">
 \t\t\t#chart-container {
 \t\t\t\twidth: 512px;
