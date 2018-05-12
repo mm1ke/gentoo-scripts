@@ -26,9 +26,9 @@
 #  metadata: mixed indentation (mixed tabs & whitespaces)
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#PORTTREE=/usr/portage/
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/simplechecks/"
+#export PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/simplechecks/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

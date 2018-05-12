@@ -24,9 +24,9 @@
 # simple scirpt to find broken SRC_URI links
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#PORTTREE=/usr/portage/
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/srctest/"
+#export PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/srctest/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

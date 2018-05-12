@@ -24,9 +24,9 @@
 # simple script for generating EAPI statistics
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/eapistats/"
-#PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/eapistats/"
+#export PORTTREE=/usr/portage/
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

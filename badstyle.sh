@@ -24,9 +24,9 @@
 #	checks for multiple package dependencies in one line
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#SCRIPT_MODE=false
-#SITEDIR="${HOME}/badstyle/"
-#PORTTREE=/usr/portage/
+#export SCRIPT_MODE=false
+#export SITEDIR="${HOME}/badstyle/"
+#export PORTTREE=/usr/portage/
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

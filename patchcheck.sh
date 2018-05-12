@@ -24,9 +24,9 @@
 # simple scirpt to find unused scripts directories in the gentoo tree
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/patchcheck/"
-#PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/patchcheck/"
+#export PORTTREE=/usr/portage/
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

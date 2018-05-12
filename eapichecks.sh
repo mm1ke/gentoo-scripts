@@ -25,9 +25,9 @@
 # and checks if there is a revision/version bump with a newer eapi
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/eapichecks/"
-#PORTTREE="/usr/portage/"
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/eapichecks/"
+#export PORTTREE="/usr/portage/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

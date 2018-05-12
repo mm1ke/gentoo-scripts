@@ -24,9 +24,9 @@
 # simple scirpt to find unused patches in the gentoo portage tree
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/patchtest/"
-#PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/patchtest/"
+#export PORTTREE=/usr/portage/
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

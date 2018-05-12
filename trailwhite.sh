@@ -25,9 +25,9 @@
 # in variables
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#PORTTREE=/usr/portage/
-#SCRIPT_MODE=true
-#SITEDIR="${HOME}/trailwhite/"
+#export PORTTREE=/usr/portage/
+#export SCRIPT_MODE=true
+#export SITEDIR="${HOME}/trailwhite/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"

@@ -23,9 +23,9 @@
 # Discription:
 # simple scirpt to find broken websites
 
-#SCRIPT_MODE=true
-#PORTTREE="/usr/portage/"
-#SITEDIR="${HOME}/wwwtest/"
+#export SCRIPT_MODE=true
+#export PORTTREE="/usr/portage/"
+#export SITEDIR="${HOME}/wwwtest/"
 
 # load repo specific settings
 startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
