@@ -246,10 +246,12 @@ if ${SCRIPT_MODE}; then
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 	for site in ${_filters[@]}; do
 		mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
-		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
-		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
-		gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
+		if $(grep -q ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt); then
+			grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
+			grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
+			gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
+			gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
+		fi
 	done
 	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
