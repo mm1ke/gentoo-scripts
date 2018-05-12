@@ -50,8 +50,8 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S) | OPENBUGS"
 		info_pack="CATEGORY/PACKAGE | EBUILD | SRCFILE | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		Checks if a package is offline and has RESTRICT="mirror" in the ebuild.
-		In this case the package is completly offline and it's impossible to install it now.
+		Lists packages which can't be installed because the SRC_URI is offline and the
+		ebuild has RESTRICT="mirror" enabled.
 		EOM
 		;;
 	ebuild_missing_zip_dependency)
