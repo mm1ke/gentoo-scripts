@@ -50,12 +50,14 @@ fi
 
 ENABLE_GIT=false
 ENABLE_MD5=false
+TREE_IS_MASTER=false
 if [ -e ${PORTTREE} ] && [ -n "${PORTTREE}" ]; then
 	[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
 	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
 fi
+[ "$(cat ${PORTTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
 
-export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR
+export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER
 #
 
 _update_buglists(){
