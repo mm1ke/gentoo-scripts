@@ -209,7 +209,8 @@ get_age() {
 # return the EAPI of a given ebuild
 get_eapi() {
 	local file=${1}
-	echo "$(grep ^EAPI ${file}|cut -d' ' -f1|grep -Eo '[0-9]')"
+	local eapi="$(grep ^EAPI ${file}|cut -d' ' -f1|grep -Eo '[0-9]')"
+	[ -n "${eapi}" ] && echo ${eapi} || echo "0"
 }
 
 # return all eclasses inherited by a ebuild
