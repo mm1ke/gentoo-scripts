@@ -45,7 +45,7 @@ fi
 
 # don't run on overlays because use.desc at overlays
 # might not exists
-${TREE_IS_MASTER} || exit 1
+${TREE_IS_MASTER} || exit 0
 
 #
 ### IMPORTANT SETTINGS START ###

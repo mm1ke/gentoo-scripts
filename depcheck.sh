@@ -46,7 +46,7 @@ fi
 
 # don't run on overlays because dependencies are most likely only
 # available at the main tree
-${TREE_IS_MASTER} || exit 1
+${TREE_IS_MASTER} || exit 0
 
 #
 ### IMPORTANT SETTINGS START ###
