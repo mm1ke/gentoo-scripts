@@ -68,22 +68,21 @@ for cat in $(ls ${WORKDIR}/sort-by-package/); do
 	done
 done
 
-if [ -e "${SITEDIR}/full_Lists/" ]; then
-	rm -rf ${SITEDIR}/full_lists/*
+if [ -e "${SITEDIR}/listings/" ]; then
+	rm -rf ${SITEDIR}/listings/*
 else
-	mkdir -p "${SITEDIR}/full_lists/"
+	mkdir -p "${SITEDIR}/listings/"
 fi
-cp -r ${WORKDIR} ${SITEDIR}/full_lists/
+cp -r ${WORKDIR}/* ${SITEDIR}/listings/
 rm -rf ${WORKDIR}
 
-# generate html output for full_lists
-gen_http_sort_main_v2 fullpak ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index-pak.html
-gen_http_sort_main_v2 main ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index.html
+# generate html output for listings
+gen_http_sort_main_v2 fullpak ${SITEDIR}/listings > ${SITEDIR}/listings/index-pak.html
+gen_http_sort_main_v2 main ${SITEDIR}/listings > ${SITEDIR}/listings/index.html
 
 # generate html output (overview/results)
 gen_http_sort_main_v2 results ${SITEDIR}/checks > ${SITEDIR}/checks/index.html
 gen_http_sort_main_v2 results ${SITEDIR}/stats > ${SITEDIR}/stats/index.html
-gen_http_sort_main_v2 results ${SITEDIR}/full_lists > ${SITEDIR}/full_lists/index.html
 
 # generate html output (maintainer/results)
 gen_html_top > ${SITEDIR}/checks.html
