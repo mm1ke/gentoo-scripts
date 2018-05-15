@@ -495,6 +495,21 @@ case ${dir} in
 		This check lists all ebuilds which still uses the ltprune eclass.
 		EOM
 		;;
+	ebuild_eclass_statistics)
+		scriptname="eclassstats.sh"
+		databasename="ebuildEclassStatistics"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Eclasses used"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE | EBUILD | ECLASSES | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
+		read -r -d '' chart_description <<- EOM
+		A simple list of all packages and the eclasses it's inheriting.
+		Not including packages which don't inherit anything (also not included are eclasses inherited by other eclasses)
+		Also includes all maintainers to the package.
+		EOM
+		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
 		databasename="sTable"				# databasetable
