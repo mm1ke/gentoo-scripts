@@ -230,8 +230,13 @@ get_eclasses_file() {
 	if ${ENABLE_MD5}; then
 		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
 		local file_eclasses=( )
+		local searchpattern="inherit"
+		local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
+		if [ -n "${eclass_var}" ]; then
+			searchpattern+="\\|${eclass_var}"
+		fi
 		for ecl in ${real_eclasses[@]}; do
-			if $(grep inherit ${real_file} | grep -q "\<${ecl}\>"); then
+			if $(grep "${searchpattern}" ${real_file} | grep -q "${ecl} \\|${ecl}\$"); then
 				file_eclasses+=( ${ecl} )
 			fi
 		done
