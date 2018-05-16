@@ -128,6 +128,11 @@ if ${SCRIPT_MODE}; then
 		done
 	done
 
+	for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 4
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 1
+	done
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
