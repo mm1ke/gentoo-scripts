@@ -163,7 +163,7 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		epatch isn't deprecated but eapply should be used instead. This would also reduce a dependency on the eutils.eclass.
+		epatch is deprecated and should be replaced by eapply. This would also reduce a dependency on the eutils.eclass.
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
 		EOM
 		;;
