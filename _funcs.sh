@@ -236,7 +236,7 @@ get_eclasses_file() {
 			searchpattern+="\\|${eclass_var}"
 		fi
 		for ecl in ${real_eclasses[@]}; do
-			if $(grep "${searchpattern}" ${real_file} | grep -q "${ecl} \\|${ecl}\$"); then
+			if $(grep "${searchpattern}" ${real_file} | grep -q "\"${ecl}\"\\|${ecl} \\|${ecl}\$"); then
 				file_eclasses+=( ${ecl} )
 			fi
 		done
