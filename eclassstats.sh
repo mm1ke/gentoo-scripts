@@ -77,9 +77,9 @@ main() {
 
 	if [ -n "${ebuild_eclass_file}" ]; then
 		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 		else
-			echo "${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}"
+			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}"
 		fi
 	fi
 }
@@ -122,19 +122,19 @@ find ./${level} \( \
 if ${SCRIPT_MODE}; then
 
 	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-		for ec in $(echo ${file}|cut -d'|' -f3|tr ':' ' '); do
+		for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
 			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
 		done
 	done
 
 	for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 4
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 1
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
 	done
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 
 	copy_checks stats
 	rm -rf ${WORKDIR}
