@@ -235,7 +235,7 @@ get_eclasses_file() {
 			file_eclasses+=( "$(grep -o "${eclass_var}=.*" ${real_file} | tail -n1 | tr -d '"' | cut -d '=' -f2 | cut -d ' ' -f1 )" )
 		fi
 		for ecl in ${real_eclasses[@]}; do
-			if $(grep inherit ${real_file} | grep -q "${ecl} \\|${ecl}\$"); then
+			if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep inherit | grep -q "${ecl} \\|${ecl}\$"); then
 				file_eclasses+=( ${ecl} )
 			fi
 		done
