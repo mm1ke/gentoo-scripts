@@ -223,6 +223,24 @@ get_eclasses_real() {
 	fi
 }
 
+check_eclasses_usage() {
+	local real_file=${1}
+	local eclass_name=${2}
+
+	local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
+	if [ -n "${eclass_var}" ]; then
+		search_pattern="inherit"
+	else
+		search_pattern="${eclass_var}\=\|inherit"
+	fi
+
+	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q "${eclass_name} \\|${eclass_name}\$"); then
+		return 0
+	else
+		return 1
+	fi
+}
+
 get_eclasses_file() {
 	local md5_file=${1}
 	local real_file=${2}
@@ -292,4 +310,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage
