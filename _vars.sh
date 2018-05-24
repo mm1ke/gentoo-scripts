@@ -467,6 +467,19 @@ case ${dir} in
 		This check looks for packages who still use the git-2 eclass.
 		EOM
 		;;
+	ebuild_deprecated_eclasses)
+		scriptname="deadeclasses.sh"
+		databasename="ebuildObsoleteEclass"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="obsolete usage"			# label of graph
+		title="${label}"		# grapth title (not shown)
+		info_full="EAPI | CATEGORY/PACKAGE | EBUILD | ECLASSES | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
+		read -r -d '' chart_description <<- EOM
+		This check lists multiple eclasses which are deprecated or obsolete and should be removed.
+		EOM
+		;;
 	ebuild_obsolete_games_usage)
 		scriptname="simplechecks.sh"
 		databasename="ebuildObsoleteGamesEclass"			# databasetable
