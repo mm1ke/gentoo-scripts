@@ -129,6 +129,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 
-	copy_checks stats
+	copy_checks checks
 	rm -rf ${WORKDIR}
 fi
