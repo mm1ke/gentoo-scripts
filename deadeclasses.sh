@@ -84,9 +84,9 @@ main() {
 
 	if [ -n "${found_usage}" ]; then
 		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 		else
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage}|tr ' ' ':')${DL}${maintainer}"
+			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage[@]}|tr ' ' ':')${DL}${maintainer}"
 		fi
 	fi
 }
