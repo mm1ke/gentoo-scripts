@@ -228,7 +228,7 @@ check_eclasses_usage() {
 	local eclass_name=${2}
 
 	local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
-	if [ -n "${eclass_var}" ]; then
+	if [ -z "${eclass_var}" ]; then
 		search_pattern="inherit"
 	else
 		search_pattern="${eclass_var}\=\|inherit"
