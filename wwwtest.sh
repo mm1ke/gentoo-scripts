@@ -221,7 +221,7 @@ find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 
 if ${SCRIPT_MODE}; then
 	# sort after http codes (including all codes)
-	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort|uniq); do
+	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort -u); do
 		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
 		grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
 	done
