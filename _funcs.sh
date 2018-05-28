@@ -234,7 +234,7 @@ check_eclasses_usage() {
 		search_pattern="${eclass_var}\=\|inherit"
 	fi
 
-	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q " ${eclass_name} \\| ${eclass_name}\$"); then
+	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q "\"${eclass_var}\"\\| ${eclass_name} \\| ${eclass_name}\$"); then
 		return 0
 	else
 		return 1
@@ -250,7 +250,10 @@ get_eclasses_file() {
 		local file_eclasses=( )
 		local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
 		if [ -n "${eclass_var}" ]; then
-			file_eclasses+=( "$(grep -o "${eclass_var}=.*" ${real_file} | tail -n1 | tr -d '"' | cut -d '=' -f2 | cut -d ' ' -f1 )" )
+			eclass_in_var="$(grep -o "${eclass_var}=.*" ${real_file} | tail -n1 | tr -d '"' | cut -d '=' -f2 | cut -d ' ' -f1 )"
+			if $(echo ${real_eclasses[@]}|grep -q ${eclass_in_var}); then
+				file_eclasses+=( "${eclass_in_var}" )
+			fi
 		fi
 		for ecl in ${real_eclasses[@]}; do
 			if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep inherit | grep -q " ${ecl} \\| ${ecl}\$"); then
