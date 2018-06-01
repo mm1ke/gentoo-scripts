@@ -478,6 +478,7 @@ case ${dir} in
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check lists multiple eclasses which are deprecated or obsolete and should be removed.
+		Currently it checks for: fdo-mime, games, git-2, ltprune and versionator
 		EOM
 		;;
 	ebuild_obsolete_games_usage)
