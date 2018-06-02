@@ -175,16 +175,21 @@ depth_set() {
 			level="${arg}"
 			MAXD=0
 			MIND=0
-			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" == "${arg##*/}" ]; then
+			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
 				MAXD=1
 				MIND=1
 			fi
-		elif [ "${arg}" == "full" ]; then
+		elif [ "${arg}" = "full" ]; then
 			level=""
 			MAXD=2
 			MIND=2
+		elif [ "${arg}" = "diff" ]; then
+			level=""
+			MAXD=0
+			MIND=0
 		else
 			echo "${PORTTREE}/${arg}: Path not found"
+			exit 1
 		fi
 	fi
 }
