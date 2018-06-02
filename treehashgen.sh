@@ -46,9 +46,10 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-[ -z "${HASHTREE}" ] && HASHTREE="/tmp/"
+[ -z "${HASHTREE}" ] && HASHTREE="/var/tmp/"
+[ -s "${REPO}" ] && REPO="gentoo"
 SCRIPT_NAME="treehashgen"
-WORKDIR="/var/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
 #
 ### IMPORTANT SETTINGS STOP ###
 #
