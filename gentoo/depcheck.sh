@@ -1,1 +1,0 @@
-../depcheck.sh

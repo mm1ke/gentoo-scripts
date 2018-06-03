@@ -1,1 +1,0 @@
-../patchcheck.sh

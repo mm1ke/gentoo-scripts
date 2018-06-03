@@ -1,1 +1,0 @@
-../trailwhite.sh
