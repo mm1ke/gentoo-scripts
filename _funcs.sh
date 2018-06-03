@@ -185,8 +185,8 @@ depth_set() {
 			MIND=2
 		elif [ "${arg}" = "diff" ]; then
 			level=""
-			MAXD=0
-			MIND=0
+			MAXD=2
+			MIND=2
 		else
 			echo "${PORTTREE}/${arg}: Path not found"
 			exit 1
