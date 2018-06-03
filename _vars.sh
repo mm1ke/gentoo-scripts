@@ -524,6 +524,20 @@ case ${dir} in
 		Also includes all maintainers to the package.
 		EOM
 		;;
+	packages_full_repoman)
+		scriptname="repomancheck.sh"
+		databasename="packagesFullRepoman"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="affected checks"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE | REPOMANPROBLEMS | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="DETAILED LISTING"
+		read -r -d '' chart_description <<- EOM
+		This is a simple script which runs repoman full on every package and
+		generates lists of found problems.
+		EOM
+		;;
 	*)
 		scriptname="scriptname.sh"	# scriptname
 		databasename="sTable"				# databasetable
