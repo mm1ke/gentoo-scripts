@@ -95,7 +95,7 @@ if [ -e ${HASHTREE} ]; then
 
 						if ! [ "${pak_hash_last}" = "${pak_hash_today}" ]; then
 							#echo "${pak/${WORKDIR}/} changed since yesterday"
-							echo "${pak/${WORKDIR}\//}" >> ${HASHTREE}/results/results-${date_today}.log
+							echo "${pak/${WORKDIR}}" >> ${HASHTREE}/results/results-${date_today}.log
 						fi
 					done
 				fi

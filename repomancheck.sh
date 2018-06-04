@@ -123,9 +123,9 @@ if [ "${1}" = "diff" ]; then
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
 	if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
 		cp ${OLDLOG} ${RUNNING_CHECKS[0]}/
-		cp ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+		cp -r ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
 		for cpak in $(cat ${TODAYCHECKS}); do
-			sed -i "/${cpak}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
+			sed -i "/${cpak//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
 			rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}
 		done
 		cat ${TODAYCHECKS} | parallel main {}
