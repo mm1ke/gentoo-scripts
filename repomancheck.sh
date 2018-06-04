@@ -121,11 +121,17 @@ find_func(){
 if [ "${1}" = "diff" ]; then
 	OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/full.txt"
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	# only run if there is already a full.txt and a diff result from today.
 	if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
 		cp ${OLDLOG} ${RUNNING_CHECKS[0]}/
+		# copying old sort-by-packages files are only important for repomancheck
+		# because these files aren't generated via gen_sort_* (like on other scripts)
 		cp -r ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
 		for cpak in $(cat ${TODAYCHECKS}); do
+			# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+			# will fail beause '/' aren't escapted.
 			sed -i "/${cpak//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
+			# like before, only important on this script (repomancheck)
 			rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}
 		done
 		cat ${TODAYCHECKS} | parallel main {}
