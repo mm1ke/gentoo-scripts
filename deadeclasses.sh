@@ -72,7 +72,7 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local full_md5path="${PORTTREE}/metadata/md5-cache/${category}/${packagename}"
 
-	local dead_eclasses="git-2 games fdo-mime ltprune base versionator"
+	local dead_eclasses="git-2 games fdo-mime ltprune base versionator readme.gentoo"
 	local found_usage=( )
 
 	for eclass in ${dead_eclasses}; do
