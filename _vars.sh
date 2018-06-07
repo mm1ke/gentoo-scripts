@@ -80,6 +80,7 @@ case ${dir} in
 		info_pack="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
 		Some ebuilds have multiple dependencies written on the same line. While it's not a bug it's a bad behaviour.
+		As of today only looks for 'libressl' and 'openssl' on the same line
 		Also see at: <a href="https://devmanual.gentoo.org/general-concepts/dependencies/">Link</a>
 		The checks tries to find such ebuilds.
 		EOM
@@ -122,8 +123,8 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE | PATCH/FILE | MAINTAINER(S)"
 		info_pack="CATEGORY/PACKAGE | PATCH/FILE | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		Like ebuild_unused_patches_simple this check looks for unused patches in pacakges. While it's much more powerfull
-		it also generates quite often false positive. A seperate whitelist file actually minimizes the output.
+		Like ebuild_unused_patches_simple this check looks for unused patches in packages. While it's much more powerfull
+		it also generates quite often false positive. A seperate whitelist file excludes false positives.
 		EOM
 		;;
 	ebuild_description_over_80)
@@ -163,7 +164,7 @@ case ${dir} in
 		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		epatch is deprecated and should be replaced by eapply. This would also reduce a dependency on the eutils.eclass.
+		epatch is deprecated and should be replaced by eapply.
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
 		EOM
 		;;
@@ -306,7 +307,7 @@ case ${dir} in
 		info_main="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
 		info_pack="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S) | OPENBUGS"
 		read -r -d '' chart_description <<- EOM
-		This checks list ebuilds which still use a homepage of a know dead site.
+		This checks lists ebuilds which still use a homepage of a know dead site.
 		Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
 		<a href="his/www-sites-his.html">Broken Sites History</a>
 		EOM
@@ -321,7 +322,7 @@ case ${dir} in
 		info_main="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
 		info_pack="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
 		read -r -d '' chart_description <<- EOM
-		This lists every ebuild with a Homepage which actually redirects to another or similar sites.
+		This lists every ebuild with a Homepage which actually redirects to another sites.
 		The list also includes the statuscode of the real homepage.
 		EOM
 		;;
@@ -449,8 +450,8 @@ case ${dir} in
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
-		This script checks every ebuilds *DEPEND* BLOCKS for packages which doesn't exist anymore.
-		These are mostly blockers (like !app-admin/foo), which usually can be removed.
+		This script checks every ebuilds *DEPEND* Blocks for packages which doesn't exist anymore.
+		These are mostly blockers (like !app-admin/foo).
 		EOM
 		;;
 	ebuild_obsolete_git_2_usage)
@@ -478,6 +479,7 @@ case ${dir} in
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check lists multiple eclasses which are deprecated or obsolete and should be removed.
+		Currently looks for following eclasses: fdo-mime, games, git-2, ltprune and versionator
 		EOM
 		;;
 	ebuild_obsolete_games_usage)
@@ -521,6 +523,20 @@ case ${dir} in
 		A simple list of all packages and the eclasses it's inheriting.
 		Not including packages which don't inherit anything (also not included are eclasses inherited by other eclasses)
 		Also includes all maintainers to the package.
+		EOM
+		;;
+	packages_full_repoman)
+		scriptname="repomancheck.sh"
+		databasename="packagesFullRepoman"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="affected checks"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="CATEGORY/PACKAGE | REPOMANPROBLEMS | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="DETAILED LISTING"
+		read -r -d '' chart_description <<- EOM
+		This is a simple script which runs repoman full on every package and
+		generates lists of found problems.
 		EOM
 		;;
 	*)

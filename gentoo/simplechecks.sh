@@ -1,1 +1,0 @@
-../simplechecks.sh

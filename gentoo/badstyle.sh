@@ -1,1 +1,0 @@
-../badstyle.sh

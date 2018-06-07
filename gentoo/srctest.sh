@@ -1,1 +1,0 @@
-../srctest.sh

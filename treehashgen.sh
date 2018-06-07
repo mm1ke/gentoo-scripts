@@ -43,22 +43,20 @@ else
 	exit 1
 fi
 
-[ -z "${REPO}" ] && REPO="gentoo"
-RESULTDIR="/root/treehashs/${REPO}/"
-date_today="$(date -I)"
 #
 ### IMPORTANT SETTINGS START ###
 #
+[ -z "${HASHTREE}" ] && HASHTREE="/var/tmp/"
+[ -s "${REPO}" ] && REPO="gentoo"
 SCRIPT_NAME="treehashgen"
 WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
 #
 ### IMPORTANT SETTINGS STOP ###
 #
 
-
-
-if [ -e ${RESULTDIR} ]; then
-	if ! [ -e ${RESULTDIR}/full-${date_today}.log ]; then
+if [ -e ${HASHTREE} ]; then
+	date_today="$(date -I)"
+	if ! [ -e ${HASHTREE}/full-${date_today}.log ]; then
 		mkdir -p ${WORKDIR}
 		# generate hashes for every package
 		for cate in $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d \
@@ -79,31 +77,31 @@ if [ -e ${RESULTDIR} ]; then
 		# generate hashes for every category based on the package hashes
 		for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
 			find ${cat} -mindepth 2 -type f -name *.xha -exec xxh64sum {} \; \
-				| tee -a ${cat}/category-xhash.xha ${RESULTDIR}/full-${date_today}.log >/dev/null
+				| tee -a ${cat}/category-xhash.xha ${HASHTREE}/full-${date_today}.log >/dev/null
 		done
 
 		find ${WORKDIR} -mindepth 2 -maxdepth 2 -type f -name *.xha -exec xxh64sum {} \; \
-			| tee -a ${WORKDIR}/tree-xhash.xha ${RESULTDIR}/full-${date_today}.log >/dev/null
+			| tee -a ${WORKDIR}/tree-xhash.xha ${HASHTREE}/full-${date_today}.log >/dev/null
 
-		if [ -e ${RESULTDIR}/full-last.log ]; then
+		if [ -e ${HASHTREE}/full-last.log ]; then
 			for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
-				cat_hash_last="$(grep ${cat}/category-xhash.xha ${RESULTDIR}/full-last.log | cut -d ' ' -f1)"
-				cat_hash_today="$(grep ${cat}/category-xhash.xha ${RESULTDIR}/full-${date_today}.log| cut -d' ' -f1)"
+				cat_hash_last="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-last.log | cut -d ' ' -f1)"
+				cat_hash_today="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-${date_today}.log| cut -d' ' -f1)"
 				if ! [ "${cat_hash_last}" = "${cat_hash_today}" ]; then
 					for pak in $(find ${cat} -mindepth 1 -maxdepth 1 -type d); do
 
-						pak_hash_last="$(grep ${pak}/package-xhash.xha ${RESULTDIR}/full-last.log | cut -d ' ' -f1)"
-						pak_hash_today="$(grep ${pak}/package-xhash.xha ${RESULTDIR}/full-${date_today}.log| cut -d' ' -f1)"
+						pak_hash_last="$(grep ${pak}/package-xhash.xha ${HASHTREE}/full-last.log | cut -d ' ' -f1)"
+						pak_hash_today="$(grep ${pak}/package-xhash.xha ${HASHTREE}/full-${date_today}.log| cut -d' ' -f1)"
 
 						if ! [ "${pak_hash_last}" = "${pak_hash_today}" ]; then
-							echo "${pak/${WORKDIR}/} changed since yesterday"
-							echo "${pak/${WORKDIR}/}" >> ${RESULTDIR}/results/results-${date_today}.log
+							#echo "${pak/${WORKDIR}/} changed since yesterday"
+							echo "${pak/${WORKDIR}}" >> ${HASHTREE}/results/results-${date_today}.log
 						fi
 					done
 				fi
 			done
 		fi
-		cp ${RESULTDIR}/full-${date_today}.log ${RESULTDIR}/full-last.log
+		cp ${HASHTREE}/full-${date_today}.log ${HASHTREE}/full-last.log
 		rm -rf ${WORKDIR}
 	fi
 fi
