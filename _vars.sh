@@ -316,9 +316,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Redirected Sites"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_main="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_pack="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_full="EAPI | (Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This lists every ebuild with a Homepage which actually redirects to another sites.
 		The list also includes the statuscode of the real homepage.
@@ -330,9 +330,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Https Redirections"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_full="EAPI | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Lists only ebuids who's homepage redirects to the same site only via HTTPS.
 		Also only lists available sites.
@@ -344,9 +344,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Slash/WWW Redirections"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_full="EAPI | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Lists only ebuild who's homepage redirects to the same site where there is only included a "www" or a missing "/" at the end (or both)
 		Also only lists available sites.
