@@ -84,49 +84,51 @@ main() {
 		echo
 	fi
 
-	local eclass_check_list=(	"ltprune;prune_libtool_files" \
-														"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:epause:ebeep:einstalldocs:in_iuse" )
+	if [ "$(get_eapi ${full_path_ebuild})" = "6" ]; then
+		local eclass_check_list=(	"ltprune;prune_libtool_files" \
+															"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse:epatch" )
 
-	for echeck in ${eclass_check_list[@]}; do
-		local eclass="$(echo ${echeck}|cut -d';' -f1)"
-		local eclass_funcs="$(echo ${echeck}|cut -d';' -f2)"
-		local obsol_ecl=( )
-		local missing_ecl=( )
+		for echeck in ${eclass_check_list[@]}; do
+			local eclass="$(echo ${echeck}|cut -d';' -f1)"
+			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2)"
+			local obsol_ecl=( )
+			local missing_ecl=( )
 
 
-		if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
-			for func in $(echo ${eclass_funcs}|tr ':' ' '); do
-				if $(grep -q ${func} ${full_path_ebuild}); then
-					echo "${category}/${package}/${filename}: ok uses ${eclass}/${func}"
-					break 2
-				fi
-			done
-			obsol_ecl+=( ${eclass} )
-		else
-			for func in $(echo ${eclass_funcs}|tr ':' ' '); do
-				if $(grep -q ${func} ${full_path_ebuild}); then
-					missing_ecl+=( ${eclass} )
-					break
-				fi
-			done
-		fi
-
-		if [ -n "${obsol_ecl}" ]; then
-			if ${SCRIPT_MODE}; then
-				echo "${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
+				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
+					if $(grep -q ${func} ${full_path_ebuild}); then
+						#echo "${category}/${package}/${filename}: ok uses ${eclass}/${func}"
+						break 2
+					fi
+				done
+				obsol_ecl+=( ${eclass} )
 			else
-				echo "unused_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
+					if $(grep -q ${func} ${full_path_ebuild}); then
+						missing_ecl+=( ${eclass} )
+						break
+					fi
+				done
 			fi
-		fi
 
-		if [ -n "${missing_ecl}" ]; then
-			if ${SCRIPT_MODE}; then
-				echo "${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-			else
-				echo "missing_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+			if [ -n "${obsol_ecl}" ]; then
+				if ${SCRIPT_MODE}; then
+					echo "${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+				else
+					echo "unused_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+				fi
 			fi
-		fi
-	done
+
+			if [ -n "${missing_ecl}" ]; then
+				if ${SCRIPT_MODE}; then
+					echo "${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+				else
+					echo "missing_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+				fi
+			fi
+		done
+	fi
 }
 
 # set the search depth

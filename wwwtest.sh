@@ -76,6 +76,8 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 	local cat=${2}
 	local pak=${3}
 	local main=${4}
+	local full_ebuild=${5}
+
 	local found=false
 	local lastchar="${hp: -1}"
 
@@ -94,9 +96,9 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 			if [ ${_code} = 200 ]; then
 				found=true
 				if ${SCRIPT_MODE}; then
-					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
+					echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
 				else
-					echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+					echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 				fi
 				break
 			fi
@@ -119,9 +121,9 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 				if [ ${_code} = 200 ]; then
 					found=true
 					if ${SCRIPT_MODE}; then
-						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
+						echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
 					else
-						echo "${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+						echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
 					fi
 					break
 				fi
@@ -133,9 +135,9 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		if ${SCRIPT_MODE}; then
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
+			echo "$(get_eapi ${full_ebuild})${DL}${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
+			echo "$(get_eapi ${full_ebuild})${DL}${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 		fi
 	fi
 }
@@ -193,7 +195,7 @@ main() {
 
 					case ${_code} in
 						301)
-							301check "${i}" "${category}" "${package}" "${maintainer}"
+							301check "${i}" "${category}" "${package}" "${maintainer}" "${eb}"
 							;;
 						esac
 
@@ -277,16 +279,16 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
 
 	# ebuild_homepage_redirection_http_to_https
-	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
-	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 4
+	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 5
 
 	# ebuild_homepage_redirection_missing_slash_www
-	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
-	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
+	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
 
 	# ebuild_homepage_301_redirections
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 6
 
 	# ebuild_homepage_http_statuscode
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
