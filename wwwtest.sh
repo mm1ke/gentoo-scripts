@@ -186,7 +186,7 @@ main() {
 					mode "VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 				elif [ -n "${_checktmp}" ]; then
 					# don't check again
-					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4}${DL}${maintainer}${openbugs}"
+					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4:-1}${DL}${maintainer}${openbugs}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
