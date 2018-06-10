@@ -237,7 +237,6 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		Checks for a set of variables if those contain a leading or trailing whitespace.
 		For example: SRC_URI=" www.foo.com/bar.tar.gz "
-		<a href="his/leading-trailing-his.html">Leading/Trailing Whitespace History</a>
 		EOM
 		;;
 	ebuild_trailing_whitespaces)
@@ -309,7 +308,6 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		This checks lists ebuilds which still use a homepage of a know dead site.
 		Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
-		<a href="his/www-sites-his.html">Broken Sites History</a>
 		EOM
 		;;
 	ebuild_homepage_301_redirections)
@@ -479,7 +477,7 @@ case ${dir} in
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check lists multiple eclasses which are deprecated or obsolete and should be removed.
-		Currently looks for following eclasses: fdo-mime, games, git-2, ltprune and versionator
+		Currently looks for following eclasses: fdo-mime, games, git-2, ltprune, readme.gentoo and versionator
 		EOM
 		;;
 	ebuild_obsolete_games_usage)
