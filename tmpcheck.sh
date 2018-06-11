@@ -62,32 +62,20 @@ array_names
 
 main() {
 	array_names
-	local relative_path=${1}
-	local category="$(echo ${relative_path}|cut -d'/' -f2)"
-	local package="$(echo ${relative_path}|cut -d'/' -f3)"
-	local filename="$(echo ${relative_path}|cut -d'/' -f4)"
-	local packagename="${filename%.*}"
-	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
-	local maintainer="$(get_main_min "${category}/${package}")"
-
-	if ${DEBUG}; then
-		echo "relative path: ${relative_path}"				# path relative to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
-		echo "full path: ${full_path}"								# full path:										/usr/portage/app-admin/salt
-		echo "full path ebuild: ${full_path_ebuild}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
-		echo "category: ${category}"									# package category:							app-admin
-		echo "package: ${package}"										# package name:									salt
-		echo "filename: ${filename}"									# package filename:							salt-0.5.2.ebuild
-		echo "packagename: ${packagename}"						# package name-version:					salt-0.5.2
-		echo "fileage: $(get_age "${filename}")"			# age of ebuild in days:				145
-		echo "maintainer: ${maintainer}"							# maintainer of package					foo@gentoo.org:bar@gmail.com
-		echo
-	fi
+	local relative_path=${1}																								# path relative to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
+	local category="$(echo ${relative_path}|cut -d'/' -f2)"									# package category:							app-admin
+	local package="$(echo ${relative_path}|cut -d'/' -f3)"									# package name:									salt
+	local filename="$(echo ${relative_path}|cut -d'/' -f4)"									# package filename:							salt-0.5.2.ebuild
+	local packagename="${filename%.*}"																			# package name-version:					salt-0.5.2
+	local full_path="${PORTTREE}/${category}/${package}"										# full path:										/usr/portage/app-admin/salt
+	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
+	local maintainer="$(get_main_min "${category}/${package}")"							# maintainer of package					foo@gentoo.org:bar@gmail.com
+	local fileage="$(get_age "${filename}")"																# age of ebuild in days:				145
 
 	if ${SCRIPT_MODE}; then
-		echo "$(get_age "${filename}")${DL}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "$(get_age "${filename}")${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
