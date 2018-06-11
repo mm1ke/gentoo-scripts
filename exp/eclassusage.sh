@@ -71,63 +71,57 @@ main() {
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if ${DEBUG}; then
-		echo "relative path: ${relative_path}"				# path relative to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
-		echo "full path: ${full_path}"								# full path:										/usr/portage/app-admin/salt
-		echo "full path ebuild: ${full_path_ebuild}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
-		echo "category: ${category}"									# package category:							app-admin
-		echo "package: ${package}"										# package name:									salt
-		echo "filename: ${filename}"									# package filename:							salt-0.5.2.ebuild
-		echo "packagename: ${packagename}"						# package name-version:					salt-0.5.2
-		echo "fileage: $(get_age "${filename}")"			# age of ebuild in days:				145
-		echo "maintainer: ${maintainer}"							# maintainer of package					foo@gentoo.org:bar@gmail.com
-		echo
-	fi
-
 	if [ "$(get_eapi ${full_path_ebuild})" = "6" ]; then
 		local eclass_check_list=(	"ltprune;prune_libtool_files" \
-															"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse:epatch" )
+															"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse" \
+															"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
+															"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
+															"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
+															"epatch;epatch:epatch_user" \
+															"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon")
+
+		local obsol_ecl=( )
+		local missing_ecl=( )
 
 		for echeck in ${eclass_check_list[@]}; do
 			local eclass="$(echo ${echeck}|cut -d';' -f1)"
 			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2)"
-			local obsol_ecl=( )
-			local missing_ecl=( )
 
-
+			# check if ebuild uses ${eclass}
 			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
+				# check if any of the given functions are used in the ebuild
 				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
 					if $(grep -q ${func} ${full_path_ebuild}); then
-						#echo "${category}/${package}/${filename}: ok uses ${eclass}/${func}"
+						${SCRIPT_MODE} && echo "${category}/${package}/${filename}: uses ${eclass}/${func} (at least)" >> ${RUNNING_CHECKS[0]}/full-unfilterd.txt
 						break 2
 					fi
 				done
 				obsol_ecl+=( ${eclass} )
+			# if ebuild doesn't use eclass check the ebuild if one of the functions
+			# are used over implicited inheriting
 			else
 				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
 					if $(grep -q ${func} ${full_path_ebuild}); then
+						${SCRIPT_MODE} && echo "${category}/${package}/${filename}: uses ${eclass}/${func} but doesn't inherit ${eclass}" >> ${RUNNING_CHECKS[0]}/full-unfilterd.txt
 						missing_ecl+=( ${eclass} )
-						break
+						break 2
 					fi
 				done
 			fi
-
-			if [ -n "${obsol_ecl}" ]; then
-				if ${SCRIPT_MODE}; then
-					echo "${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-				else
-					echo "unused_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
-				fi
-			fi
-
-			if [ -n "${missing_ecl}" ]; then
-				if ${SCRIPT_MODE}; then
-					echo "${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-				else
-					echo "missing_eclass${DL}${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
-				fi
-			fi
 		done
+
+		[ -n "${obsol_ecl}" ] && local o_eclass="$(echo ${obsol_ecl[@]}|tr '[:upper:]' '[:lower:]'|tr ' ' ':')"
+		[ -n "${missing_ecl}" ] && local m_eclass="$(echo ${missing_ecl[@]}|tr '[:lower:]' '[:upper:]'|tr ' ' ':')"
+
+		if [ -n "${o_eclass}" ] || [ -n "${m_eclass}" ]; then
+			if ${SCRIPT_MODE}; then
+				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			else
+				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${o_eclass}${DL}${maintainer}"
+			fi
+		fi
+
+
 	fi
 }
 
