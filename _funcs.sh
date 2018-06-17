@@ -220,6 +220,23 @@ get_eapi() {
 	[ -n "${eapi}" ] && echo ${eapi} || echo "0"
 }
 
+get_eapi_pak(){
+	local package=${1}
+	local eapi_list=( $(grep EAPI ${package}/*.ebuild 2> /dev/null | cut -d'=' -f2 | cut -d' ' -f1 | grep -Eo '[0-9]' | uniq -c | sed 's/^\s*//'|tr ' ' '_') )
+
+	local x
+	local return_string=( )
+	for x in ${eapi_list[@]}; do
+		local eapi=$(echo ${x}|rev|cut -d'_' -f1)
+		local count=$(echo ${x}|cut -d'_' -f1)
+		return_string+=( "${eapi}(${count})" )
+	done
+
+	IFS=$'\n' return_string=($(sort -r <<<"${return_string[*]}"))
+
+	echo "$(echo ${return_string[@]}|tr ' ' ':')"
+}
+
 # return all eclasses inherited by a ebuild
 # the list is generated from the md5-cache, which means it also includes
 # eclasses inherited by other eclasses
@@ -327,4 +344,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage get_eapi_pak
