@@ -110,6 +110,14 @@ find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -print | parallel main {}
 
 if ${SCRIPT_MODE}; then
+
+	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
+		for fp in $(echo ${file}|cut -d'|' -f2|tr ':' ' '); do
+			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}
+			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}/full.txt
+		done
+	done
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
