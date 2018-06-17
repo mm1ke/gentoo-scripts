@@ -334,27 +334,27 @@ main(){
 				if ! ${wlr}; then
 					if ${prechecks}; then
 						if [ "${file}" = "rc-addon.sh" ]; then
-							$(grep vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+							$(grep -q vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						# check for vdr-plugin-2 eclass which installs confd files if exists
 						elif [ "${file}" = "confd" ]; then
-							$(grep vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+							$(grep -q vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 						# check for games-mods eclass which install server.cfg files
 						elif [ "${file}" = "server.cfg" ]; then
-							$(grep games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+							$(grep -q games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						# check for mysql cnf files
 						elif [ "${file%%-*}" = "my.cnf" ]; then
-							$(grep mysql-multilib-r1 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
+							$(grep -q mysql-multilib-r1 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
 						elif [ "${file##*.}" = "conf" ]; then
-							$(grep apache-module ${fullpath}/*.ebuild > /dev/null) && \
-								$(grep APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+							$(grep -q apache-module ${fullpath}/*.ebuild > /dev/null) && \
+								$(grep -q APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 						# check for elisp eclass which install el files if a SITEFILE is set
 						elif [ "${file##*.}" = "el" ]; then
-							$(grep elisp ${fullpath}/*.ebuild > /dev/null) && \
-								$(grep SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
+							$(grep -q elisp ${fullpath}/*.ebuild > /dev/null) && \
+								$(grep -q SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
 						# ignoring README.gentoo files
 						elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
-							break
+							$(grep -q readme.gentoo ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						else
 							patch_list+=("${file}")
 						fi
