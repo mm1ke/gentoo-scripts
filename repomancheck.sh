@@ -149,11 +149,11 @@ if ${SCRIPT_MODE}; then
 	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 		for fp in $(echo ${file}|cut  -d'|' -f2|tr ':' ' '); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}
-			echo ${file} >> ${RUNNING_CHECKS[@]}/sort-by-filter/${fp}/full.txt
+			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}/full.txt
 		done
 	done
 
-	for ffp in $(ls ${RUNNING_CHECKS[@]}/sort-by-filter/); do
+	for ffp in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
 		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ffp} 3
 		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ffp} 1
 	done
