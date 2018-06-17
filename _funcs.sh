@@ -92,6 +92,7 @@ _update_buglists(){
 }
 _update_buglists
 
+# returns a list of Bug Numbers for a given ebuild
 get_bugs(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
@@ -99,6 +100,7 @@ get_bugs(){
 	[ -n "${return}" ] && echo "${return::-1}"
 }
 
+# returns a list of Bugs for a given ebuild. Also includes Bugtitle
 get_bugs_full(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f1,3)"
@@ -194,7 +196,7 @@ depth_set() {
 	fi
 }
 
-# this function get the age (file creation) of a particular ebuild
+# this function get the age (file creation) of a particular ebuild file
 # depends on ${ENABLE_GIT}
 # returns the age in days
 get_age() {
@@ -219,6 +221,8 @@ get_eapi() {
 }
 
 # return all eclasses inherited by a ebuild
+# the list is generated from the md5-cache, which means it also includes
+# eclasses inherited by other eclasses
 get_eclasses_real() {
 	local md5_file=${1}
 
@@ -228,6 +232,8 @@ get_eclasses_real() {
 	fi
 }
 
+# simply return 0 or 1 (true or false) if a given eclass is used by
+# a given ebuild file
 check_eclasses_usage() {
 	local real_file=${1}
 	local eclass_name=${2}
@@ -246,6 +252,9 @@ check_eclasses_usage() {
 	fi
 }
 
+# list all eclasses used by a given ebuild file
+# returns the list as followed:
+#  eclass1:eclass2
 get_eclasses_file() {
 	local md5_file=${1}
 	local real_file=${2}
