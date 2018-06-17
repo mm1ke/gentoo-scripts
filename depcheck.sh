@@ -47,6 +47,8 @@ fi
 # don't run on overlays because dependencies are most likely only
 # available at the main tree
 ${TREE_IS_MASTER} || exit 0
+# only works with md5-cache
+${ENABLE_MD5} || exit 0
 
 #
 ### IMPORTANT SETTINGS START ###
@@ -65,13 +67,7 @@ array_names
 ### IMPORTANT SETTINGS STOP ###
 #
 
-# only works with md5-cache
-if ! ${ENABLE_MD5}; then
-	exit 1
-fi
-
 main() {
-
 	array_names
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
@@ -82,19 +78,6 @@ main() {
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if ${DEBUG}; then
-		# Debug
-		echo "absolute path: ${absolute_path}"
-		echo "full path: ${full_path}"
-		echo "full path ebuild: ${full_path_ebuild}"
-		echo "category: ${category}"
-		echo "package: ${package}"
-		echo "filename: ${filename}"
-		echo "packagename: ${packagename}"
-		echo "fileage: $(get_age "${filename}")"
-		echo "maintainer: ${maintainer}"
-		echo
-	fi
 
 	local found=false
 	local obsolete_dep=()
@@ -138,6 +121,14 @@ find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'DEPEND' {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
+
+	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
+		for fp in $(echo ${file}|cut -d'|' -f2|tr ':' ' '); do
+			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')
+			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')/full.txt
+		done
+	done
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
