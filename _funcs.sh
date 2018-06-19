@@ -222,7 +222,7 @@ get_eapi() {
 
 get_eapi_pak(){
 	local package=${1}
-	local eapi_list=( $(grep EAPI ${package}/*.ebuild 2> /dev/null | cut -d'=' -f2 | cut -d' ' -f1 | grep -Eo '[0-9]' | uniq -c | sed 's/^\s*//'|tr ' ' '_') )
+	local eapi_list=( $(grep EAPI ${package}/*.ebuild 2> /dev/null | cut -d'=' -f2 | cut -d' ' -f1 | grep -Eo '[0-9]' | sort | uniq -c | sed 's/^\s*//'|tr ' ' '_') )
 
 	local x
 	local return_string=( )
