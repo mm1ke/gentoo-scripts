@@ -84,6 +84,7 @@ if [ -e ${HASHTREE} ]; then
 			| tee -a ${WORKDIR}/tree-xhash.xha ${HASHTREE}/full-${date_today}.log >/dev/null
 
 		if [ -e ${HASHTREE}/full-last.log ]; then
+			touch ${HASHTREE}/results/results-${date_today}.log
 			for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
 				cat_hash_last="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-last.log | cut -d ' ' -f1)"
 				cat_hash_today="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-${date_today}.log| cut -d' ' -f1)"
