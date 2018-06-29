@@ -237,6 +237,18 @@ get_eapi_pak(){
 	echo "$(echo ${return_string[@]}|tr ' ' ':')"
 }
 
+# list all eapi's for a given package. the list looks like following:
+# EAPI Version:		0 1 2 3 4 5 6 7			(not outputed)
+# EAPI Count:			0:0:0:0:0:1:2:0
+get_eapi_list(){
+	local package=${1}
+	local eapi_list=( )
+	for eapi in $(seq 0 7); do
+		eapi_list+=( $(grep -h EAPI ${package}/*.ebuild |cut -d' ' -f1 | grep ${eapi}| wc -l) )
+	done
+	echo "$(echo ${eapi_list[@]}|tr ' ' ':')"
+}
+
 # return all eclasses inherited by a ebuild
 # the list is generated from the md5-cache, which means it also includes
 # eclasses inherited by other eclasses
@@ -344,4 +356,4 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage get_eapi_pak
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list
