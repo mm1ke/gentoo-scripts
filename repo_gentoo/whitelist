@@ -18,6 +18,7 @@ white_list=(
 	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
 	"app-portage/eclass-manpages;eclass-to-manpage.awk;*"
 	"sys-apps/portage;README.RESCUE;*"
+	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
 	"app-emulation/playonlinux;playonlinux.1;playonlinux-4.2.12.ebuild"
 	"app-emulation/playonlinux;playonlinux-pkg.1;playonlinux-4.2.12.ebuild"
