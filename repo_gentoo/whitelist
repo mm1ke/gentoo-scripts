@@ -399,4 +399,6 @@ white_list=(
 	"net-firewall/firewalld;firewalld-0.5.1-errorcodes2.patch;firewalld-0.5.1-r2.ebuild"
 	"sci-misc/boinc;7.8-fix_xlocale.patch;boinc-7.8.6.ebuild"
 	"x11-wm/i3-gaps;i3-gaps-4.15-musl.patch;i3-gaps-4.15.0.1.ebuild"
+	"net-vpn/tinc;tinc-1.1_pre15-fix-paths.patch;tinc-1.1_pre15.ebuild"
+	"net-vpn/tinc;tinc-1.1_pre16-fix-paths.patch;tinc-1.1_pre16.ebuild"
 )
