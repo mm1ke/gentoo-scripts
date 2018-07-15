@@ -143,7 +143,7 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 }
 
 get_code() {
-	local code="$(curl -o /dev/null --silent --max-time 10 --head --write-out '%{http_code}\n' ${1})"
+	local code="$(curl -o /dev/null --silent --max-time 20 --head --write-out '%{http_code}\n' ${1})"
 	echo ${code}
 }
 

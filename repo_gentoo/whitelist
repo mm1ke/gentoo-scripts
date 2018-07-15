@@ -391,7 +391,7 @@ white_list=(
 	"sys-libs/tapi;objcmetadata-800.0.42.1-standalone.patch;tapi-2.0.0.ebuild"
 	"x11-libs/wxGTK;wxGTK-3.0-gtk3-translation-domain.patch;wxGTK-3.0.3-r300.ebuild"
 	"net-analyzer/tcptrace;tcptrace-6.6.7-cross-compile.patch;tcptrace-6.6.7_p4_p1.ebuild"
-	"dev-lang/php;php-5.6-no-bison-warnings.patch;php-5.6.33.ebuild"
+	"dev-lang/php;php-5.6-no-bison-warnings.patch;php-5.6.35-r1.ebuild:php-5.6.36.ebuild"
 	"media-sound/lilypond;lilypond-9999-programming_error.patch;lilypond-9999.ebuild"
 	"app-admin/fam;fam-2.7.0-AM_CONFIG_HEADER.patch;fam-2.7.0_p17_p2.ebuild"
 	"app-admin/fam;fam-2.7.0-patch-header.patch;fam-2.7.0_p17_p2.ebuild"

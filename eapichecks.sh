@@ -115,7 +115,9 @@ main() {
 					old_file="$(get_age "${org_name}.ebuild")${DL}"
 					new_file="$(get_age "${name}-r${i}.ebuild")${DL}"
 				fi
-				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild)" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild)" ]; then
+				# TODO: use md5-cache here for KEYWORDS grepping, also maybe write
+				# a _func version
+				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild  | sed -e 's/^[ \t]*//')" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild | sed -e 's/^[ \t]*//')" ]; then
 					output "${ebuild_eapi}${DL}${old_file}6${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[0]##*/}"
 
