@@ -401,4 +401,6 @@ white_list=(
 	"x11-wm/i3-gaps;i3-gaps-4.15-musl.patch;i3-gaps-4.15.0.1.ebuild"
 	"net-vpn/tinc;tinc-1.1_pre15-fix-paths.patch;tinc-1.1_pre15.ebuild"
 	"net-vpn/tinc;tinc-1.1_pre16-fix-paths.patch;tinc-1.1_pre16.ebuild"
+	"games-strategy/uqm;uqm-0.7.0-tempdir.patch;uqm-0.7.0.1.ebuild"
+	"games-strategy/uqm;uqm-0.7.0-warning.patch;uqm-0.7.0.1.ebuild"
 )
