@@ -52,7 +52,7 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"			#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"						#Index 0
 	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_live_statistics"			#Index 1
 	)
 }
@@ -71,7 +71,7 @@ main() {
 	local fileversion="${packagename/${package}-/}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if [ $(echo ${fileversion}|grep 9999) ]; then
+	if $(echo ${fileversion}|grep -q 9999); then
 		if ${SCRIPT_MODE}; then
 			echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
