@@ -48,6 +48,7 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 JOBS="50"
+TIMEOUT="20"
 
 # need the array in a function in order
 # to be able to export the array
@@ -57,8 +58,8 @@ array_names(){
 	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_301_redirections"									#Index 1
 	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_missing_slash_www"		#Index 2
 	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_http_to_https"				#Index 3
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_upstream_shutdown"						#Index 4
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_unsync"									#Index 5
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_upstream_shutdown"								#Index 4
+	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_unsync"														#Index 5
 	)
 }
 array_names
@@ -132,7 +133,7 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 	fi
 
 	if ! ${found}; then
-		local correct_site="$(curl -Ls -o /dev/null --silent --max-time 10 --head -w %{url_effective} ${hp})"
+		local correct_site="$(curl -Ls -o /dev/null --silent --max-time ${TIMEOUT} --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		if ${SCRIPT_MODE}; then
 			echo "$(get_eapi ${full_ebuild})${DL}${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
@@ -143,7 +144,7 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 }
 
 get_code() {
-	local code="$(curl -o /dev/null --silent --max-time 20 --head --write-out '%{http_code}\n' ${1})"
+	local code="$(curl -o /dev/null --silent --max-time ${TIMEOUT} --head --write-out '%{http_code}\n' ${1})"
 	echo ${code}
 }
 
