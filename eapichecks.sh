@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Discription:
-# This scripts checks eapi usage. it looks for ebuils with old eapi 
+# This scripts checks eapi usage. it looks for ebuils with old eapi
 # and checks if there is a revision/version bump with a newer eapi
 
 #override PORTTREE,SCRIPT_MODE,SITEDIR settings
@@ -54,8 +54,8 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 array_names(){
 	RUNNING_CHECKS=(
 	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_cleanup_candidates"					#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"	#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"			#Index 2
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"						#Index 1
+	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"								#Index 2
 	)
 }
 array_names
@@ -108,7 +108,9 @@ main() {
 	for i in $(seq $start 10); do
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
 			local found_ebuild="${package_path}/${name}-r${i}.ebuild"
-			if [ "$(get_eapi ${found_ebuild})" = "6" ]; then
+			local eapi_found_ebuild="$(get_eapi ${found_ebuild})"
+
+			if [ "${eapi_found_ebuild}" = "6" ] || [ "${eapi_found_ebuild}" = "7" ]; then
 				local old_file=""
 				local new_file=""
 				if ${ENABLE_GIT}; then
@@ -118,11 +120,11 @@ main() {
 				# TODO: use md5-cache here for KEYWORDS grepping, also maybe write
 				# a _func version
 				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild  | sed -e 's/^[ \t]*//')" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild | sed -e 's/^[ \t]*//')" ]; then
-					output "${ebuild_eapi}${DL}${old_file}6${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[0]##*/}"
 
 				else
-					output "${ebuild_eapi}${DL}${old_file}6${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[1]##*/}"
 				fi
 				break 2
@@ -130,9 +132,7 @@ main() {
 		fi
 	done
 	if ! [ ${ebuild_eapi} = 5 ]; then
-		other_ebuild_eapi=($(grep ^EAPI ${category}/${package}/*.ebuild |tr -d '"'|cut -d'=' -f2|sort -u))
-		[ -z "${other_ebuild_eapi}" ] && other_ebuild_eapi=0
-		output "${ebuild_eapi}${DL}$(echo ${other_ebuild_eapi[@]})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
+		output "${ebuild_eapi}${DL}$(get_eapi_pak ${package_path})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
 			"${RUNNING_CHECKS[2]##*/}"
 	fi
 }
