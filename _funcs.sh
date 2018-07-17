@@ -220,6 +220,9 @@ get_eapi() {
 	[ -n "${eapi}" ] && echo ${eapi} || echo "0"
 }
 
+# list all eapi versions for a given package only showing used EAPIs. the list
+# looks like following:
+# 7(1):6(2):5(1)
 get_eapi_pak(){
 	local package=${1}
 	local eapi_list=( $(grep EAPI ${package}/*.ebuild 2> /dev/null | cut -d'=' -f2 | cut -d' ' -f1 | grep -Eo '[0-9]' | sort | uniq -c | sed 's/^\s*//'|tr ' ' '_') )
