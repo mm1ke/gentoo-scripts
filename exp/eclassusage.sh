@@ -72,13 +72,16 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if [ "$(get_eapi ${full_path_ebuild})" = "6" ]; then
-		local eclass_check_list=(	"ltprune;prune_libtool_files" \
+		local eclass_check_list=( \
+															"ltprune;prune_libtool_files" \
 															"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse" \
 															"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
 															"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
 															"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
 															"epatch;epatch:epatch_user" \
-															"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon")
+															"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon" \
+															"versionator;get_all_version_components:get_version_components:get_major_version:get_version_componetns_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
+		)
 
 		local obsol_ecl=( )
 		local missing_ecl=( )
