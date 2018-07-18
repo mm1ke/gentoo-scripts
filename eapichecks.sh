@@ -117,12 +117,9 @@ main() {
 					old_file="$(get_age "${org_name}.ebuild")${DL}"
 					new_file="$(get_age "${name}-r${i}.ebuild")${DL}"
 				fi
-				# TODO: use md5-cache here for KEYWORDS grepping, also maybe write
-				# a _func version
-				if [ "$(grep KEYWORDS\= ${package_path}/${org_name}.ebuild  | sed -e 's/^[ \t]*//')" = "$(grep KEYWORDS\= ${package_path}/${name}-r${i}.ebuild | sed -e 's/^[ \t]*//')" ]; then
+				if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
 					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[0]##*/}"
-
 				else
 					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
 						"${RUNNING_CHECKS[1]##*/}"
@@ -137,25 +134,34 @@ main() {
 	fi
 }
 
+pre_check(){
+	if ! [ "$(get_eapi ${1})" = "6" ] && ! [ "$(get_eapi ${1})" = "7" ]; then
+		main ${1}
+	fi
+}
+
 depth_set ${1}
 cd ${PORTTREE}
 export WORKDIR SCRIPT_SHORT
-export -f main output array_names
+export -f main output array_names pre_check
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-for e in $(seq 0 5); do
-	find ./${level}  \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "^EAPI.*${e}" {} \; | parallel main {}
-done
+find ./${level}  \( \
+	-path ./scripts/\* -o \
+	-path ./profiles/\* -o \
+	-path ./packages/\* -o \
+	-path ./licenses/\* -o \
+	-path ./distfiles/\* -o \
+	-path ./metadata/\* -o \
+	-path ./eclass/\* -o \
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check {}
 
 if ${SCRIPT_MODE}; then
+
+	sort_result ${RUNNING_CHECKS[2]} "1,1 -k3,3"
+	sort_result ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
+	sort_result ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
 

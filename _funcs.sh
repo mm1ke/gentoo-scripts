@@ -132,6 +132,29 @@ sort_result(){
 	fi
 }
 
+compare_keywords(){
+	local ebuild1="${1}"
+	local ebuild2="${2}"
+	local category="${3}"
+	local package="${4}"
+
+	if ${ENABLE_MD5}; then
+		if [ "$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})" = \
+			"$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})" ]; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		if [ "$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')" = \
+			"$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')" ]; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+}
+
 # function which sorts a list by it's maintainer
 gen_sort_main_v2(){
 	local workfile="${1}"
@@ -384,4 +407,5 @@ END`
 }
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
-	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result
+	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
+	compare_keywords
