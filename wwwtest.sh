@@ -245,6 +245,12 @@ if ${SCRIPT_MODE}; then
 		" ${TMPFILE}
 	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
+	sort_result ${RUNNING_CHECKS[0]} 2
+	sort_result ${RUNNING_CHECKS[0]}/full-unfiltered.txt 2
+	sort_result ${RUNNING_CHECKS[1]} 3
+	sort_result ${RUNNING_CHECKS[2]} 2
+	sort_result ${RUNNING_CHECKS[3]} 2
+
 	# special filters - ebuild_homepage_upstream_shutdown
 	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 	for site in ${_filters[@]}; do
