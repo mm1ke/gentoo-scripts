@@ -108,6 +108,30 @@ get_bugs_full(){
 	[ -n "${return}" ] && echo "${return}"
 }
 
+# function to sort the output, takes two argument, where the second is optional.
+# The first argument is the file to sort (usually full.txt)
+# the second is the column number to sort after
+sort_result(){
+	local workfile="${1}"
+	local column="${2}"
+
+	if [ -d ${workfile} ]; then
+		if [ -e "${workfile}/full.txt" ]; then
+			local workfile="${workfile}/full.txt"
+		else
+			return 1
+		fi
+	elif ! [ -e ${workfile} ]; then
+		return 1
+	fi
+
+	if [ -z "${column}" ]; then
+		sort -o ${workfile} ${workfile}
+	else
+		sort -t"${DL}" -k${column} -o${workfile} ${workfile}
+	fi
+}
+
 # function which sorts a list by it's maintainer
 gen_sort_main_v2(){
 	local workfile="${1}"
@@ -359,4 +383,5 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list
+export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
+	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result
