@@ -210,7 +210,7 @@ depth_set ${1}
 cd ${PORTTREE}
 # for parallel execution
 export -f main get_code 301check array_names
-export TMPCHECK TMPFILE WORKDIR SCRIPT_SHORT
+export TMPCHECK TMPFILE WORKDIR SCRIPT_SHORT TIMEOUT
 
 find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
 	-path ./scripts/\* -o \
