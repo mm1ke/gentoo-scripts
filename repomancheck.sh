@@ -129,7 +129,7 @@ if [ "${1}" = "diff" ]; then
 		cp -r ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
 		for cpak in $(cat ${TODAYCHECKS}); do
 			# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-			# will fail beause '/' aren't escapted. also remove first slash
+			# will fail because '/' aren't escapted. also remove first slash
 			pakcat="${cpak:1}"
 			sed -i "/${pakcat//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
 			# like before, only important on this script (repomancheck)
