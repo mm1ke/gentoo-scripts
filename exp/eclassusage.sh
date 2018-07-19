@@ -88,28 +88,21 @@ main() {
 
 		for echeck in ${eclass_check_list[@]}; do
 			local eclass="$(echo ${echeck}|cut -d';' -f1)"
-			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2)"
+			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' '|')"
 
 			# check if ebuild uses ${eclass}
 			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
-				# check if any of the given functions are used in the ebuild
-				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
-					if $(grep -q ${func} ${full_path_ebuild}); then
-						${SCRIPT_MODE} && echo "${category}/${package}/${filename}: uses ${eclass}/${func} (at least)" >> ${RUNNING_CHECKS[0]}/full-unfilterd.txt
-						break 2
-					fi
-				done
+				if $(grep -qE "${eclass_funcs}" ${full_path_ebuild}); then
+					break
+				fi
 				obsol_ecl+=( ${eclass} )
 			# if ebuild doesn't use eclass check the ebuild if one of the functions
 			# are used over implicited inheriting
 			else
-				for func in $(echo ${eclass_funcs}|tr ':' ' '); do
-					if $(grep -q ${func} ${full_path_ebuild}); then
-						${SCRIPT_MODE} && echo "${category}/${package}/${filename}: uses ${eclass}/${func} but doesn't inherit ${eclass}" >> ${RUNNING_CHECKS[0]}/full-unfilterd.txt
-						missing_ecl+=( ${eclass} )
-						break 2
-					fi
-				done
+				if $(grep -qE "${eclass_funcs}" ${full_path_ebuild}); then
+					missing_ecl+=( ${eclass} )
+					break
+				fi
 			fi
 		done
 
