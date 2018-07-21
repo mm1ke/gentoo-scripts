@@ -52,16 +52,34 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_eclass_correctness"						#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_missing_eclasses"						#Index 0
+	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_unused_eclasses"							#Index 1
 	)
 }
+
 array_names
 #
 ### IMPORTANT SETTINGS STOP ###
 #
 
+array_eclasses(){
+	ECLASSES=( \
+		"ltprune;prune_libtool_files" \
+		"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse" \
+		"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
+		"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
+		"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
+		"epatch;epatch:epatch_user" \
+		"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon" \
+		"versionator;get_all_version_components:get_version_components:get_major_version:get_version_componetns_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
+		"user;egetent:enewuser:enewgroup:egethome:egetshell:esethome"
+	)
+}
+
 main() {
 	array_names
+	array_eclasses
+
 	local relative_path=${1}
 	local category="$(echo ${relative_path}|cut -d'/' -f2)"
 	local package="$(echo ${relative_path}|cut -d'/' -f3)"
@@ -72,21 +90,11 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if [ "$(get_eapi ${full_path_ebuild})" = "6" ]; then
-		local eclass_check_list=( \
-															"ltprune;prune_libtool_files" \
-															"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:optfeature:ebeep:in_iuse" \
-															"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
-															"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
-															"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
-															"epatch;epatch:epatch_user" \
-															"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon" \
-															"versionator;get_all_version_components:get_version_components:get_major_version:get_version_componetns_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
-		)
 
 		local obsol_ecl=( )
 		local missing_ecl=( )
 
-		for echeck in ${eclass_check_list[@]}; do
+		for echeck in ${ECLASSES[@]}; do
 			local eclass="$(echo ${echeck}|cut -d';' -f1)"
 			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' '|')"
 
@@ -104,14 +112,21 @@ main() {
 			fi
 		done
 
-		[ -n "${obsol_ecl}" ] && local o_eclass="$(echo ${obsol_ecl[@]}|tr '[:upper:]' '[:lower:]'|tr ' ' ':')"
-		[ -n "${missing_ecl}" ] && local m_eclass="$(echo ${missing_ecl[@]}|tr '[:lower:]' '[:upper:]'|tr ' ' ':')"
+		[ -n "${obsol_ecl}" ] && local o_eclass="$(echo ${obsol_ecl[@]}|tr ' ' ':')"
+		[ -n "${missing_ecl}" ] && local m_eclass="$(echo ${missing_ecl[@]}|tr ' ' ':')"
+
+		if ${SCRIPT_MODE}; then
+			if [ -n "${o_eclass}" ]; then
+				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+			fi
+			if [ -n "${m_eclass}" ]; then
+				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			fi
+		fi
 
 		if [ -n "${o_eclass}" ] || [ -n "${m_eclass}" ]; then
-			if ${SCRIPT_MODE}; then
-				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-			else
-				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${o_eclass}${DL}${maintainer}"
+			if ! ${SCRIPT_MODE}; then
+				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}MISSING:${m_eclass}${DL}UNUSED:${o_eclass}${DL}${maintainer}"
 			fi
 		fi
 
@@ -125,7 +140,7 @@ depth_set ${1}
 cd ${PORTTREE}
 # export important variables
 export WORKDIR SCRIPT_SHORT
-export -f main array_names
+export -f main array_names array_eclasses
 
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
@@ -141,7 +156,10 @@ find ./${level} \( \
 
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
+	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
