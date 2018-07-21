@@ -452,20 +452,6 @@ case ${dir} in
 		These are mostly blockers (like !app-admin/foo).
 		EOM
 		;;
-	ebuild_obsolete_git_2_usage)
-		scriptname="simplechecks.sh"
-		databasename="ebuildObsoleteGit2Eclass"			# databasetable
-		databasevalue="sValue"		# row of interrest
-		label="git-2 usage"			# label of graph
-		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		read -r -d '' chart_description <<- EOM
-		The git-2 eclass is superseeded by the git-r3 eclass, which is why git-2 shouldn't be used anymore.
-		This check looks for packages who still use the git-2 eclass.
-		EOM
-		;;
 	ebuild_deprecated_eclasses)
 		scriptname="deadeclasses.sh"
 		databasename="ebuildObsoleteEclass"			# databasetable
@@ -478,34 +464,6 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		This check lists multiple eclasses which are deprecated or obsolete and should be removed.
 		Currently looks for following eclasses: fdo-mime, games, git-2, ltprune, readme.gentoo and versionator
-		EOM
-		;;
-	ebuild_obsolete_games_usage)
-		scriptname="simplechecks.sh"
-		databasename="ebuildObsoleteGamesEclass"			# databasetable
-		databasevalue="sValue"		# row of interrest
-		label="games usage"			# label of graph
-		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		read -r -d '' chart_description <<- EOM
-		The games eclass is obsolete and shouldn't be used anymore.
-		This check lists all ebuilds which still uses the games eclass.
-		EOM
-		;;
-	ebuild_obsolete_ltprune_usage)
-		scriptname="simplechecks.sh"
-		databasename="ebuildObsoleteLtpruneEclass"			# databasetable
-		databasevalue="sValue"		# row of interrest
-		label="ltprune usage"			# label of graph
-		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		read -r -d '' chart_description <<- EOM
-		The ltprune eclass is obsolete and shouldn't be used anymore.
-		This check lists all ebuilds which still uses the ltprune eclass.
 		EOM
 		;;
 	ebuild_eclass_statistics)
@@ -535,6 +493,35 @@ case ${dir} in
 		read -r -d '' chart_description <<- EOM
 		This is a simple script which runs repoman full on every package and
 		generates lists of found problems.
+		EOM
+		;;
+	ebuild_missing_eclass)
+		scriptname="eclassusage.sh"
+		databasename="ebuildEclassMissing"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Eclasses missing"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="EAPI | CATEGORY/PACKAGE | EBUILD | MISSING ECLASSES | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
+		read -r -d '' chart_description <<- EOM
+		This check looks for ebuilds, who uses eclasses which are not inherit. Usually such eclasses get inherited
+		implicit by other eclasses.
+		Following eclasses are checked: ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop, versionator, user
+		EOM
+		;;
+	ebuild_unused_eclass)
+		scriptname="eclassusage.sh"
+		databasename="ebuildEclassUnuses"			# databasetable
+		databasevalue="sValue"		# row of interrest
+		label="Eclasses unused"			# label of graph
+		title="${label}"					# grapth title (not shown)
+		info_full="EAPI | CATEGORY/PACKAGE | EBUILD | UNUSED ECLASSES | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
+		read -r -d '' chart_description <<- EOM
+		This check looks for ebuilds who inherit a eclass but doesn't use a feature of it.
+		Following eclasses are checked: ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop, versionator, user
 		EOM
 		;;
 	*)
