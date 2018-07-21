@@ -95,21 +95,21 @@ rec_dt_eclass(){
 		if [ -n "${ec_in}" ]; then
 			for tec in ${dupcheck}; do
 				if $(echo ${ec_in[@]}|tr ' ' ':'|grep -q -P -o "${tec}(?=:|$)"); then
-					echo -e "!C${tabdeep}| CIRCULAR DEEP with ${tec}"
+					echo -e "!C${tabdeep}|- CIRCULAR DEEP with ${tec}"
 					return
 				fi
 			done
 			for e in $(echo ${ec_in[@]}); do
 				if [ -e "${PORTTREE}/eclass/${e}.eclass" ]; then
-					echo -e "${tabdeep}| ${e}"
+					echo -e "${tabdeep}|- ${e}"
 					rec_dt_eclass ${tabdeep} "${e}" "${dupcheck}"
 				else
-					echo -e "!N${tabdeep}| ${e}.eclass doesn't exist"
+					echo -e "!N${tabdeep}|- ${e}.eclass doesn't exist"
 				fi
 			done
 		fi
 	else
-		echo -e "!N${tabdeep}| ${ecl}.eclass doesn't exist"
+		echo -e "!N${tabdeep}|- ${ecl}.eclass doesn't exist"
 	fi
 }
 
