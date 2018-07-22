@@ -20,6 +20,7 @@ white_list=(
 	"sys-apps/portage;README.RESCUE;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
+	"dev-util/wxglade;wxglade-0.6.3-wxversion.patch;*"		#https://github.com/gentoo/gentoo/pull/9293
 	"app-emulation/playonlinux;playonlinux.1;playonlinux-4.2.12.ebuild"
 	"app-emulation/playonlinux;playonlinux-pkg.1;playonlinux-4.2.12.ebuild"
 	"net-misc/teamviewer;teamviewerd9.init;teamviewer-9.0.32150.ebuild"
