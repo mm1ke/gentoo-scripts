@@ -155,6 +155,31 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
+
+	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
+		for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
+			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
+			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
+		done
+	done
+
+	for file2 in $(cat ${RUNNING_CHECKS[1]}/full.txt); do
+		for ec2 in $(echo ${file2}|cut -d'|' -f4|tr ':' ' '); do
+			mkdir -p ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass
+			echo ${file2} >> ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass/full.txt
+		done
+	done
+
+	for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
+	done
+
+	for ecd2 in $(ls ${RUNNING_CHECKS[1]}/sort-by-filter/); do
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 2
+	done
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 
