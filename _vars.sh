@@ -495,7 +495,7 @@ case ${dir} in
 		generates lists of found problems.
 		EOM
 		;;
-	ebuild_missing_eclass)
+	ebuild_missing_eclasses)
 		scriptname="eclassusage.sh"
 		databasename="ebuildEclassMissing"			# databasetable
 		databasevalue="sValue"		# row of interrest
@@ -510,9 +510,9 @@ case ${dir} in
 		Following eclasses are checked: ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop, versionator, user
 		EOM
 		;;
-	ebuild_unused_eclass)
+	ebuild_unused_eclasses)
 		scriptname="eclassusage.sh"
-		databasename="ebuildEclassUnuses"			# databasetable
+		databasename="ebuildEclassUnused"			# databasetable
 		databasevalue="sValue"		# row of interrest
 		label="Eclasses unused"			# label of graph
 		title="${label}"					# grapth title (not shown)
