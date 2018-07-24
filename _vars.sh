@@ -231,9 +231,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds with leading/trailing whitespaces in variables"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="VARIABLE | CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="VARIABLE | CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="VARIABLE | CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="VARIABLE | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Checks for a set of variables if those contain a leading or trailing whitespace.
 		For example: SRC_URI=" www.foo.com/bar.tar.gz "

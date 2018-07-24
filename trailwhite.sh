@@ -72,9 +72,9 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${VARI}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		echo "${VARI}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "${VARI}${RUNNING_CHECKS[0]##*/}${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${VARI}${RUNNING_CHECKS[0]##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -101,13 +101,13 @@ for var in ${_varibales}; do
 	if ${SCRIPT_MODE}; then
 		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/
 		grep "^${VARI}" ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/full.txt
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/ 3
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/ 4
 		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${var}/ 2
 	fi
 done
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 
 	copy_checks checks
