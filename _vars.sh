@@ -133,9 +133,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Description over 80"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This simple check shows results of ebuilds which has a description longer than 80 characters.
 		EOM
@@ -146,9 +146,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="dohtml in EAPI6"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check looks at EAPI6 ebuilds and if those ebuild are using 'dohtml', which is deprecated.
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
@@ -160,9 +160,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Epatch in EAPI6"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		epatch is deprecated and should be replaced by eapply.
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
@@ -174,9 +174,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="fdo-mime usage"			# label of graph
 		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		The fdo-mime eclass is obsolete since 2017-06-19.
 		More details and how to fix ebuilds with fdo-mime can be found on <a href="https://wiki.gentoo.org/wiki/Notes_on_ebuilds_with_GUI">Link</a>
@@ -188,9 +188,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="git:// usage"			# label of graph
 		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Checks if ebuilds using git:// for git repos, which is insecure. Should be replaced with https://
 		Also see: <a href="https://gist.github.com/grawity/4392747">Link</a>
@@ -202,9 +202,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds using mirror://"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check list results of ebuilds which use mirror://gentoo in SRC_URI, which is deprecated
 		See also: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
@@ -216,9 +216,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="ebuilds with variables in HOMEPAGE"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		This check looks for variables in the HOMEPAGE variable. While not technically a bug, this shouldn't be used.
 		See Tracker bug: <a href="https://bugs.gentoo.org/408917">Link</a>
@@ -245,9 +245,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Trailing Whitespaces"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Simple checks which lists ebuilds who contain trailing whitespaces
 		EOM
@@ -258,9 +258,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Mixed Indentation"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Checks metadata files (metadata.xml) if it used tabs and whitespaces
 		EOM
@@ -271,9 +271,9 @@ case ${dir} in
 		databasevalue="sValue"		# row of interrest
 		label="Proxy Maintainers"			# label of graph
 		title="${label}"					# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_main="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
-		info_pack="CATEGORY/PACKAGE/EBUILD | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
+		info_main="${info_full}"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Checks the metadata.xml of proxy maintained packages if it includes actually a
 		non gentoo email address (address of proxy maintainer).

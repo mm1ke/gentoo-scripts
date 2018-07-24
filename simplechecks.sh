@@ -79,9 +79,9 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
-		echo "${VARI}${category}/${package}/${filename}${DL}${maintainer}" >> ${NAME}/full.txt
+		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${NAME}/full.txt
 	else
-		echo "${VARI}${NAME##*/}${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${NAME##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
 	fi
 }
 
@@ -109,7 +109,7 @@ pre_check_ebuild_description_over_80() {
 	local filename="$(echo ${full_package}|cut -d'/' -f4)"
 
 	if [ $(grep DESCRIPTION ${PORTTREE}/metadata/md5-cache/${category}/${filename%.*} | wc -m) -gt 95 ]; then
-		main ${1}
+		main ${full_package}
 	fi
 }
 
@@ -121,13 +121,14 @@ pre_metadata_missing_proxy_maintainer() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local ok=false
 
+	local i
 	for i in $(echo ${maintainer}|tr ':' '\n'); do
-		if ! $(echo $i | grep "@gentoo.org" >/dev/null ); then
+		if ! $(echo ${i} | grep "@gentoo.org" >/dev/null ); then
 			ok=true
 		fi
 	done
 
-	${ok} || main ${1}
+	${ok} || main ${full_package}
 }
 
 depth_set ${1}
@@ -261,31 +262,31 @@ find ./${level} \( \
 	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[5]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[6]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[6]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[6]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[7]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[7]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[7]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[8]} 2
+	gen_sort_main_v2 ${RUNNING_CHECKS[8]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[8]} 1
 
 	copy_checks checks
