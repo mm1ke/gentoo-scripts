@@ -444,7 +444,7 @@ case ${dir} in
 		databasevalue="sValue"			# row of interrest
 		label="Obsolete Dependencies"				# label of graph
 		title="${label}"						# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE/EBUILD | OBSOLETE DEPENDENSY(S) | MAINTAINER(S)"
+		info_full="CATEGORY/PACKAGE | EBUILD | OBSOLETE DEPENDENSY(S) | MAINTAINER(S)"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM

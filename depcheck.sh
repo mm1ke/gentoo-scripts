@@ -93,9 +93,9 @@ main() {
 
 	if ${found}; then
 		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}/${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			echo "${category}/${package}${DL}${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 		else
-			echo "${category}/${package}/${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
+			echo "${category}/${package}${DL}${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
 		fi
 	fi
 }
@@ -123,13 +123,13 @@ find ./${level} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \( \
 if ${SCRIPT_MODE}; then
 
 	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-		for fp in $(echo ${file}|cut -d'|' -f2|tr ':' ' '); do
+		for fp in $(echo ${file}|cut -d'|' -f3|tr ':' ' '); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')
 			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')/full.txt
 		done
 	done
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
 	copy_checks checks
