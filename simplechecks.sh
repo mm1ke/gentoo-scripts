@@ -225,18 +225,6 @@ find ./${level} \( \
 	-path ./eclass/\* -o \
 	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_metadata_missing_proxy_maintainer {}
 
-# ebuild_obsolete_fdo_mime_usage
-export NAME="${RUNNING_CHECKS[7]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "inherit.* fdo-mime" {} \; | parallel main {}
-
 # ebuild_variables_in_homepages
 export NAME="${RUNNING_CHECKS[7]}"
 find ./${level} \( \

@@ -168,20 +168,6 @@ case ${dir} in
 		Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
 		EOM
 		;;
-	ebuild_obsolete_fdo_mime_usage)
-		scriptname="simplechecks.sh"
-		databasename="ssFdoMimeCheck"			# databasetable
-		databasevalue="sValue"		# row of interrest
-		label="fdo-mime usage"			# label of graph
-		title="${label}"		# grapth title (not shown)
-		info_full="CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
-		info_main="${info_full}"
-		info_pack="${info_full}"
-		read -r -d '' chart_description <<- EOM
-		The fdo-mime eclass is obsolete since 2017-06-19.
-		More details and how to fix ebuilds with fdo-mime can be found on <a href="https://wiki.gentoo.org/wiki/Notes_on_ebuilds_with_GUI">Link</a>
-		EOM
-		;;
 	ebuild_insecure_git_uri_usage)
 		scriptname="simplechecks.sh"
 		databasename="ebuildEgitRepoUri"			# databasetable
