@@ -70,12 +70,11 @@ main() {
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local full_md5path="${PORTTREE}/metadata/md5-cache/${category}/${packagename}"
 
-	local dead_eclasses="git-2 games fdo-mime ltprune base versionator readme.gentoo"
+	local dead_eclasses=( git-2 games fdo-mime ltprune base versionator readme.gentoo )
 	local found_usage=( )
 
-	for eclass in ${dead_eclasses}; do
+	for eclass in ${dead_eclasses[@]}; do
 		if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
 			found_usage+=( ${eclass} )
 		fi
