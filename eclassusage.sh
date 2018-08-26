@@ -71,7 +71,7 @@ array_eclasses(){
 		"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
 		"epatch;epatch:epatch_user" \
 		"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon" \
-		"versionator;get_all_version_components:get_version_components:get_major_version:get_version_componet_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
+		"versionator;get_all_version_components:get_version_components:get_major_version:get_version_component_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
 		"user;egetent:enewuser:enewgroup:egethome:egetshell:esethome"
 	)
 }
