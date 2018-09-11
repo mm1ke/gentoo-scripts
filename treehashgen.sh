@@ -54,20 +54,6 @@ WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
 ### IMPORTANT SETTINGS STOP ###
 #
 
-arg="${1}"
-if [ -z "${arg}" ]; then
-	exit 1
-else
-	if [ "${arg}" = "hstart" ]; then
-		hash_start
-	elif [ "${arg}" = "hstop" ]; then
-		hash_stop
-	else
-		echo "Please use start or stop"
-		exit 1
-	fi
-fi
-
 hash_start(){
 	# check if hashtree directory exists
 	if [ -e ${HASHTREE} ]; then
@@ -130,3 +116,17 @@ hash_stop(){
 	# only after all scripts were proceded.
 	cp ${HASHTREE}/full-${date_today}.log ${HASHTREE}/full-last.log
 }
+
+arg="${1}"
+if [ -z "${arg}" ]; then
+	exit 1
+else
+	if [ "${arg}" = "hstart" ]; then
+		hash_start
+	elif [ "${arg}" = "hstop" ]; then
+		hash_stop
+	else
+		echo "Please use start or stop"
+		exit 1
+	fi
+fi
