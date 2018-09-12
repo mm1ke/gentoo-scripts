@@ -54,10 +54,11 @@ WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
 ### IMPORTANT SETTINGS STOP ###
 #
 
+date_today="$(date -I)"
+
 hash_start(){
 	# check if hashtree directory exists
 	if [ -e ${HASHTREE} ]; then
-		date_today="$(date -I)"
 		# only run if there doesn't exists a result for today
 		if ! [ -e ${HASHTREE}/full-${date_today}.log ]; then
 			mkdir -p ${WORKDIR}
