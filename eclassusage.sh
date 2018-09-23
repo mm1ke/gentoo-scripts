@@ -75,7 +75,11 @@ array_eclasses(){
 		"user;egetent:enewuser:enewgroup:egethome:egetshell:esethome" \
 		"flag-o-matic;filter-flags:filter-lfs-flags:filter-ldflags:append-cppflags:append-cflags:append-cxxflags:append-fflags:append-lfs-flags:append-ldflags:append-flags:replace-flags:replace-cpu-flags:is-flagq:is-flag:is-ldflagq:is-ldflag:filter-mfpmath:strip-flags:test-flag-CC:test-flag-CXX:test-flag-F77:test-flag-FC:test-flags-CC:test-flags-CXX:test-flags-F77:test-flags-FC:test-flags:test_version_info:strip-unsupported-flags:get-flag:replace-sparc64-flags:append-libs:raw-ldflags:no-as-needed" \
 		"xdg-utils;xdg_environment_reset:xdg_desktop_database_update:xdg_mimeinfo_database_update" \
-		"libtool;elibtoolize"
+		"libtool;elibtoolize" \
+		"udev;udev_get_udevdir:get_udev_dir:udev_dorules:udev_newrules:udev_reload" \
+		"eapi7-ver;ver_cut:ver_rs:ver_test" \
+		"pam;dopamd:newpamd:dopamsecurity:newpamsecurity:getpam_mod_dir:pammod_hide_symbols:dopammod:newpammod:pamd_mimic_system:pamd_mimic:cleanpamd:pam_epam_expand" \
+		"ssl-cert;gen_cnf:get_base:gen_key:gen_csr:gen_crt:gen_pem:install_cert"
 	)
 }
 
