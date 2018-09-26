@@ -96,7 +96,9 @@ main() {
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if [ "$(get_eapi ${full_path_ebuild})" = "6" ]; then
+	local ebuild_eapi="$(get_eapi ${full_path_ebuild})"
+
+	if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
 		local obsol_ecl=( )
 		local missing_ecl=( )
@@ -104,6 +106,11 @@ main() {
 		for echeck in ${ECLASSES[@]}; do
 			local eclass="$(echo ${echeck}|cut -d';' -f1)"
 			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' '|')"
+
+			# don't check for eapi7-ver at EAPI=7 ebuilds
+			if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" = "7" ]; then
+				continue
+			fi
 
 			# check if ebuild uses ${eclass}
 			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
@@ -124,16 +131,16 @@ main() {
 
 		if ${SCRIPT_MODE}; then
 			if [ -n "${o_eclass}" ]; then
-				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
 			fi
 			if [ -n "${m_eclass}" ]; then
-				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 			fi
 		fi
 
 		if [ -n "${o_eclass}" ] || [ -n "${m_eclass}" ]; then
 			if ! ${SCRIPT_MODE}; then
-				echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}MISSING:${m_eclass}${DL}UNUSED:${o_eclass}${DL}${maintainer}"
+				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}MISSING:${m_eclass}${DL}UNUSED:${o_eclass}${DL}${maintainer}"
 			fi
 		fi
 
