@@ -70,19 +70,24 @@ main() {
 	local packagename="${filename%.*}"
 	local fileversion="${packagename/${package}-/}"
 	local maintainer="$(get_main_min "${category}/${package}")"
+	local openbugs="$(get_bugs ${category}/${package})"
+	if ! [ -z "${openbugs}" ]; then
+		openbugs="${DL}${openbugs}"
+	fi
+	local eapi="$(get_eapi ${full_package})"
 
 	if $(echo ${fileversion}|grep -q 9999); then
 		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+			echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
-			echo "live_stats${DL}$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}"
+			echo "live_stats${DL}${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
 		fi
 	fi
 
 	if ${SCRIPT_MODE}; then
-		echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+		echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
-		echo "$(get_eapi ${full_package})${DL}${category}/${package}/${filename}${DL}${maintainer}"
+		echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
 	fi
 }
 
@@ -108,20 +113,20 @@ if ${SCRIPT_MODE}; then
 		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}
 		grep ^${eapi}${DL} ${RUNNING_CHECKS[0]}/full.txt > ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt
 
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 4
 		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt 3
 	done
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 
 	for eapi in $(cut -c-1 ${RUNNING_CHECKS[1]}/full.txt|sort -u); do
 		mkdir -p ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}
 		grep ^${eapi}${DL} ${RUNNING_CHECKS[1]}/full.txt > ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt
 
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 4
 		gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt 3
 	done
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 3
+	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 
 	copy_checks stats
