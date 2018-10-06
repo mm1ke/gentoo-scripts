@@ -48,6 +48,7 @@ fi
 #
 SCRIPT_NAME="eclassusage"
 SCRIPT_SHORT="ECU"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
@@ -76,7 +77,7 @@ array_eclasses(){
 		"flag-o-matic;filter-flags:filter-lfs-flags:filter-ldflags:append-cppflags:append-cflags:append-cxxflags:append-fflags:append-lfs-flags:append-ldflags:append-flags:replace-flags:replace-cpu-flags:is-flagq:is-flag:is-ldflagq:is-ldflag:filter-mfpmath:strip-flags:test-flag-CC:test-flag-CXX:test-flag-F77:test-flag-FC:test-flags-CC:test-flags-CXX:test-flags-F77:test-flags-FC:test-flags:test_version_info:strip-unsupported-flags:get-flag:replace-sparc64-flags:append-libs:raw-ldflags:no-as-needed" \
 		"xdg-utils;xdg_environment_reset:xdg_desktop_database_update:xdg_mimeinfo_database_update" \
 		"libtool;elibtoolize" \
-		"udev;udev_get_udevdir:get_udev_dir:udev_dorules:udev_newrules:udev_reload" \
+		"udev;udev_get_udevdir:get_udevdir:udev_dorules:udev_newrules:udev_reload" \
 		"eapi7-ver;ver_cut:ver_rs:ver_test" \
 		"pam;dopamd:newpamd:dopamsecurity:newpamsecurity:getpam_mod_dir:pammod_hide_symbols:dopammod:newpammod:pamd_mimic_system:pamd_mimic:cleanpamd:pam_epam_expand" \
 		"ssl-cert;gen_cnf:get_base:gen_key:gen_csr:gen_crt:gen_pem:install_cert"
@@ -158,18 +159,53 @@ export -f main array_names array_eclasses
 
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
+find_func(){
+	find ./${level} \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
+}
+
+if [ "${1}" = "diff" ]; then
+	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	check_status=true
+	echo ${TODAYCHECKS} >> /tmp/diff-test.log
+
+	for oldfull in ${RUNNING_CHECKS[@]}; do
+		# SCRIPT_TYPE isn't used in the ebuilds usually,
+		# thus it has to be set with the other important variables
+		OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+		# only run if there is already a full.txt and a diff result from today.
+		if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
+			# copy old result file to workdir
+			cp ${OLDLOG} ${oldfull}/
+			for cpak in $(cat ${TODAYCHECKS}); do
+				# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+				# will fail because '/' aren't escapted. also remove first slash
+				pakcat="${cpak:1}"
+				sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+			done
+		else
+			check_status=false
+		fi
+	done
+
+	# only run if we could copy all old full results
+	if ${check_status}; then
+		cat ${TODAYCHECKS} | parallel main {}
+	else
+		find_func
+	fi
+else
+	find_func
+fi
 
 if ${SCRIPT_MODE}; then
-
 	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 		for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
@@ -200,6 +236,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi
