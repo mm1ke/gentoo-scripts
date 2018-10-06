@@ -214,6 +214,7 @@ if [ "${1}" = "diff" ]; then
 	else
 		# diff mode override (file exist, thus check_status=false
 		check_status=false
+		rm /tmp/${SCRIPT_NAME}
 	fi
 
 	# only run if we could copy all old full results
