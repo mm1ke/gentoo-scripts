@@ -71,7 +71,7 @@ main() {
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	local dead_eclasses=( git-2 games fdo-mime ltprune base versionator readme.gentoo )
+	local dead_eclasses=( git-2 games fdo-mime ltprune base versionator readme.gentoo autotools-multilib autotools-utils )
 	local found_usage=( )
 
 	for eclass in ${dead_eclasses[@]}; do
