@@ -173,27 +173,48 @@ find_func(){
 
 if [ "${1}" = "diff" ]; then
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	# default value true, thus we assume we can run in diff mode
 	check_status=true
-	echo ${TODAYCHECKS} >> /tmp/diff-test.log
 
-	for oldfull in ${RUNNING_CHECKS[@]}; do
-		# SCRIPT_TYPE isn't used in the ebuilds usually,
-		# thus it has to be set with the other important variables
-		OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-		# only run if there is already a full.txt and a diff result from today.
-		if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
-			# copy old result file to workdir
-			cp ${OLDLOG} ${oldfull}/
-			for cpak in $(cat ${TODAYCHECKS}); do
-				# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-				# will fail because '/' aren't escapted. also remove first slash
-				pakcat="${cpak:1}"
-				sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+		for oldfull in ${RUNNING_CHECKS[@]}; do
+			# SCRIPT_TYPE isn't used in the ebuilds usually,
+			# thus it has to be set with the other important variables
+			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+			# only run if there is already a full.txt and a diff result from today.
+			if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
+				#
+				# from here we have to run in diff mode
+				#
+				# copy old result file to workdir
+				cp ${OLDLOG} ${oldfull}/
+				for cpak in $(cat ${TODAYCHECKS}); do
+					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+					# will fail because '/' aren't escapted. also remove first slash
+					pakcat="${cpak:1}"
+					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+				done
+			else
+				# oldfull or todaychecks doesn't exist, run normal
+				# make sure full.txt doesn't exist
+				check_status=false
+			fi
+		done
+		# in case only one file was missing make sure every full.txt is being
+		# removed
+		if ! ${check_status}; then
+			for fulltxt in ${RUNNING_CHECKS[@]}; do
+				rm ${fulltxt}/full.txt
 			done
-		else
-			check_status=false
 		fi
-	done
+	else
+		# diff mode override (file exist, thus check_status=false
+		check_status=false
+	fi
 
 	# only run if we could copy all old full results
 	if ${check_status}; then
