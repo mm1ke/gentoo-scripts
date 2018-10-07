@@ -96,8 +96,9 @@ main() {
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
-
 	local ebuild_eapi="$(get_eapi ${full_path_ebuild})"
+
+	#echo "in main func checking: ${category}/${package}" >> /tmp/diff-test-eu.log
 
 	if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
@@ -133,9 +134,11 @@ main() {
 		if ${SCRIPT_MODE}; then
 			if [ -n "${o_eclass}" ]; then
 				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
+				#echo "adding ${PORTTREE}-${category}/${package} to ${RUNNING_CHECKS[1]}/full.txt" >> /tmp/diff-test-eu.log
 			fi
 			if [ -n "${m_eclass}" ]; then
 				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+				#echo "adding ${PORTTREE}-${category}/${package} to ${RUNNING_CHECKS[0]}/full.txt" >> /tmp/diff-test-eu.log
 			fi
 		fi
 
@@ -180,17 +183,16 @@ if [ "${1}" = "diff" ]; then
 	# this way it's possible to override the diff mode
 	# this is usefull when the script got updates which should run
 	# on the whole tree
-	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ] && [ -e ${TODAYCHECKS} ]; then
 		for oldfull in ${RUNNING_CHECKS[@]}; do
 			# SCRIPT_TYPE isn't used in the ebuilds usually,
 			# thus it has to be set with the other important variables
+			#
+			# first set the full.txt path from the old log
 			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-			# only run if there is already a full.txt and a diff result from today.
-			if [ -e ${OLDLOG} ] && [ -e ${TODAYCHECKS} ]; then
-				#
-				# from here we have to run in diff mode
-				#
-				# copy old result file to workdir
+			# check if the oldlog exist (don't have to be)
+			if [ -e ${OLDLOG} ]; then
+				# copy old result file to workdir and filter the result
 				cp ${OLDLOG} ${oldfull}/
 				for cpak in $(cat ${TODAYCHECKS}); do
 					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
@@ -198,28 +200,18 @@ if [ "${1}" = "diff" ]; then
 					pakcat="${cpak:1}"
 					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
 				done
-			else
-				# oldfull or todaychecks doesn't exist, run normal
-				# make sure full.txt doesn't exist
-				check_status=false
 			fi
 		done
-		# in case only one file was missing make sure every full.txt is being
-		# removed
-		if ! ${check_status}; then
-			for fulltxt in ${RUNNING_CHECKS[@]}; do
-				rm ${fulltxt}/full.txt
-			done
-		fi
 	else
-		# diff mode override (file exist, thus check_status=false
+		# diff mode override (file exist, thus check_status=false)
 		check_status=false
 		rm /tmp/${SCRIPT_NAME}
 	fi
 
 	# only run if we could copy all old full results
 	if ${check_status}; then
-		cat ${TODAYCHECKS} | parallel main {}
+		find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+			-exec egrep -l 'inherit' {} \; | parallel main {}
 	else
 		find_func
 	fi
