@@ -66,10 +66,7 @@ main() {
 	local relative_path=${1}
 	local category="$(echo ${relative_path}|cut -d'/' -f2)"
 	local package="$(echo ${relative_path}|cut -d'/' -f3)"
-	local filename="$(echo ${relative_path}|cut -d'/' -f4)"
-	local packagename="${filename%.*}"
 	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	cd ${full_path}
