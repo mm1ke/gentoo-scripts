@@ -58,12 +58,24 @@ date_today="$(date -I)"
 
 hash_start(){
 	# check if hashtree directory exists
-	if [ -e ${HASHTREE} ]; then
+	if [ -d ${HASHTREE} ]; then
 		# only run if there doesn't exists a result for today
 		if ! [ -e ${HASHTREE}/full-${date_today}.log ]; then
 			mkdir -p ${WORKDIR}
 
 			# generate hashes for every package
+			# list every category
+			local searchp="${PORTTREE}/*-*"
+			[ -d "${PORTTREE}/virtual" ] && searchp+=" ${PORTTREE}/virtual"
+			for cate in $(find ${searchp} -mindepth 0 -maxdepth 0 -type d); do
+				for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
+					#mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
+					# list all files in each directory and create hash
+					#find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
+					find ${paka} -type f -exec xxh64sum {} \; >> /tmp/package-xhash-ng.log
+				done
+			done
+
 			for cate in $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d \
 				-not -path '*/\.*' \
 				-not -path '*/profiles' \
@@ -73,8 +85,10 @@ hash_start(){
 				-not -path '*/licenses' \
 				-not -path '*/packages' \
 				-not -path '*/distfiles'); do
+				# in every category, list every package
 				for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
 					mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
+					# list all files in each directory and create hash
 					find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
 				done
 			done
@@ -90,17 +104,16 @@ hash_start(){
 			# if this file doesn't exist nothing happen.
 			if [ -e ${HASHTREE}/full-last.log ]; then
 				touch ${HASHTREE}/results/results-${date_today}.log
+				# list every category, save hashes of today and yesterday, compare and
+				# if it doesn't match, check every package in that category
 				for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
 					cat_hash_last="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-last.log | cut -d ' ' -f1)"
 					cat_hash_today="$(grep ${cat}/category-xhash.xha ${HASHTREE}/full-${date_today}.log| cut -d' ' -f1)"
 					if ! [ "${cat_hash_last}" = "${cat_hash_today}" ]; then
 						for pak in $(find ${cat} -mindepth 1 -maxdepth 1 -type d); do
-
 							pak_hash_last="$(grep ${pak}/package-xhash.xha ${HASHTREE}/full-last.log | cut -d ' ' -f1)"
 							pak_hash_today="$(grep ${pak}/package-xhash.xha ${HASHTREE}/full-${date_today}.log| cut -d' ' -f1)"
-
 							if ! [ "${pak_hash_last}" = "${pak_hash_today}" ]; then
-								#echo "${pak/${WORKDIR}/} changed since yesterday"
 								echo "${pak/${WORKDIR}}" >> ${HASHTREE}/results/results-${date_today}.log
 							fi
 						done
