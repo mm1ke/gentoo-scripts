@@ -74,7 +74,7 @@ hash_start(){
 					#mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
 					# list all files in each directory and create hash
 					#find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
-					find ${paka} -type f -exec xxh64sum {} \; >> /tmp/package-xhash-ng.log
+					echo ${paka} >> /tmp/package-ng.log
 				done
 			done
 
