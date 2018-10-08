@@ -220,19 +220,19 @@ depth_set() {
 		usage
 		exit 1
 	else
+		# test if user provided input exist
 		if [ -d "${PORTTREE}/${arg}" ]; then
 			level="${arg}"
 			MAXD=0
 			MIND=0
+			# case if user provides only category
+			# if there is a '/', everything after need to be empty
+			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
 			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
 				MAXD=1
 				MIND=1
 			fi
-		elif [ "${arg}" = "full" ]; then
-			level=""
-			MAXD=2
-			MIND=2
-		elif [ "${arg}" = "diff" ]; then
+		elif [ "${arg}" = "full" ] || [ "${arg}" = "diff" ]; then
 			level=""
 			MAXD=2
 			MIND=2
