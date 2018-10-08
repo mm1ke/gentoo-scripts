@@ -66,8 +66,10 @@ hash_start(){
 			# generate hashes for every package
 			# list every category
 			local searchp="${PORTTREE}/*-*"
-			[ -d "${PORTTREE}/virtual" ] && searchp+=" ${PORTTREE}/virtual"
-			for cate in $(find ${searchp} -mindepth 0 -maxdepth 0 -type d); do
+			local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type -regextype sed -regex "./*[a-zA-Z0-9].*-[a-zA-Z0-9].*") )
+			[ -d "${PORTTREE}/virtual" ] && searchp+=( ${PORTTREE}/virtual)
+
+			for cate in ${searchp[@]}; do
 				for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
 					#mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
 					# list all files in each directory and create hash
