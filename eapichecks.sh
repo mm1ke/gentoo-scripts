@@ -49,6 +49,7 @@ fi
 #
 SCRIPT_NAME="eapichecks"
 SCRIPT_SHORT="EAC"
+SCRIPT_TYPE="stats"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
@@ -146,15 +147,61 @@ export WORKDIR SCRIPT_SHORT
 export -f main output array_names pre_check
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level}  \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check {}
+find_func(){
+	find ./${level}  \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check {}
+}
+
+if [ "${1}" = "diff" ]; then
+	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	# default value true, thus we assume we can run in diff mode
+	check_status=true
+
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ] && [ -e ${TODAYCHECKS} ]; then
+		for oldfull in ${RUNNING_CHECKS[@]}; do
+			# SCRIPT_TYPE isn't used in the ebuilds usually,
+			# thus it has to be set with the other important variables
+			#
+			# first set the full.txt path from the old log
+			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+			# check if the oldlog exist (don't have to be)
+			if [ -e ${OLDLOG} ]; then
+				# copy old result file to workdir and filter the result
+				cp ${OLDLOG} ${oldfull}/
+				for cpak in $(cat ${TODAYCHECKS}); do
+					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+					# will fail because '/' aren't escapted. also remove first slash
+					pakcat="${cpak:1}"
+					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+				done
+			fi
+		done
+	else
+		# disable diff checking
+		check_status=false
+	fi
+
+	# only run if we could copy all old full results
+	if ${check_status}; then
+		find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+			-exec egrep -l 'inherit' {} \; | parallel pre_check {}
+	else
+		find_func
+	fi
+else
+	find_func
+fi
 
 if ${SCRIPT_MODE}; then
 
@@ -171,6 +218,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 5 || echo 3)
 
-	copy_checks stats
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi
