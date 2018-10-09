@@ -159,65 +159,98 @@ find_func(){
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check {}
 }
 
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		sort_result ${RUNNING_CHECKS[2]} "1,1 -k3,3"
+		sort_result ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
+		sort_result ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
+
+		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
+
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 5 || echo 3)
+
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 5 || echo 3)
+
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
 if [ "${1}" = "diff" ]; then
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
-	# default value true, thus we assume we can run in diff mode
-	check_status=true
 
-	# if /tmp/${SCRIPT_NAME} exist run in normal mode
-	# this way it's possible to override the diff mode
-	# this is usefull when the script got updates which should run
-	# on the whole tree
-	if ! [ -e "/tmp/${SCRIPT_NAME}" ] && [ -e ${TODAYCHECKS} ]; then
-		for oldfull in ${RUNNING_CHECKS[@]}; do
-			# SCRIPT_TYPE isn't used in the ebuilds usually,
-			# thus it has to be set with the other important variables
+	# only run diff mode if todaychecks exist and doesn't have zero bytes
+	if [ -s ${TODAYCHECKS} ]; then
+		# default value true, thus we assume we can run in diff mode
+		check_status=true
+
+		# if /tmp/${SCRIPT_NAME} exist run in normal mode
+		# this way it's possible to override the diff mode
+		# this is usefull when the script got updates which should run
+		# on the whole tree
+		if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+			for oldfull in ${RUNNING_CHECKS[@]}; do
+				# SCRIPT_TYPE isn't used in the ebuilds usually,
+				# thus it has to be set with the other important variables
+				#
+				# first set the full.txt path from the old log
+				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+				# check if the oldlog exist (don't have to be)
+				if [ -e ${OLDLOG} ]; then
+					# copy old result file to workdir and filter the result
+					cp ${OLDLOG} ${oldfull}/
+					for cpak in $(cat ${TODAYCHECKS}); do
+						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+						# will fail because '/' aren't escapted. also remove first slash
+						pakcat="${cpak:1}"
+						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+					done
+				fi
+			done
+			# special case for cleanup candidates and stable candidates.
+			# this increases the second and fourth row by 1. This row contain the git
+			# age of the ebuild which should got older by one day. Since we don't
+			# check full we have to increase it manually
 			#
-			# first set the full.txt path from the old log
-			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-			# check if the oldlog exist (don't have to be)
-			if [ -e ${OLDLOG} ]; then
-				# copy old result file to workdir and filter the result
-				cp ${OLDLOG} ${oldfull}/
-				for cpak in $(cat ${TODAYCHECKS}); do
-					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-					# will fail because '/' aren't escapted. also remove first slash
-					pakcat="${cpak:1}"
-					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-				done
-			fi
-		done
-	else
-		# disable diff checking
-		check_status=false
-	fi
+			# first put both special cases into a variable (array) and feed it into
+			# a for loop
+			special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
+			for sp in ${special_case[@]}; do
+				# before doing anything check if there even exists a full.txt
+				if [ -e "${sp}/full.txt" ]; then
+					# count the occurences of '|' as it's possible to not have any git age
+					# information in the full file at all. If there is that information
+					# there must be either 7 or 8 occurences of '|'
+					check_deli="$(head -n1 ${sp}/full.txt | grep -o '|' | wc -l)"
+					if [ ${check_deli} -eq 8 ] || [ ${check_deli} -eq 7 ]; then
+						# increase the git age by +1 for both rows
+						gawk -i inplace -F'|' '{$2=$2+1}1' OFS='|' ${sp}/full.txt
+						gawk -i inplace -F'|' '{$4=$4+1}1' OFS='|' ${sp}/full.txt
+					fi
+				fi
+			done
+		else
+			# disable diff checking
+			check_status=false
+		fi
 
-	# only run if we could copy all old full results
-	if ${check_status}; then
-		find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-			-exec egrep -l 'inherit' {} \; | parallel pre_check {}
-	else
-		find_func
+		# only run if we could copy all old full results
+		if ${check_status}; then
+			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+				-exec egrep -l 'inherit' {} \; | parallel pre_check {}
+			gen_results
+		else
+			find_func
+			gen_results
+		fi
 	fi
 else
 	find_func
+	gen_results
 fi
 
-if ${SCRIPT_MODE}; then
 
-	sort_result ${RUNNING_CHECKS[2]} "1,1 -k3,3"
-	sort_result ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
-	sort_result ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
-
-	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
-
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 5 || echo 3)
-
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 5 || echo 3)
-
-	copy_checks ${SCRIPT_TYPE}
-	rm -rf ${WORKDIR}
-fi
+# cleanup tmp files
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
