@@ -66,7 +66,7 @@ hash_start(){
 			# generate hashes for every package
 			# list every category
 			local searchp="${PORTTREE}/*-*"
-			local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type -regextype sed -regex "./*[a-zA-Z0-9].*-[a-zA-Z0-9].*") )
+			local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-zA-Z0-9].*-[a-zA-Z0-9].*") )
 			[ -d "${PORTTREE}/virtual" ] && searchp+=( ${PORTTREE}/virtual)
 
 			for cate in ${searchp[@]}; do
