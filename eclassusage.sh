@@ -174,81 +174,93 @@ find_func(){
 		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
 }
 
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
+			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
+				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
+				echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
+			done
+		done
+
+		for file2 in $(cat ${RUNNING_CHECKS[1]}/full.txt); do
+			for ec2 in $(echo ${file2}|cut -d'|' -f4|tr ':' ' '); do
+				mkdir -p ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass
+				echo ${file2} >> ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass/full.txt
+			done
+		done
+
+		for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
+			gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
+			gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
+		done
+
+		for ecd2 in $(ls ${RUNNING_CHECKS[1]}/sort-by-filter/); do
+			gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 5
+			gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 2
+		done
+
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
+
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
 if [ "${1}" = "diff" ]; then
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
-	# default value true, thus we assume we can run in diff mode
-	check_status=true
 
-	# if /tmp/${SCRIPT_NAME} exist run in normal mode
-	# this way it's possible to override the diff mode
-	# this is usefull when the script got updates which should run
-	# on the whole tree
-	if ! [ -e "/tmp/${SCRIPT_NAME}" ] && [ -e ${TODAYCHECKS} ]; then
-		for oldfull in ${RUNNING_CHECKS[@]}; do
-			# SCRIPT_TYPE isn't used in the ebuilds usually,
-			# thus it has to be set with the other important variables
-			#
-			# first set the full.txt path from the old log
-			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-			# check if the oldlog exist (don't have to be)
-			if [ -e ${OLDLOG} ]; then
-				# copy old result file to workdir and filter the result
-				cp ${OLDLOG} ${oldfull}/
-				for cpak in $(cat ${TODAYCHECKS}); do
-					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-					# will fail because '/' aren't escapted. also remove first slash
-					pakcat="${cpak:1}"
-					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-				done
-			fi
-		done
-	else
-		# disable diff checking
-		check_status=false
-	fi
+	# only run diff mode if todaychecks exist and doesn't have zero bytes
+	if [ -s ${TODAYCHECKS} ]; then
+		# default value true, thus we assume we can run in diff mode
+		check_status=true
 
-	# only run if we could copy all old full results
-	if ${check_status}; then
-		find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-			-exec egrep -l 'inherit' {} \; | parallel main {}
-	else
-		find_func
+		# if /tmp/${SCRIPT_NAME} exist run in normal mode
+		# this way it's possible to override the diff mode
+		# this is usefull when the script got updates which should run
+		# on the whole tree
+		if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+			for oldfull in ${RUNNING_CHECKS[@]}; do
+				# SCRIPT_TYPE isn't used in the ebuilds usually,
+				# thus it has to be set with the other important variables
+				#
+				# first set the full.txt path from the old log
+				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+				# check if the oldlog exist (don't have to be)
+				if [ -e ${OLDLOG} ]; then
+					# copy old result file to workdir and filter the result
+					cp ${OLDLOG} ${oldfull}/
+					for cpak in $(cat ${TODAYCHECKS}); do
+						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+						# will fail because '/' aren't escapted. also remove first slash
+						pakcat="${cpak:1}"
+						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+					done
+				fi
+			done
+		else
+			# disable diff checking
+			check_status=false
+		fi
+
+		# only run if we could copy all old full results
+		if ${check_status}; then
+			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+				-exec egrep -l 'inherit' {} \; | parallel main {}
+			gen_results
+		else
+			find_func
+			gen_results
+		fi
 	fi
 else
+	# normal mode, either full of with cat/pak set
 	find_func
+	gen_results
 fi
 
-if ${SCRIPT_MODE}; then
-	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-		for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
-			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
-			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
-		done
-	done
-
-	for file2 in $(cat ${RUNNING_CHECKS[1]}/full.txt); do
-		for ec2 in $(echo ${file2}|cut -d'|' -f4|tr ':' ' '); do
-			mkdir -p ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass
-			echo ${file2} >> ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass/full.txt
-		done
-	done
-
-	for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
-	done
-
-	for ecd2 in $(ls ${RUNNING_CHECKS[1]}/sort-by-filter/); do
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 2
-	done
-
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
-
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
-
-	copy_checks ${SCRIPT_TYPE}
-	rm -rf ${WORKDIR}
-fi
+# cleanup tmp files
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
