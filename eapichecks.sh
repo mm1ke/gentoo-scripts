@@ -178,6 +178,22 @@ gen_results(){
 	fi
 }
 
+increase_git_age(){
+	local fullfile=${1}
+	# before doing anything check if there even exists a full.txt
+	if [ -e "${fullfile}" ]; then
+		# count the occurences of '|' as it's possible to not have any git age
+		# information in the full file at all. If there is that information
+		# there must be either 7 or 8 occurences of '|'
+		local check_deli="$(head -n1 ${fullfile} | grep -o '|' | wc -l)"
+		if [ ${check_deli} -eq 8 ] || [ ${check_deli} -eq 7 ]; then
+			# increase the git age by +1 for both rows
+			gawk -i inplace -F'|' '{$2=$2+1}1' OFS='|' ${fullfile}
+			gawk -i inplace -F'|' '{$4=$4+1}1' OFS='|' ${fullfile}
+		fi
+	fi
+}
+
 if [ "${1}" = "diff" ]; then
 	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
 
@@ -218,18 +234,7 @@ if [ "${1}" = "diff" ]; then
 			# a for loop
 			special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
 			for sp in ${special_case[@]}; do
-				# before doing anything check if there even exists a full.txt
-				if [ -e "${sp}/full.txt" ]; then
-					# count the occurences of '|' as it's possible to not have any git age
-					# information in the full file at all. If there is that information
-					# there must be either 7 or 8 occurences of '|'
-					check_deli="$(head -n1 ${sp}/full.txt | grep -o '|' | wc -l)"
-					if [ ${check_deli} -eq 8 ] || [ ${check_deli} -eq 7 ]; then
-						# increase the git age by +1 for both rows
-						gawk -i inplace -F'|' '{$2=$2+1}1' OFS='|' ${sp}/full.txt
-						gawk -i inplace -F'|' '{$4=$4+1}1' OFS='|' ${sp}/full.txt
-					fi
-				fi
+				increase_git_age "${sp}/full.txt"
 			done
 		else
 			# disable diff checking
@@ -245,6 +250,12 @@ if [ "${1}" = "diff" ]; then
 			find_func
 			gen_results
 		fi
+	else
+		# second case where we have to add +1
+		special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
+		for sp in ${special_case[@]}; do
+			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${sp/${WORKDIR}/}/full.txt"
+		done
 	fi
 else
 	find_func
