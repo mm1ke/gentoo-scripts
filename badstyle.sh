@@ -63,9 +63,9 @@ array_names
 main() {
 	array_names
 	local absolute_path=${1}
-	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
-	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
-	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
+	local category="$(echo ${absolute_path}|cut -d'/' -f1)"
+	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
+	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	if ${SCRIPT_MODE}; then
@@ -85,26 +85,38 @@ export -f main array_names
 # create all folders
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-pattern=(
-	"dev-libs/openssl:dev-libs/libressl"
-	)
+all_cat=( $(find -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+[ -e ${PORTTREE}/virtual ] && all_cat+=( "virtual" )
 
-for pat in ${pattern[@]}; do
-	a="$(echo ${pat}|cut -d':' -f1)"
-	b="$(echo ${pat}|cut -d':' -f2)"
+if [ ${1} = "full" ] || [ ${1} = "diff" ]; then
+	searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*") )
+	[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+else
+	searchp=( ${1} )
+fi
 
-	find ./${level} \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l "${a}.*${b}|${b}.*${a}" {} \; | parallel main {}
+x=0
+y="${#all_cat[@]}"
+z=( )
+
+for a in ${all_cat[@]}; do
+	# we don't put _ALL_ possibilities into one single egrep string since this would
+	# made the argument too long (get_conf MAX_ARG). We split arguments into
+	# multiple find strings splitted by the categories.
+	for b in ${all_cat[@]:${x}:${y}}; do
+		z+=( "${a}/.*${b}/.*|${b}/.*${a}/.*" )
+	done
+	# search the pattern
+	find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "$(echo ${z[@]} | tr ' ' '|')" {} \; | parallel main {}
+	x=$(expr ${x} + 1)
+	z=( )
 done
 
+
 if ${SCRIPT_MODE}; then
+	# remove duplicate entries
+	awk -i inplace '!seen[$0]++' ${RUNNING_CHECKS[0]}/full.txt
+
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
