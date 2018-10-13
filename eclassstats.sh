@@ -144,18 +144,19 @@ gen_results(){
 }
 
 if [ "${1}" = "diff" ]; then
-	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
 
-	# only run diff mode if todaychecks exist and doesn't have zero bytes
-	if [ -s ${TODAYCHECKS} ]; then
-		# default value true, thus we assume we can run in diff mode
-		check_status=true
+		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+		# only run diff mode if todaychecks exist and doesn't have zero bytes
+		if [ -s ${TODAYCHECKS} ]; then
 
-		# if /tmp/${SCRIPT_NAME} exist run in normal mode
-		# this way it's possible to override the diff mode
-		# this is usefull when the script got updates which should run
-		# on the whole tree
-		if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+			# we need to copy all existing results first and remove packages which
+			# were changed (listed in TODAYCHECKS). If no results file exists, do
+			# nothing - the script would create a new one anyway
 			for oldfull in ${RUNNING_CHECKS[@]}; do
 				# SCRIPT_TYPE isn't used in the ebuilds usually,
 				# thus it has to be set with the other important variables
@@ -174,23 +175,17 @@ if [ "${1}" = "diff" ]; then
 					done
 				fi
 			done
-		else
-			# disable diff checking
-			check_status=false
-		fi
 
-		# only run if we could copy all old full results
-		if ${check_status}; then
+			# run the script only on the changed packages
 			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
 				-exec egrep -l 'inherit' {} \; | parallel main {}
 			gen_results
-		else
-			find_func
-			gen_results
 		fi
+	else
+		find_func
+		gen_results
 	fi
 else
-	# normal mode, either full of with cat/pak set
 	find_func
 	gen_results
 fi
