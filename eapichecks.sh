@@ -195,18 +195,19 @@ increase_git_age(){
 }
 
 if [ "${1}" = "diff" ]; then
-	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
 
-	# only run diff mode if todaychecks exist and doesn't have zero bytes
-	if [ -s ${TODAYCHECKS} ]; then
-		# default value true, thus we assume we can run in diff mode
-		check_status=true
+		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+		# only run diff mode if todaychecks exist and doesn't have zero bytes
+		if [ -s ${TODAYCHECKS} ]; then
 
-		# if /tmp/${SCRIPT_NAME} exist run in normal mode
-		# this way it's possible to override the diff mode
-		# this is usefull when the script got updates which should run
-		# on the whole tree
-		if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+			# we need to copy all existing results first and remove packages which
+			# were changed (listed in TODAYCHECKS). If no results file exists, do
+			# nothing - the script would create a new one anyway
 			for oldfull in ${RUNNING_CHECKS[@]}; do
 				# SCRIPT_TYPE isn't used in the ebuilds usually,
 				# thus it has to be set with the other important variables
@@ -225,6 +226,7 @@ if [ "${1}" = "diff" ]; then
 					done
 				fi
 			done
+
 			# special case for cleanup candidates and stable candidates.
 			# this increases the second and fourth row by 1. This row contain the git
 			# age of the ebuild which should got older by one day. Since we don't
@@ -236,32 +238,28 @@ if [ "${1}" = "diff" ]; then
 			for sp in ${special_case[@]}; do
 				increase_git_age "${sp}/full.txt"
 			done
-		else
-			# disable diff checking
-			check_status=false
-		fi
 
-		# only run if we could copy all old full results
-		if ${check_status}; then
+			# run the script only on the changed packages
 			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
 				-exec egrep -l 'inherit' {} \; | parallel pre_check {}
 			gen_results
+
 		else
-			find_func
-			gen_results
+			# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
+			# this case, increase the git age:
+			special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
+			for sp in ${special_case[@]}; do
+				increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${sp/${WORKDIR}/}/full.txt"
+			done
 		fi
 	else
-		# second case where we have to add +1
-		special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
-		for sp in ${special_case[@]}; do
-			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${sp/${WORKDIR}/}/full.txt"
-		done
+		find_func
+		gen_results
 	fi
 else
 	find_func
 	gen_results
 fi
-
 
 # cleanup tmp files
 ${SCRIPT_MODE} && rm -rf ${WORKDIR}
