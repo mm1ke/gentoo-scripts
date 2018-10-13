@@ -66,34 +66,35 @@ hash_start(){
 			# generate hashes for every package
 			# list every category
 			local searchp="${PORTTREE}/*-*"
-			local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-zA-Z0-9].*-[a-zA-Z0-9].*") )
-			[ -d "${PORTTREE}/virtual" ] && searchp+=( ${PORTTREE}/virtual)
+			local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*") )
+			[ -d "${PORTTREE}/virtual" ] && searchp+=( "${PORTTREE%/}/virtual" )
 
 			for cate in ${searchp[@]}; do
-				for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
-					#mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
-					# list all files in each directory and create hash
-					#find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
-					echo ${paka} >> /tmp/package-ng.log
-				done
-			done
-
-			for cate in $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d \
-				-not -path '*/\.*' \
-				-not -path '*/profiles' \
-				-not -path '*/metadata' \
-				-not -path '*/eclass' \
-				-not -path '*/scripts' \
-				-not -path '*/licenses' \
-				-not -path '*/packages' \
-				-not -path '*/distfiles'); do
-				# in every category, list every package
 				for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
 					mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
 					# list all files in each directory and create hash
 					find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
+					#echo ${paka} >> /tmp/package-ng-new.log
 				done
 			done
+
+			#for cate in $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d \
+			#	-not -path '*/\.*' \
+			#	-not -path '*/profiles' \
+			#	-not -path '*/metadata' \
+			#	-not -path '*/eclass' \
+			#	-not -path '*/scripts' \
+			#	-not -path '*/licenses' \
+			#	-not -path '*/packages' \
+			#	-not -path '*/distfiles'); do
+			#	# in every category, list every package
+			#	for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
+			#		mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
+			#		# list all files in each directory and create hash
+			#		find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
+			#		echo ${paka} >> /tmp/package-ng-old.log
+			#	done
+			#done
 			# generate hashes for every category based on the package hashes
 			for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
 				find ${cat} -mindepth 2 -type f -name *.xha -exec xxh64sum {} \; \
