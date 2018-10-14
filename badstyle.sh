@@ -95,7 +95,7 @@ main() {
 		done
 
 
-		if $(egrep -q "$(echo ${z[@]}|tr ' ' '|')" ${absolute_path} ); then
+		if $(grep "^[^#;]" ${absolute_path} | egrep -q "$(echo ${z[@]}|tr ' ' '|')" ); then
 			if ${SCRIPT_MODE}; then
 				echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 			else
