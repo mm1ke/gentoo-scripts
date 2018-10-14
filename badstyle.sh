@@ -62,16 +62,46 @@ array_names
 
 main() {
 	array_names
+	repo_categories
 	local absolute_path=${1}
 	local category="$(echo ${absolute_path}|cut -d'/' -f1)"
 	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
+	local packagename="${filename%.*}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if ${SCRIPT_MODE}; then
-		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-	else
-		echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
+	local used_cats=( )
+	for cat in ${all_cat[@]}; do
+		if $(grep DEPEND /${PORTTREE}/metadata/md5-cache/${category}/${packagename} | grep -q ${cat}); then
+			used_cats+=( "${cat}" )
+		fi
+	done
+
+	if [ -n "${used_cats}" ]; then
+		x=0
+		y="${#used_cats[@]}"
+		z=( )
+
+		for a in ${used_cats[@]}; do
+			for b in ${used_cats[@]:${x}:${y}}; do
+				if [ "${a}" = "${b}" ]; then
+					z+=( "${a}/.*${b}/.*" )
+				else
+					z+=( "${a}/.*${b}/.*|${b}/.*${a}/.*" )
+				fi
+			done
+			# search the pattern
+			x=$(expr ${x} + 1)
+		done
+
+
+		if $(egrep -q "$(echo ${z[@]}|tr ' ' '|')" ${absolute_path} ); then
+			if ${SCRIPT_MODE}; then
+				echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			else
+				echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
+			fi
+		fi
 	fi
 }
 
@@ -79,44 +109,27 @@ main() {
 depth_set ${1}
 # switch to the PORTTREE dir
 cd ${PORTTREE}
+# create a list of categories in ${PORTTREE}
+repo_categories(){
+	all_cat=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+	[ -e ${PORTTREE}/virtual ] && all_cat+=( "virtual" )
+}
 # export important variables and functions
 export WORKDIR SCRIPT_SHORT
-export -f main array_names
+export -f main array_names repo_categories
 # create all folders
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-all_cat=( $(find -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-[ -e ${PORTTREE}/virtual ] && all_cat+=( "virtual" )
-
 if [ ${1} = "full" ] || [ ${1} = "diff" ]; then
-	searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*") )
+	searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
 	[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
 else
 	searchp=( ${1} )
 fi
 
-x=0
-y="${#all_cat[@]}"
-z=( )
-
-for a in ${all_cat[@]}; do
-	# we don't put _ALL_ possibilities into one single egrep string since this would
-	# made the argument too long (get_conf MAX_ARG). We split arguments into
-	# multiple find strings splitted by the categories.
-	for b in ${all_cat[@]:${x}:${y}}; do
-		z+=( "${a}/.*${b}/.*|${b}/.*${a}/.*" )
-	done
-	# search the pattern
-	find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "$(echo ${z[@]} | tr ' ' '|')" {} \; | parallel main {}
-	x=$(expr ${x} + 1)
-	z=( )
-done
-
+find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
-	# remove duplicate entries
-	awk -i inplace '!seen[$0]++' ${RUNNING_CHECKS[0]}/full.txt
-
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
