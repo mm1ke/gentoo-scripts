@@ -43,11 +43,15 @@ else
 	exit 1
 fi
 
+# only works with md5-cache
+${ENABLE_MD5} || exit 0
+
 #
 ### IMPORTANT SETTINGS START ###
 #
 SCRIPT_NAME="badstyle"
 SCRIPT_SHORT="BAS"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
@@ -120,19 +124,71 @@ export -f main array_names repo_categories
 # create all folders
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-if [ ${1} = "full" ] || [ ${1} = "diff" ]; then
-	searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-	[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+find_func(){
+	if [ ${1} = "full" ]; then
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+	else
+		searchp=( ${1} )
+	fi
+
+	find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
+}
+
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
+
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
+if [ "${1}" = "diff" ]; then
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+
+		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+		# only run diff mode if todaychecks exist and doesn't have zero bytes
+		if [ -s ${TODAYCHECKS} ]; then
+
+			# we need to copy all existing results first and remove packages which
+			# were changed (listed in TODAYCHECKS). If no results file exists, do
+			# nothing - the script would create a new one anyway
+			for oldfull in ${RUNNING_CHECKS[@]}; do
+				# SCRIPT_TYPE isn't used in the ebuilds usually,
+				# thus it has to be set with the other important variables
+				#
+				# first set the full.txt path from the old log
+				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+				# check if the oldlog exist (don't have to be)
+				if [ -e ${OLDLOG} ]; then
+					# copy old result file to workdir and filter the result
+					cp ${OLDLOG} ${oldfull}/
+					for cpak in $(cat ${TODAYCHECKS}); do
+						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+						# will fail because '/' aren't escapted. also remove first slash
+						pakcat="${cpak:1}"
+						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+					done
+				fi
+			done
+
+			# run the script only on the changed packages
+			find $(sed -e 's/^.//' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+				-exec egrep -l "DEPEND" {} \; | parallel main {}
+			gen_results
+		fi
+	else
+		find_func
+		gen_results
+	fi
 else
-	searchp=( ${1} )
+	find_func
+	gen_results
 fi
 
-find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
-
-if ${SCRIPT_MODE}; then
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
-
-	copy_checks checks
-	rm -rf ${WORKDIR}
-fi
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
