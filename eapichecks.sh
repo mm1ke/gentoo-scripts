@@ -241,7 +241,7 @@ if [ "${1}" = "diff" ]; then
 
 			# run the script only on the changed packages
 			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-				-exec egrep -l 'inherit' {} \; | parallel pre_check {}
+				-print | parallel pre_check {}
 			gen_results
 
 		else
