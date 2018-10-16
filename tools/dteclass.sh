@@ -63,19 +63,18 @@ array_names
 get_inherits(){
 	local eclass=${1}
 	# get the eclasses inherited by a eclass:
-	# 1(sed): catch eclasses which are cut over multiple lines (remove newline
+	# 1(sed): catch eclasses which are cut over multiple lines (remove newline)
 	# 2(sed): remove leading spaces
-	# after a line ending with '\'
 	# 2(grep): remove all lines starting with '#' (comments)
 	# 3(grep): search for lines starting with 'inherit ' or lines containing '&& inherit '
-	# 4(grep): remove inherit from result
+	# 4(cut): remove inherit from result
 	# 5(sed): remove comments at the end of lines (see darcs.eclass)
 	local eclass_inherit=( $( sed -e :a -e '/\\$/N; s/\\\n//; ta' ${1} \
 		| sed "s/^[ \t]*//" \
 		| grep "^[^#]" \
 		| grep "^inherit \|&& inherit \|*) inherit " \
 		| sed 's/^.*\(inherit .*\).*$/\1/' \
-		|cut -c9- \
+		| cut -c9- \
 		| sed 's/\#.*$//' \
 		| sed 's/\;\;//') )
 
