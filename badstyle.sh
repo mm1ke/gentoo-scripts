@@ -68,9 +68,9 @@ main() {
 	array_names
 	repo_categories
 	local absolute_path=${1}
-	local category="$(echo ${absolute_path}|cut -d'/' -f1)"
-	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
-	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
+	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
+	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
+	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
 	local packagename="${filename%.*}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
@@ -125,7 +125,7 @@ export -f main array_names repo_categories
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find_func(){
-	if [ ${1} = "full" ]; then
+	if [ "${1}" = "full" ]; then
 		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
 		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
 	else
