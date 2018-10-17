@@ -82,12 +82,15 @@ main() {
 	done
 
 	if [ -n "${used_cats}" ]; then
+		#remove duplicates from found categories
+		cat_to_check=($(printf "%s\n" "${used_cats[@]}" | sort -u))
+
 		x=0
-		y="${#used_cats[@]}"
+		y="${#cat_to_check[@]}"
 		z=( )
 
-		for a in ${used_cats[@]}; do
-			for b in ${used_cats[@]:${x}:${y}}; do
+		for a in ${cat_to_check[@]}; do
+			for b in ${cat_to_check[@]:${x}:${y}}; do
 				if [ "${a}" = "${b}" ]; then
 					z+=( "${a}/.*${b}/.*" )
 				else
