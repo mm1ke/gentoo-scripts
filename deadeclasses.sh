@@ -49,6 +49,7 @@ fi
 SCRIPT_NAME="deadeclasses"
 SCRIPT_SHORT="DEL"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+SCRIPT_TYPE="checks"
 
 array_names(){
 	RUNNING_CHECKS=(
@@ -100,34 +101,84 @@ export -f main array_names
 
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
+find_func(){
+	find ./${level} \( \
+		-path ./scripts/\* -o \
+		-path ./profiles/\* -o \
+		-path ./packages/\* -o \
+		-path ./licenses/\* -o \
+		-path ./distfiles/\* -o \
+		-path ./metadata/\* -o \
+		-path ./eclass/\* -o \
+		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
+}
 
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
-
-if ${SCRIPT_MODE}; then
-
-	for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-		for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
-			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
-			echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
+			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
+				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
+				echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
+			done
 		done
-	done
 
-	for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
-	done
+		for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
+			gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
+			gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
+		done
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 
-	copy_checks checks
-	rm -rf ${WORKDIR}
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
+if [ "${1}" = "diff" ]; then
+	# if /tmp/${SCRIPT_NAME} exist run in normal mode
+	# this way it's possible to override the diff mode
+	# this is usefull when the script got updates which should run
+	# on the whole tree
+	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+
+		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+		# only run diff mode if todaychecks exist and doesn't have zero bytes
+		if [ -s ${TODAYCHECKS} ]; then
+
+			# we need to copy all existing results first and remove packages which
+			# were changed (listed in TODAYCHECKS). If no results file exists, do
+			# nothing - the script would create a new one anyway
+			for oldfull in ${RUNNING_CHECKS[@]}; do
+				# SCRIPT_TYPE isn't used in the ebuilds usually,
+				# thus it has to be set with the other important variables
+				#
+				# first set the full.txt path from the old log
+				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+				# check if the oldlog exist (don't have to be)
+				if [ -e ${OLDLOG} ]; then
+					# copy old result file to workdir and filter the result
+					cp ${OLDLOG} ${oldfull}/
+					for cpak in $(cat ${TODAYCHECKS}); do
+						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+						# will fail because '/' aren't escapted. also remove first slash
+						pakcat="${cpak:1}"
+						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+					done
+				fi
+			done
+
+			# run the script only on the changed packages
+			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+				-exec egrep -l 'inherit' {} \; | parallel main {}
+			gen_results
+		fi
+	else
+		find_func
+		gen_results
+	fi
+else
+	find_func
+	gen_results
 fi
+
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
