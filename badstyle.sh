@@ -68,9 +68,9 @@ main() {
 	array_names
 	repo_categories
 	local absolute_path=${1}
-	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
-	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
-	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
+	local category="$(echo ${absolute_path}|cut -d'/' -f1)"
+	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
+	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
@@ -129,13 +129,27 @@ ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find_func(){
 	if [ "${1}" = "full" ]; then
-		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
 		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+	elif [ "${1}" = "diff" ]; then
+		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+		# diff provides categories/package so we need maxd=1 and mind=1
+		# setting both vars to 0 because the find command adds 1 anyway
+		MAXD=0
+		MIND=0
 	else
 		searchp=( ${1} )
 	fi
 
-	find ${searchp[@]} -type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
+	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+		-type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
 }
 
 gen_results(){
@@ -181,16 +195,15 @@ if [ "${1}" = "diff" ]; then
 			done
 
 			# run the script only on the changed packages
-			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-				-exec egrep -l "DEPEND" {} \; | parallel main {}
+			find_func ${1}
 			gen_results
 		fi
 	else
-		find_func
+		find_func ${1}
 		gen_results
 	fi
 else
-	find_func
+	find_func ${1}
 	gen_results
 fi
 
