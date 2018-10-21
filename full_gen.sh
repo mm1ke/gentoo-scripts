@@ -40,17 +40,20 @@ fi
 
 WORKDIR="/tmp/full-gen-${RANDOM}"
 
-search_pattern="*-*-*"
 mkdir -p ${WORKDIR}/{sort-by-package,sort-by-maintainer}
 
-for check in ${SITEDIR}/checks/${search_pattern}; do
+### full list generation start ###
+#
+# full list gen - maintainer sorting
+for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|sort); do
 	for main in $(ls ${check}/sort-by-maintainer/); do
 		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-maintainer/${main}
 		cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/sort-by-maintainer/${main}
 	done
 done
 
-for check in ${SITEDIR}/checks/${search_pattern}; do
+# full list gen - package sorting
+for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|sort); do
 	for cat in $(ls ${check}/sort-by-package/); do
 		mkdir -p ${WORKDIR}/sort-by-package/${cat}
 		for pack in $(ls ${check}/sort-by-package/${cat}/); do
@@ -60,6 +63,7 @@ for check in ${SITEDIR}/checks/${search_pattern}; do
 	done
 done
 
+# add bug information to the packages
 for cat in $(ls ${WORKDIR}/sort-by-package/); do
 	for pack in $(ls ${WORKDIR}/sort-by-package/${cat}/); do
 		echo "<<< open bugs >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
@@ -67,6 +71,7 @@ for cat in $(ls ${WORKDIR}/sort-by-package/); do
 		echo "${openbugs}" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 	done
 done
+### full list generation end ###
 
 if [ -e "${SITEDIR}/listings/" ]; then
 	rm -rf ${SITEDIR}/listings/*
@@ -87,35 +92,23 @@ gen_http_sort_main_v2 results ${SITEDIR}/stats > ${SITEDIR}/stats/index.html
 # generate html output (maintainer/results)
 gen_html_top > ${SITEDIR}/checks.html
 gen_html_top > ${SITEDIR}/stats.html
-for ce in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d|sort); do
-	gen_html_out ${ce##*/} checks >> ${SITEDIR}/checks.html
-	gen_http_sort_main_v2 main ${ce} > ${ce}/index.html
-	if [ -e "${ce}/sort-by-filter" ]; then
-		gen_http_sort_main_v2 results ${ce}/sort-by-filter > ${ce}/sort-by-filter/index.html
-		for fce in $(find ${ce}/sort-by-filter/ -mindepth 1 -maxdepth 1 -type d|sort); do
-			gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
-		done
-	elif [ -e "${ce}/sort-by-eapi" ]; then
-		gen_http_sort_main_v2 results ${ce}/sort-by-eapi > ${ce}/sort-by-eapi/index.html
-		for fce in $(find ${ce}/sort-by-eapi/ -mindepth 1 -maxdepth 1 -type d|sort); do
-			gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
-		done
-	fi
-done
-for st in $(find ${SITEDIR}/stats/ -mindepth 1 -maxdepth 1 -type d|sort); do
-	gen_html_out ${st##*/} stats >> ${SITEDIR}/stats.html
-	gen_http_sort_main_v2 main ${st} > ${st}/index.html
-	if [ -e "${st}/sort-by-filter" ]; then
-		gen_http_sort_main_v2 results ${st}/sort-by-filter > ${st}/sort-by-filter/index.html
-		for fst in $(find ${st}/sort-by-filter/ -mindepth 1 -maxdepth 1 -type d|sort); do
-			gen_http_sort_main_v2 main ${fst} > ${fst}/index.html
-		done
-	elif [ -e "${st}/sort-by-eapi" ]; then
-		gen_http_sort_main_v2 results ${st}/sort-by-eapi > ${st}/sort-by-eapi/index.html
-		for fst in $(find ${st}/sort-by-eapi/ -mindepth 1 -maxdepth 1 -type d|sort); do
-			gen_http_sort_main_v2 main ${fst} > ${fst}/index.html
-		done
-	fi
+# scan checks and stats
+for x in checks stats; do
+	for ce in $(find ${SITEDIR}/${x}/ -mindepth 1 -maxdepth 1 -type d|sort); do
+		gen_html_out ${ce##*/} ${x} >> ${SITEDIR}/${x}.html
+		gen_http_sort_main_v2 main ${ce} > ${ce}/index.html
+		if [ -e "${ce}/sort-by-filter" ]; then
+			gen_http_sort_main_v2 results ${ce}/sort-by-filter > ${ce}/sort-by-filter/index.html
+			for fce in $(find ${ce}/sort-by-filter/ -mindepth 1 -maxdepth 1 -type d|sort); do
+				gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
+			done
+		elif [ -e "${ce}/sort-by-eapi" ]; then
+			gen_http_sort_main_v2 results ${ce}/sort-by-eapi > ${ce}/sort-by-eapi/index.html
+			for fce in $(find ${ce}/sort-by-eapi/ -mindepth 1 -maxdepth 1 -type d|sort); do
+				gen_http_sort_main_v2 main ${fce} > ${fce}/index.html
+			done
+		fi
+	done
 done
 gen_html_bottom >> ${SITEDIR}/stats.html
 gen_html_bottom >> ${SITEDIR}/checks.html
