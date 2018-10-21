@@ -181,7 +181,7 @@ if [ "${1}" = "diff" ]; then
 			done
 
 			# run the script only on the changed packages
-			find $(sed -e 's/^.//' ${TODAYCHECKS}) -type f -name "*.ebuild" \
+			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
 				-exec egrep -l "DEPEND" {} \; | parallel main {}
 			gen_results
 		fi
