@@ -196,6 +196,15 @@ if [ "${1}" = "diff" ]; then
 
 			# run the script only on the changed packages
 			find_func ${1}
+			# remove dropped packages
+			for c in ${RUNNING_CHECKS[@]}; do
+				p_list=( $(cut -d'|' -f1 ${c}/full.txt) )
+				for p in ${p_list[@]}; do
+					if ! [ -d ${PORTTREE}/${p} ]; then
+						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
+					fi
+				done
+			done
 			gen_results
 		fi
 	else
