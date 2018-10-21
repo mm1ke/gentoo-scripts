@@ -181,14 +181,7 @@ if [ "${1}" = "diff" ]; then
 				-exec egrep -l 'inherit' {} \; | parallel main {}
 
 			# remove dropped packages
-			for c in ${RUNNING_CHECKS[@]}; do
-				p_list=( $(cut -d'|' -f1 ${c}/full.txt) )
-				for p in ${p_list[@]}; do
-					if ! [ -d ${PORTTREE}/${p} ]; then
-						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
-					fi
-				done
-			done
+			diff_rm_dropped_paks
 			gen_results
 		fi
 	else

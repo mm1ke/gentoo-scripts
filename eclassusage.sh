@@ -98,7 +98,6 @@ main() {
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local ebuild_eapi="$(get_eapi ${full_path_ebuild})"
 
-	#echo "in main func checking: ${category}/${package}" >> /tmp/diff-test-eu.log
 
 	if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
@@ -134,11 +133,9 @@ main() {
 		if ${SCRIPT_MODE}; then
 			if [ -n "${o_eclass}" ]; then
 				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
-				#echo "adding ${PORTTREE}-${category}/${package} to ${RUNNING_CHECKS[1]}/full.txt" >> /tmp/diff-test-eu.log
 			fi
 			if [ -n "${m_eclass}" ]; then
 				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-				#echo "adding ${PORTTREE}-${category}/${package} to ${RUNNING_CHECKS[0]}/full.txt" >> /tmp/diff-test-eu.log
 			fi
 		fi
 
@@ -248,14 +245,7 @@ if [ "${1}" = "diff" ]; then
 				-exec egrep -l 'inherit' {} \; | parallel main {}
 
 			# remove dropped packages
-			for c in ${RUNNING_CHECKS[@]}; do
-				p_list=( $(cut -d'|' -f1 ${c}/full.txt) )
-				for p in ${p_list[@]}; do
-					if ! [ -d ${PORTTREE}/${p} ]; then
-						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
-					fi
-				done
-			done
+			diff_rm_dropped_paks
 			gen_results
 		fi
 	else

@@ -373,6 +373,24 @@ copy_checks() {
 	fi
 }
 
+# remove dropped packages, needed for diff mode
+diff_rm_dropped_paks(){
+	local c
+	local p
+	local p_list=( )
+
+	for c in ${RUNNING_CHECKS[@]}; do
+		if [ -s ${c}/full.txt ]; then
+			p_list=( $(cut -d'|' -f1 ${c}/full.txt) )
+			for p in ${p_list[@]}; do
+				if ! [ -d ${PORTTREE}/${p} ]; then
+					sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
+				fi
+			done
+		fi
+	done
+}
+
 get_main_min(){
 	local maint=`/usr/bin/python3 - "${1}" <<END
 import xml.etree.ElementTree
@@ -408,4 +426,4 @@ END`
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
-	compare_keywords
+	compare_keywords diff_rm_dropped_paks
