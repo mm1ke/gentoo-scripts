@@ -199,7 +199,7 @@ if [ "${1}" = "diff" ]; then
 			gen_results
 		fi
 	else
-		find_func ${1}
+		find_func full
 		gen_results
 	fi
 else
