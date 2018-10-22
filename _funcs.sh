@@ -381,7 +381,7 @@ diff_rm_dropped_paks(){
 	local p_list=( )
 
 	# only run if we get a package location
-	if [ -n "${1}" ]; then
+	if [ -n "${l}" ]; then
 		for c in ${RUNNING_CHECKS[@]}; do
 			if [ -s ${c}/full.txt ]; then
 				p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
@@ -392,6 +392,41 @@ diff_rm_dropped_paks(){
 				done
 			fi
 		done
+	fi
+}
+
+diff_rm_dropped_paks_v2(){
+	local l=${1}			# package location (row)
+	local id=${2}			# RUNNING_CHECKS Id (can be empty)
+	local c
+	local p
+
+	p_list=( )
+
+	_cleanup() {
+		local file=${1}
+		for p in ${p_list[@]}; do
+			if ! [ -d ${PORTTREE}/${p} ]; then
+				sed -i "/${p//\//\\/}${DL}/d" ${file}
+			fi
+		done
+	}
+
+	# only run if we get a package location
+	if [ -n "${l}" ]; then
+		if [ -n "${id}" ]; then
+			if [ -s ${RUNNING_CHECKS[${id}]} ]; then
+				p_list=( $(cut -d'|' -f${l} ${RUNNING_CHECKS[${id}]}/full.txt) )
+				_cleanup "${RUNNING_CHECKS[${id}]}/full.txt"
+			fi
+		else
+			for c in ${RUNNING_CHECKS[@]}; do
+				if [ -s ${c}/full.txt ]; then
+					p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
+					_cleanup "${c}/full.txt"
+				fi
+			done
+		fi
 	fi
 }
 
