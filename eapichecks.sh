@@ -231,29 +231,24 @@ if [ "${1}" = "diff" ]; then
 			# this increases the second and fourth row by 1. This row contain the git
 			# age of the ebuild which should got older by one day. Since we don't
 			# check full we have to increase it manually
-			#
-			# first put both special cases into a variable (array) and feed it into
-			# a for loop
-			special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
-			for sp in ${special_case[@]}; do
-				increase_git_age "${sp}/full.txt"
-			done
+			increase_git_age "${RUNNING_CHECKS[0]}/full.txt"
+			increase_git_age "${RUNNING_CHECKS[1]}/full.txt"
 
 			# run the script only on the changed packages
 			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
 				-print | parallel pre_check {}
 
 			# remove dropped packages
-			#diff_rm_dropped_paks
+			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 0
+			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 1
+			diff_rm_dropped_paks_v2 3 2
 			gen_results
 
 		else
 			# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
 			# this case, increase the git age:
-			special_case=( "${RUNNING_CHECKS[0]}" "${RUNNING_CHECKS[1]}" )
-			for sp in ${special_case[@]}; do
-				increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${sp/${WORKDIR}/}/full.txt"
-			done
+			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/full.txt"
+			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[1]/${WORKDIR}/}/full.txt"
 		fi
 	else
 		find_func
