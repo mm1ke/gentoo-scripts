@@ -375,20 +375,24 @@ copy_checks() {
 
 # remove dropped packages, needed for diff mode
 diff_rm_dropped_paks(){
+	local l=${1}			# package location (row)
 	local c
 	local p
 	local p_list=( )
 
-	for c in ${RUNNING_CHECKS[@]}; do
-		if [ -s ${c}/full.txt ]; then
-			p_list=( $(cut -d'|' -f1 ${c}/full.txt) )
-			for p in ${p_list[@]}; do
-				if ! [ -d ${PORTTREE}/${p} ]; then
-					sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
-				fi
-			done
-		fi
-	done
+	# only run if we get a package location
+	if [ -n "${1}" ]; then
+		for c in ${RUNNING_CHECKS[@]}; do
+			if [ -s ${c}/full.txt ]; then
+				p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
+				for p in ${p_list[@]}; do
+					if ! [ -d ${PORTTREE}/${p} ]; then
+						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
+					fi
+				done
+			fi
+		done
+	fi
 }
 
 get_main_min(){

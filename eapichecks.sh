@@ -244,7 +244,7 @@ if [ "${1}" = "diff" ]; then
 				-print | parallel pre_check {}
 
 			# remove dropped packages
-			diff_rm_dropped_paks
+			#diff_rm_dropped_paks
 			gen_results
 
 		else

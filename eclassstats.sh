@@ -181,7 +181,7 @@ if [ "${1}" = "diff" ]; then
 				-exec egrep -l 'inherit' {} \; | parallel main {}
 
 			# remove dropped packages
-			diff_rm_dropped_paks
+			diff_rm_dropped_paks 2
 			gen_results
 		fi
 	else

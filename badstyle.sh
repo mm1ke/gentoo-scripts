@@ -197,7 +197,7 @@ if [ "${1}" = "diff" ]; then
 			# run the script only on the changed packages
 			find_func ${1}
 			# remove dropped packages
-			diff_rm_dropped_paks
+			diff_rm_dropped_paks 1
 			gen_results
 		fi
 	else
