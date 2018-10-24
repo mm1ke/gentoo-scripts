@@ -70,7 +70,7 @@ main() {
 	local full_path="${PORTTREE}/${category}/${package}"										# full path:										/usr/portage/app-admin/salt
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"	# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
 	local maintainer="$(get_main_min "${category}/${package}")"							# maintainer of package					foo@gentoo.org:bar@gmail.com
-	local fileage="$(get_age "${filename}")"																# age of ebuild in days:				145
+	local fileage="$(get_age "${category}/${package}/${filename}")"					# age of ebuild in days:				145
 
 	if ${SCRIPT_MODE}; then
 		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt

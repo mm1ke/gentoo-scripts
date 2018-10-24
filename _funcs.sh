@@ -252,7 +252,7 @@ get_age() {
 
 	if ${ENABLE_GIT}; then
 		fileage="$(expr \( "${date_today}" - \
-			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${category}/${package}/${file} \
+			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${file} \
 			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
 		echo "${fileage}"
 	else
@@ -263,7 +263,7 @@ get_age() {
 # get the date when the package got removed (removed via git)
 get_dead_age() {
 	local package=${1}
-	local date_today="$(date '+%s' -d today)"
+	#local date_today="$(date '+%s' -d today)"
 
 	if ${ENABLE_GIT}; then
 		#deadage="$(expr \( "${date_today}" - \

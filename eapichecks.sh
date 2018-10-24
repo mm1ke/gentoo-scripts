@@ -115,8 +115,8 @@ main() {
 				local old_file=""
 				local new_file=""
 				if ${ENABLE_GIT}; then
-					old_file="$(get_age "${org_name}.ebuild")${DL}"
-					new_file="$(get_age "${name}-r${i}.ebuild")${DL}"
+					old_file="$(get_age "${category}/${package}/${org_name}.ebuild")${DL}"
+					new_file="$(get_age "${category}/${package}/${name}-r${i}.ebuild")${DL}"
 				fi
 				if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
 					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
