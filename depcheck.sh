@@ -85,6 +85,12 @@ main() {
 	for dep in ${dependencies[@]}; do
 		if $(grep ${dep} ${full_path_ebuild} >/dev/null 2>&1); then
 			if ! [ -e "${PORTTREE}/${dep}" ]; then
+				if ${ENABLE_GIT}; then
+					local deadage="$(get_dead_age "${dep}")"
+					if [ -n "${deadage}" ]; then
+						dep="${dep}[${deadage}]"
+					fi
+				fi
 				obsolete_dep+=( "${dep}" )
 				found=true
 			fi
