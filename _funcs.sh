@@ -260,6 +260,23 @@ get_age() {
 	fi
 }
 
+# get the date when the package got removed (removed via git)
+get_dead_age() {
+	local package=${1}
+	local date_today="$(date '+%s' -d today)"
+
+	if ${ENABLE_GIT}; then
+		#deadage="$(expr \( "${date_today}" - \
+		#	"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${package} \
+		#	| head -1 | cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
+		deadage="$(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${package} \
+			| head -1 | cut -d' ' -f1)"
+		echo "${deadage}"
+	else
+		echo ""
+	fi
+}
+
 # return the EAPI of a given ebuild
 get_eapi() {
 	local file=${1}
@@ -465,4 +482,4 @@ END`
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
-	compare_keywords diff_rm_dropped_paks
+	compare_keywords diff_rm_dropped_paks get_dead_age
