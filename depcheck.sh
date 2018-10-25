@@ -56,6 +56,7 @@ ${ENABLE_MD5} || exit 0
 SCRIPT_NAME="depcheck"
 SCRIPT_SHORT="DEC"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+SCRIPT_TYPE="checks"
 
 array_names(){
 	RUNNING_CHECKS=(
