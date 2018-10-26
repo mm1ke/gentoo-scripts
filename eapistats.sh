@@ -120,7 +120,7 @@ find_func(){
 	fi
 
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
+		-type f -name "*.ebuild" -print | parallel main {}
 }
 
 gen_results() {
