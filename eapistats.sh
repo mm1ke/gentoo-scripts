@@ -115,6 +115,9 @@ find_func(){
 		# setting both vars to 0 because the find command adds 1 anyway
 		MAXD=0
 		MIND=0
+	elif [ -z "${1}" ]; then
+		echo "No directory given. Please fix your script"
+		exit 1
 	else
 		searchp=( ${1} )
 	fi
