@@ -65,9 +65,9 @@ array_names
 main() {
 	array_names
 	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package="$(echo ${full_package}|cut -d'/' -f3)"
-	local filename="$(echo ${full_package}|cut -d'/' -f4)"
+	local category="$(echo ${full_package}|cut -d'/' -f1)"
+	local package="$(echo ${full_package}|cut -d'/' -f2)"
+	local filename="$(echo ${full_package}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local fileversion="${packagename/${package}-/}"
 	local maintainer="$(get_main_min "${category}/${package}")"
