@@ -71,9 +71,9 @@ array_names
 main() {
 	array_names
 	local absolute_path=${1}
-	local category="$(echo ${absolute_path}|cut -d'/' -f2)"
-	local package="$(echo ${absolute_path}|cut -d'/' -f3)"
-	local filename="$(echo ${absolute_path}|cut -d'/' -f4)"
+	local category="$(echo ${absolute_path}|cut -d'/' -f1)"
+	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
+	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
