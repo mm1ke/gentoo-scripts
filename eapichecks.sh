@@ -79,9 +79,9 @@ output() {
 main() {
 	array_names
 	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package="$(echo ${full_package}|cut -d'/' -f3)"
-	local filename="$(echo ${full_package}|cut -d'/' -f4)"
+	local category="$(echo ${full_package}|cut -d'/' -f1)"
+	local package="$(echo ${full_package}|cut -d'/' -f2)"
+	local filename="$(echo ${full_package}|cut -d'/' -f3)"
 	local name="${filename%.*}"
 	local ebuild_eapi="$(get_eapi ${full_package})"
 
@@ -148,15 +148,28 @@ export -f main output array_names pre_check
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find_func(){
-	find ./${level}  \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check {}
+	if [ "${1}" = "full" ]; then
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+	elif [ "${1}" = "diff" ]; then
+		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+		# diff provides categories/package so we need maxd=1 and mind=1
+		# setting both vars to 0 because the find command adds 1 anyway
+		MAXD=0
+		MIND=0
+	else
+		searchp=( ${1} )
+	fi
+
+	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+		-type f -name "*.ebuild" -print | parallel pre_check {}
 }
 
 gen_results(){
@@ -235,9 +248,7 @@ if [ "${1}" = "diff" ]; then
 			increase_git_age "${RUNNING_CHECKS[1]}/full.txt"
 
 			# run the script only on the changed packages
-			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-				-print | parallel pre_check {}
-
+			find_func ${1}
 			# remove dropped packages
 			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 0
 			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 1
@@ -251,11 +262,11 @@ if [ "${1}" = "diff" ]; then
 			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[1]/${WORKDIR}/}/full.txt"
 		fi
 	else
-		find_func
+		find_func full
 		gen_results
 	fi
 else
-	find_func
+	find_func ${1}
 	gen_results
 fi
 
