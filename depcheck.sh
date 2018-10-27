@@ -149,7 +149,7 @@ gen_results() {
 	if ${SCRIPT_MODE}; then
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-			for fp in $(echo ${file}|cut -d'|' -f3|tr ':' ' '); do
+			for fp in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
 				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')
 				echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/$(echo ${fp}|tr '/' '_')/full.txt
 			done
