@@ -52,6 +52,7 @@ ${TREE_IS_MASTER} || exit 0
 #
 SCRIPT_NAME="dupuse"
 SCRIPT_SHORT="DUU"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
