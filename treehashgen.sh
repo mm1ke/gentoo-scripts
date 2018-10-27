@@ -78,23 +78,6 @@ hash_start(){
 				done
 			done
 
-			#for cate in $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d \
-			#	-not -path '*/\.*' \
-			#	-not -path '*/profiles' \
-			#	-not -path '*/metadata' \
-			#	-not -path '*/eclass' \
-			#	-not -path '*/scripts' \
-			#	-not -path '*/licenses' \
-			#	-not -path '*/packages' \
-			#	-not -path '*/distfiles'); do
-			#	# in every category, list every package
-			#	for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
-			#		mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
-			#		# list all files in each directory and create hash
-			#		find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
-			#		echo ${paka} >> /tmp/package-ng-old.log
-			#	done
-			#done
 			# generate hashes for every category based on the package hashes
 			for cat in $(find ${WORKDIR} -mindepth 1 -maxdepth 1 -type d); do
 				find ${cat} -mindepth 2 -type f -name *.xha -exec xxh64sum {} \; \
@@ -132,6 +115,8 @@ hash_stop(){
 	# copy todays full result to the full-last.log
 	# only after all scripts were proceded.
 	cp ${HASHTREE}/full-${date_today}.log ${HASHTREE}/full-last.log
+	gzip ${HASHTREE}/full-$(date -I -d -2days).log
+	gzip ${HASHTREE}/results/results-$(date -I -d -2days).log
 }
 
 arg="${1}"
