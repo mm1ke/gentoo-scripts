@@ -64,9 +64,9 @@ array_names
 main() {
 	array_names
 	local relative_path=${1}
-	local category="$(echo ${relative_path}|cut -d'/' -f2)"
-	local package="$(echo ${relative_path}|cut -d'/' -f3)"
-	local filename="$(echo ${relative_path}|cut -d'/' -f4)"
+	local category="$(echo ${relative_path}|cut -d'/' -f1)"
+	local package="$(echo ${relative_path}|cut -d'/' -f2)"
+	local filename="$(echo ${relative_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local full_path="${PORTTREE}/${category}/${package}"
 	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
@@ -111,15 +111,31 @@ if ${SCRIPT_MODE}; then
 fi
 
 find_func(){
-	find ./${level} \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l 'inherit' {} \; | parallel main {}
+	if [ "${1}" = "full" ]; then
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+	elif [ "${1}" = "diff" ]; then
+		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+		# diff provides categories/package so we need maxd=1 and mind=1
+		# setting both vars to 0 because the find command adds 1 anyway
+		MAXD=0
+		MIND=0
+	elif [ -z "${1}" ]; then
+		echo "No directory given. Please fix your script"
+		exit 1
+	else
+		searchp=( ${1} )
+	fi
+
+	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+		-type f -name "*.ebuild" -exec egrep -l "inherit" {} \; | parallel main {}
 }
 
 gen_results(){
@@ -177,19 +193,17 @@ if [ "${1}" = "diff" ]; then
 			done
 
 			# run the script only on the changed packages
-			find $(sed -e 's/^/./' ${TODAYCHECKS}) -type f -name "*.ebuild" \
-				-exec egrep -l 'inherit' {} \; | parallel main {}
-
+			find_func ${1}
 			# remove dropped packages
 			diff_rm_dropped_paks 2
 			gen_results
 		fi
 	else
-		find_func
+		find_func full
 		gen_results
 	fi
 else
-	find_func
+	find_func ${1}
 	gen_results
 fi
 
