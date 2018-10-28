@@ -77,8 +77,8 @@ main() {
 
 	if ! [ "$(cat ${TMPFILE})" = "No QA issues found" ]; then
 		if ${SCRIPT_MODE}; then
-			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-package/${category}/${package}/
-			head -n-1 ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-package/${category}/${package}/${package}.txt
+			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-package/${category}/
+			head -n-1 ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-package/${category}/${package}.txt
 			echo "${category}/${package}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
 		else
 			if [ "${1}" = "full" ]; then
@@ -130,7 +130,7 @@ if [ "${1}" = "diff" ]; then
 			pakcat="${cpak:1}"
 			sed -i "/${pakcat//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
 			# like before, only important on this script (repomancheck)
-			rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}
+			rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
 		done
 		cat ${TODAYCHECKS} | parallel main {}
 
@@ -139,7 +139,7 @@ if [ "${1}" = "diff" ]; then
 		for p in ${p_list[@]}; do
 			if ! [ -d ${PORTTREE}/${p} ]; then
 				sed -i "/${p//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
-				rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${p}
+				rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${p}.txt
 			fi
 		done
 
