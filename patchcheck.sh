@@ -48,6 +48,7 @@ fi
 #
 SCRIPT_NAME="patchcheck"
 SCRIPT_SHORT="PAC"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
 
 array_names(){
@@ -118,6 +119,6 @@ find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
 if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 2
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi

@@ -50,6 +50,7 @@ fi
 #
 SCRIPT_NAME="simplechecks"
 SCRIPT_SHORT="SIC"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
@@ -230,6 +231,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[8]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[8]} 1
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi

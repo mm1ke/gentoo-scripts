@@ -48,6 +48,7 @@ fi
 #
 SCRIPT_NAME="srctest"
 SCRIPT_SHORT="SRT"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
 JOBS="50"
@@ -214,7 +215,7 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi
 rm ${TMPCHECK}

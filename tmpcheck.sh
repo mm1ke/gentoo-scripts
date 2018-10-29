@@ -48,6 +48,7 @@ fi
 #
 SCRIPT_NAME="tmpcheck"
 SCRIPT_SHORT="TMC"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
@@ -103,6 +104,6 @@ if ${SCRIPT_MODE}; then
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 3
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 fi

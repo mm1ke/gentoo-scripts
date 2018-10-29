@@ -44,6 +44,7 @@ fi
 
 SCRIPT_NAME="wwwtest"
 SCRIPT_SHORT="WWT"
+SCRIPT_TYPE="checks"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
 TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
@@ -301,7 +302,7 @@ if ${SCRIPT_MODE}; then
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
 
-	copy_checks checks
+	copy_checks ${SCRIPT_TYPE}
 	rm -rf ${WORKDIR}
 	rm ${TMPFILE}
 fi
