@@ -149,7 +149,7 @@ gen_results() {
 		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 4
 		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
 
-		copy_checks stats
+		copy_checks ${SCRIPT_TYPE}
 		rm -rf ${WORKDIR}
 	fi
 }
