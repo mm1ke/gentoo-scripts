@@ -46,6 +46,12 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="srctest"
 SCRIPT_SHORT="SRT"
 SCRIPT_TYPE="checks"
@@ -66,11 +72,6 @@ array_names
 #
 ### IMPORTANT SETTINGS STOP ###
 #
-
-# only works with md5-cache
-if ! ${ENABLE_MD5}; then
-	exit 1
-fi
 
 main() {
 	get_status() {
@@ -99,8 +100,8 @@ main() {
 	array_names
 
 	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package=${full_package##*/}
+	local category="$(echo ${full_package}|cut -d'/' -f1)"
+	local package="$(echo ${full_package}|cut -d'/' -f2)"
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local openbugs="$(get_bugs "${category}/${package}")"
 	if ! [ -z "${openbugs}" ]; then
@@ -190,32 +191,106 @@ export WORKDIR TMPCHECK SCRIPT_SHORT
 touch ${TMPCHECK}
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
-find ./${level} -mindepth ${MIND} -maxdepth ${MAXD} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | parallel -j ${JOBS} main {}
+find_func() {
+	if [ "${1}" = "full" ]; then
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+	elif [ "${1}" = "diff" ]; then
+		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+		# diff provides categories/package so we need maxd=1 and mind=1
+		# setting both vars to 0 because the find command adds 1 anyway
+		MAXD=0
+		MIND=0
+	elif [ -z "${1}" ]; then
+		echo "No directory given. Please fix your script"
+		exit 1
+	else
+		searchp=( ${1} )
+	fi
 
+	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
+		-type d -print | parallel -j ${JOBS} main {}
+}
 
-if ${SCRIPT_MODE}; then
-	cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt
-	cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt
-	cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt
+gen_results() {
+	if ${SCRIPT_MODE}; then
+		cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt
+		cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt
+		cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
+		sort_result ${RUNNING_CHECKS[0]}
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 4
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 1
+		sort_result ${RUNNING_CHECKS[1]}
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 4
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 1
 
-	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
-	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
+		sort_result ${RUNNING_CHECKS[2]}
+		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 4
+		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 
-	copy_checks ${SCRIPT_TYPE}
-	rm -rf ${WORKDIR}
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
+if [ "${1}" = "diff" ]; then
+
+	# don't use diff mode for srctest
+	find_func full
+	gen_results
+
+	## if /tmp/${SCRIPT_NAME} exist run in normal mode
+	## this way it's possible to override the diff mode
+	## this is usefull when the script got updates which should run
+	## on the whole tree
+	#if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+	#	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	#	# only run diff mode if todaychecks exist and doesn't have zero bytes
+	#	if [ -s ${TODAYCHECKS} ]; then
+	#		# we need to copy all existing results first and remove packages which
+	#		# were changed (listed in TODAYCHECKS). If no results file exists, do
+	#		# nothing - the script would create a new one anyway
+	#		for oldfull in ${RUNNING_CHECKS[@]}; do
+	#			# SCRIPT_TYPE isn't used in the ebuilds usually,
+	#			# thus it has to be set with the other important variables
+	#			#
+	#			# first set the full.txt path from the old log
+	#			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+	#			# check if the oldlog exist (don't have to be)
+	#			if [ -e ${OLDLOG} ]; then
+	#				# copy old result file to workdir and filter the result
+	#				cp ${OLDLOG} ${oldfull}/
+	#				for cpak in $(cat ${TODAYCHECKS}); do
+	#					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+	#					# will fail because '/' aren't escapted. also remove first slash
+	#					pakcat="${cpak:1}"
+	#					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+	#				done
+	#			fi
+	#		done
+	#		# run the script only on the changed packages
+	#		find_func ${1}
+	#		# remove dropped packages
+	#		diff_rm_dropped_paks 1
+	#		gen_results
+	#	fi
+	#else
+	#	find_func full
+	#	gen_results
+	#fi
+
+else
+	find_func ${1}
+	gen_results
 fi
+
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}
