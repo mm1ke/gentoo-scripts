@@ -42,6 +42,15 @@ else
 	exit 1
 fi
 
+#
+### IMPORTANT SETTINGS START ###
+#
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+#${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="wwwtest"
 SCRIPT_SHORT="WWT"
 SCRIPT_TYPE="checks"
@@ -64,11 +73,10 @@ array_names(){
 	)
 }
 array_names
+#
+### IMPORTANT SETTINGS STOP ###
+#
 
-# touch file first, otherwise the _checktmp could fail because of
-# the missing file
-touch ${TMPCHECK}
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 301check() {
 	# needed to get the names
@@ -160,8 +168,8 @@ main() {
 	}
 
 	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package=${full_package##*/}
+	local category="$(echo ${full_package}|cut -d'/' -f1)"
+	local package="$(echo ${full_package}|cut -d'/' -f2)"
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local openbugs="$(get_bugs "${category}/${package}")"
 	if ! [ -z "${openbugs}" ]; then
@@ -208,102 +216,178 @@ main() {
 }
 
 depth_set ${1}
+# touch file first, otherwise the _checktmp could fail because of
+# the missing file
+touch ${TMPCHECK}
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 cd ${PORTTREE}
 # for parallel execution
 export -f main get_code 301check array_names
 export TMPCHECK TMPFILE WORKDIR SCRIPT_SHORT TIMEOUT
 
-find ./${level} -mindepth $MIND -maxdepth $MAXD \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type d -print | parallel -j ${JOBS} main {}
+find_func() {
+	if [ "${1}" = "full" ]; then
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+	elif [ "${1}" = "diff" ]; then
+		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+		# diff provides categories/package so we need maxd=1 and mind=1
+		# setting both vars to 0 because the find command adds 1 anyway
+		MAXD=0
+		MIND=0
+	elif [ -z "${1}" ]; then
+		echo "No directory given. Please fix your script"
+		exit 1
+	else
+		searchp=( ${1} )
+	fi
 
-if ${SCRIPT_MODE}; then
-	# sort after http codes (including all codes)
-	for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort -u); do
-		mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
-		grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
-	done
+	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
+		-type d -print | parallel -j ${JOBS} main {}
+}
 
-	# copy full log
-	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full-unfiltered.txt
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		# sort after http codes (including all codes)
+		for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort -u); do
+			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
+			grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
+		done
 
-	# copy full log, ignoring "good" codes
-	sed -i "/^VAR/d; \
-		/^FTP/d; \
-		/^200/d; \
-		/^301/d; \
-		/^302/d; \
-		/^307/d; \
-		/^400/d; \
-		/^503/d; \
-		/^429/d; \
-		" ${TMPFILE}
-	cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
+		# copy full log
+		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full-unfiltered.txt
 
-	sort_result ${RUNNING_CHECKS[0]} 2
-	sort_result ${RUNNING_CHECKS[0]}/full-unfiltered.txt 2
-	sort_result ${RUNNING_CHECKS[1]} 3
-	sort_result ${RUNNING_CHECKS[2]} 2
-	sort_result ${RUNNING_CHECKS[3]} 2
+		# copy full log, ignoring "good" codes
+		sed -i "/^VAR/d; \
+			/^FTP/d; \
+			/^200/d; \
+			/^301/d; \
+			/^302/d; \
+			/^307/d; \
+			/^400/d; \
+			/^503/d; \
+			/^429/d; \
+			" ${TMPFILE}
+		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
-	# special filters - ebuild_homepage_upstream_shutdown
-	_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
-	for site in ${_filters[@]}; do
-		mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
-		if $(grep -q ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt); then
-			grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
-			grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
-			gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
-			gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
-		fi
-	done
-	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
+		sort_result ${RUNNING_CHECKS[0]} 2
+		sort_result ${RUNNING_CHECKS[0]}/full-unfiltered.txt 2
+		sort_result ${RUNNING_CHECKS[1]} 3
+		sort_result ${RUNNING_CHECKS[2]} 2
+		sort_result ${RUNNING_CHECKS[3]} 2
 
-	# ebuild_homepage_unsync
-	# find different homepages in same packages
-	for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
-		# get all HOMEPAGEs from every package,
-		# lists them and count the lines.
-		# if homepages are sync, the line count should be 1
-		# --- works best with the md5-cache ---
-		if ${ENABLE_MD5}; then
-			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
-		else
-			hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
-		fi
-		if [ "${hp_lines}" -gt 1 ]; then
-			mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
-			grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt > ${RUNNING_CHECKS[5]}/sort-by-package/${i}.txt
-			grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5  >> ${RUNNING_CHECKS[5]}/full.txt
-		fi
-	done
-	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
+		# special filters - ebuild_homepage_upstream_shutdown
+		_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
+		for site in ${_filters[@]}; do
+			mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
+			if $(grep -q ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt); then
+				grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
+				grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
+				gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
+				gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
+			fi
+		done
+		gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
+		gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
 
-	# ebuild_homepage_redirection_http_to_https
-	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 2
-	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 5
+		# ebuild_homepage_unsync
+		# find different homepages in same packages
+		for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
+			# get all HOMEPAGEs from every package,
+			# lists them and count the lines.
+			# if homepages are sync, the line count should be 1
+			# --- works best with the md5-cache ---
+			if ${ENABLE_MD5}; then
+				hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
+			else
+				hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
+			fi
+			if [ "${hp_lines}" -gt 1 ]; then
+				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
+				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt > ${RUNNING_CHECKS[5]}/sort-by-package/${i}.txt
+				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5  >> ${RUNNING_CHECKS[5]}/full.txt
+			fi
+		done
+		gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
 
-	# ebuild_homepage_redirection_missing_slash_www
-	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 2
-	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
+		# ebuild_homepage_redirection_http_to_https
+		gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[3]} 5
 
-	# ebuild_homepage_301_redirections
-	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
-	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 6
+		# ebuild_homepage_redirection_missing_slash_www
+		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
 
-	# ebuild_homepage_http_statuscode
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+		# ebuild_homepage_301_redirections
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 6
 
-	copy_checks ${SCRIPT_TYPE}
-	rm -rf ${WORKDIR}
-	rm ${TMPFILE}
+		# ebuild_homepage_http_statuscode
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+
+		copy_checks ${SCRIPT_TYPE}
+	fi
+}
+
+if [ "${1}" = "diff" ]; then
+
+	# don't use diff mode for wwwtest
+	find_func full
+	gen_results
+
+	## if /tmp/${SCRIPT_NAME} exist run in normal mode
+	## this way it's possible to override the diff mode
+	## this is usefull when the script got updates which should run
+	## on the whole tree
+	#if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+	#	TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+	#	# only run diff mode if todaychecks exist and doesn't have zero bytes
+	#	if [ -s ${TODAYCHECKS} ]; then
+	#		# we need to copy all existing results first and remove packages which
+	#		# were changed (listed in TODAYCHECKS). If no results file exists, do
+	#		# nothing - the script would create a new one anyway
+	#		for oldfull in ${RUNNING_CHECKS[@]}; do
+	#			# SCRIPT_TYPE isn't used in the ebuilds usually,
+	#			# thus it has to be set with the other important variables
+	#			#
+	#			# first set the full.txt path from the old log
+	#			OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+	#			# check if the oldlog exist (don't have to be)
+	#			if [ -e ${OLDLOG} ]; then
+	#				# copy old result file to workdir and filter the result
+	#				cp ${OLDLOG} ${oldfull}/
+	#				for cpak in $(cat ${TODAYCHECKS}); do
+	#					# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+	#					# will fail because '/' aren't escapted. also remove first slash
+	#					pakcat="${cpak:1}"
+	#					sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+	#				done
+	#			fi
+	#		done
+	#		# run the script only on the changed packages
+	#		find_func ${1}
+	#		# remove dropped packages
+	#		diff_rm_dropped_paks 1
+	#		gen_results
+	#	fi
+	#else
+	#	find_func full
+	#	gen_results
+	#fi
+
+else
+	find_func ${1}
+	gen_results
 fi
+
+${SCRIPT_MODE} && rm ${TMPFILE}
+${SCRIPT_MODE} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}
