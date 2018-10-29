@@ -405,6 +405,9 @@ diff_rm_dropped_paks(){
 				for p in ${p_list[@]}; do
 					if ! [ -d ${PORTTREE}/${p} ]; then
 						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
+						if [ -d ${c}/sort-by-package ]; then
+							rm -rf ${c}/sort-by-package/${p}.txt
+						fi
 					fi
 				done
 			fi
