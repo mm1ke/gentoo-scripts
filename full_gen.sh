@@ -48,7 +48,7 @@ mkdir -p ${WORKDIR}/{sort-by-package,sort-by-maintainer}
 for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|sort); do
 	for main in $(ls ${check}/sort-by-maintainer/); do
 		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-maintainer/${main}
-		cat ${check}/sort-by-maintainer/${main} >> ${WORKDIR}/sort-by-maintainer/${main}
+		cat ${check}/sort-by-maintainer/${main} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-maintainer/${main}
 	done
 done
 
@@ -58,7 +58,7 @@ for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|so
 		mkdir -p ${WORKDIR}/sort-by-package/${cat}
 		for pack in $(ls ${check}/sort-by-package/${cat}/); do
 			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
-			cat ${check}/sort-by-package/${cat}/${pack} >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+			cat ${check}/sort-by-package/${cat}/${pack} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 		done
 	done
 done
@@ -68,7 +68,7 @@ for cat in $(ls ${WORKDIR}/sort-by-package/); do
 	for pack in $(ls ${WORKDIR}/sort-by-package/${cat}/); do
 		echo "<<< open bugs >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-		echo "${openbugs}" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+		echo "${openbugs}" | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 	done
 done
 ### full list generation end ###
