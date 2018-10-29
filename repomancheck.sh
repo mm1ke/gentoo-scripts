@@ -135,13 +135,7 @@ if [ "${1}" = "diff" ]; then
 		cat ${TODAYCHECKS} | parallel main {}
 
 		# remove dropped packages
-		p_list=( $(cut -d'|' -f1 ${RUNNING_CHECKS[0]}/full.txt) )
-		for p in ${p_list[@]}; do
-			if ! [ -d ${PORTTREE}/${p} ]; then
-				sed -i "/${p//\//\\/}${DL}/d" ${RUNNING_CHECKS[0]}/full.txt
-				rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${p}.txt
-			fi
-		done
+		diff_rm_dropped_paks 1
 
 	else
 		find_func
