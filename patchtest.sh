@@ -46,6 +46,12 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+#${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="patchtest"
 SCRIPT_SHORT="PAT"
 SCRIPT_TYPE="checks"
@@ -79,8 +85,8 @@ main(){
 
 			# get ebuild detail
 			local ebuild_full=$(basename ${ebuild%.*})
-			local ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
-			local ebuild_revision=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f3)
+			local ebuild_version=$(echo ${ebuild_full/${package}}|cut -d'-' -f2)
+			local ebuild_revision=$(echo ${ebuild_full/${package}}|cut -d'-' -f3)
 			local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
 
 			$DEBUG && >&2 echo "**DEBUG: Ebuildvars: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot"
@@ -88,11 +94,11 @@ main(){
 			local cn=()
 			# create custom names to check
 			cn+=("${patchfile}")
-			cn+=("${patchfile/${package_name}/${pn}}")
-			cn+=("${patchfile/${package_name}-${ebuild_version}/${p}}")
+			cn+=("${patchfile/${package}/${pn}}")
+			cn+=("${patchfile/${package}-${ebuild_version}/${p}}")
 			cn+=("${patchfile/${ebuild_version}/${pv}}")
 
-			local cn_name_vers="${patchfile/${package_name}/${pn}}"
+			local cn_name_vers="${patchfile/${package}/${pn}}"
 			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
 
 			# special naming
@@ -105,7 +111,7 @@ main(){
 				local var_dist_ver='${DIST_VERSION}'
 				local var_x509_ver='${X509_VER}'
 
-				local package_name_ver="${package_name}-${ebuild_version}"
+				local package_name_ver="${package}-${ebuild_version}"
 
 				# get the variables from the ebuilds
 				my_pn_name="$(grep ^MY_PN\= ${ebuild})"
@@ -115,9 +121,9 @@ main(){
 				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild})"
 				my_x509_ver="$(grep ^X509_VER\= ${ebuild}|cut -d' ' -f1)"
 
-				# i dont know
+				# this needs some better explanaition
 				[ -n "${my_pn_name}" ] && \
-					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package_name|g")" >/dev/null 2>&1
+					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package|g")" >/dev/null 2>&1
 				[ -n "${my_pv_name}" ] && \
 					eval my_pv_name="$(echo ${my_pv_name:6}|sed "s|PV|ebuild_version|g")" >/dev/null 2>&1
 				[ -n "${my_p_name}" ] && \
@@ -139,37 +145,37 @@ main(){
 				if [ -n "${my_mod_ver}" ]; then
 					cn+=("${patchfile/${my_mod_ver}/${var_mod_ver}}")
 					n1="${patchfile/${my_mod_ver}/${var_mod_ver}}"
-					cn+=("${n1/${package_name}/${pn}}")
+					cn+=("${n1/${package}/${pn}}")
 				fi
 
 				if [ -n "${my_dist_ver}" ]; then
 					cn+=("${patchfile/${my_dist_ver}/${var_dist_ver}}")
 					n2="${patchfile/${my_dist_ver}/${var_dist_ver}}"
-					cn+=("${n2/${package_name}/${pn}}")
+					cn+=("${n2/${package}/${pn}}")
 				fi
 
 				if [ -n "${my_x509_ver}" ]; then
 					cn+=("${patchfile/${my_x509_ver}/${var_x509_ver}}")
 					n2="${patchfile/${my_x509_ver}/${var_x509_ver}}"
-					cn+=("${n2/${package_name}/${pn}}")
-					cn+=("${n2/${package_name}-${ebuild_version}/${p}}")
+					cn+=("${n2/${package}/${pn}}")
+					cn+=("${n2/${package}-${ebuild_version}/${p}}")
 				fi
 			fi
 
 			# add special naming if there is a revision
 			if [ -n "${ebuild_revision}" ]; then
-				cn+=("${patchfile/${package_name}-${ebuild_version}-${ebuild_revision}/${pf}}")
+				cn+=("${patchfile/${package}-${ebuild_version}-${ebuild_revision}/${pf}}")
 				cn+=("${patchfile/${ebuild_version}-${ebuild_revision}/${pvr}}")
 			fi
 			# looks for names with slotes, if slot is not 0
 			if [ -n "${ebuild_slot}" ] && ! [ "${ebuild_slot}" = "0" ]; then
 				cn+=("${patchfile/${ebuild_slot}/${slot}}")
-				name_slot="${patchfile/${package_name}/${pn}}"
+				name_slot="${patchfile/${package}/${pn}}"
 				name_slot="${name_slot/${ebuild_slot}/${slot}}"
 				cn+=("${name_slot}")
 			fi
 			# find vmware-modules patches
-			if [ "${package_name}" = "vmware-modules" ]; then
+			if [ "${package}" = "vmware-modules" ]; then
 				local pv_major='${PV_MAJOR}'
 				cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
 			fi
@@ -276,17 +282,19 @@ main(){
 		fi
 	}
 
+	# do eclass prechecking
 	local prechecks=true
-	local package=${1}
-	local category="$(echo ${package}|cut -d'/' -f2)"
 
-	package_name=${package##*/}
-	fullpath="/${PORTTREE}/${package}"
+	local full_package=${1}
+	local category="$(echo ${full_package}|cut -d'/' -f2)"
+	package="$(echo ${full_package}|cut -d'/' -f3)"
 
-	$DEBUG && >&2 echo "DEBUG: checking: ${category}/${package_name}"
+	fullpath="/${PORTTREE}/${full_package}"
+
+	$DEBUG && >&2 echo "DEBUG: checking: ${category}/${package}"
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
-		$DEBUG && >&2 echo "DEBUG: found files dir in ${category}/${package_name}"
+		$DEBUG && >&2 echo "DEBUG: found files dir in ${category}/${package}"
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
@@ -300,18 +308,18 @@ main(){
 				echo false
 			fi
 
-			if $(echo ${white_list[@]} | grep "${package:2};${pfile}" >/dev/null); then
+			if $(echo ${white_list[@]} | grep "${category}/${package};${pfile}" >/dev/null); then
 				for white in ${white_list[@]}; do
 					local cat_pak="$(echo ${white}|cut -d';' -f1)"
 					local white_file="$(echo ${white}|cut -d';' -f2)"
 					local white_ebuild="$(echo ${white}|cut -d';' -f3)"
-					if [ "${package:2};${pfile}" = "${cat_pak};${white_file}" ]; then
+					if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
 						if [ "${white_ebuild}" = "*" ]; then
 							echo true
 							break
 						else
 							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
-								if [ -e ${PORTTREE}/${package}/${wbuild} ]; then
+								if [ -e ${PORTTREE}/${full_package}/${wbuild} ]; then
 									echo true
 									break 2
 								fi
@@ -440,11 +448,11 @@ main(){
 							local p='${P}'
 							local pv='${PV}'
 							local ebuild_full=$(basename ${aster_ebuild%.*})
-							local ebuild_version=$(echo ${ebuild_full/${package_name}}|cut -d'-' -f2)
+							local ebuild_version=$(echo ${ebuild_full/${package}}|cut -d'-' -f2)
 
-							snip="${snip/${p}/${package_name}-${ebuild_version}}"
+							snip="${snip/${p}/${package}-${ebuild_version}}"
 							snip="${snip/${pv}/${ebuild_version}}"
-							snip="${snip/${pn}/${package_name}}"
+							snip="${snip/${pn}/${package}}"
 
 							b="ls ${fullpath}/files/${snip}"
 							asterix_patches=$(eval ${b} 2> /dev/null)
@@ -471,17 +479,17 @@ main(){
 		$DEBUG && echo >&2 "DEBUG: unused patches: ${unused_patches[@]}"
 		$DEBUG && echo >&2
 
-		main="$(get_main_min "${category}/${package_name}")"
+		main="$(get_main_min "${category}/${package}")"
 
 		array_names
 		if [ ${#unused_patches[@]} -gt 0 ]; then
 			if ${SCRIPT_MODE}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
+					echo -e "${category}/${package}${DL}${upatch}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package_name}${DL}${upatch}${DL}${main}"
+					echo -e "${category}/${package}${DL}${upatch}${DL}${main}"
 				done
 			fi
 		fi
