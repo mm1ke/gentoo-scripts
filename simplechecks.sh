@@ -71,6 +71,7 @@ array_names
 #
 
 main() {
+	array_names
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f2)"
 	local package="$(echo ${full_package}|cut -d'/' -f3)"
@@ -78,69 +79,100 @@ main() {
 
 	local maintainer="$(get_main_min "${category}/${package}")"
 
-	if ${SCRIPT_MODE}; then
-		echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${NAME}/full.txt
-	else
-		echo "${NAME##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
-	fi
-}
-
-pre_check_metadata_mixed_indentation() {
-	if grep $'\t' ${1} >/dev/null; then
-		main ${1}
-	fi
-}
-
-pre_check_eapi6() {
-	if [ "$(get_eapi ${1})" = "6" ]; then
-		main ${1}
-	fi
-}
-
-pre_check_homepage_var() {
-	if ! grep 'HOMEPAGE=.*${HOMEPAGE}' ${1} >/dev/null; then
-		main ${1}
-	fi
-}
-
-pre_check_ebuild_description_over_80() {
-	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local filename="$(echo ${full_package}|cut -d'/' -f4)"
-
-	if [ $(grep DESCRIPTION ${PORTTREE}/metadata/md5-cache/${category}/${filename%.*} | wc -m) -gt 95 ]; then
-		main ${full_package}
-	fi
-}
-
-pre_metadata_missing_proxy_maintainer() {
-	local full_package=${1}
-	local category="$(echo ${full_package}|cut -d'/' -f2)"
-	local package="$(echo ${full_package}|cut -d'/' -f3)"
-
-	local maintainer="$(get_main_min "${category}/${package}")"
-	local ok=false
-
-	local i
-	for i in $(echo ${maintainer}|tr ':' '\n'); do
-		if ! $(echo ${i} | grep "@gentoo.org" >/dev/null ); then
-			ok=true
+	output(){
+		local checkid=${1}
+		if ${SCRIPT_MODE}; then
+			echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+		else
+			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
 		fi
-	done
+	}
 
-	${ok} || main ${full_package}
+	# trailing whitespace
+	if $(egrep -q " +$" ${full_package}); then
+		output 0
+	fi
+	# mirror usage
+	if $(grep -q 'mirror://gentoo' ${full_package}); then
+		output 2
+	fi
+
+	if [ "$(get_eapi ${full_package})" = "6" ]; then
+		# epatch usage
+		if $(grep -q "\<epatch\>" ${full_package}); then
+			output 3
+		fi
+		# dohtml usage
+		if $(grep -q "\<dohtml\>" ${full_package}); then
+			output 4
+		fi
+	fi
+	# DESCRIPTION over 80
+	if [ $(grep DESCRIPTION ${PORTTREE}/metadata/md5-cache/${category}/${filename%.*} | wc -m) -gt 95 ]; then
+		output 5
+	fi
+	# HOMEPAGE with variables
+	if $(grep -q "HOMEPAGE=.*\${" ${full_package}); then
+		if ! $(grep -q 'HOMEPAGE=.*${HOMEPAGE}' ${full_package}); then
+			output 7
+		fi
+	fi
+	# insecure git usage
+	if $(grep -q "EGIT_REPO_URI=\"git://" ${full_package}); then
+		output 8
+	fi
+}
+
+main-xml(){
+	array_names
+	local full_package=${1}
+	local category="$(echo ${full_package}|cut -d'/' -f2)"
+	local package="$(echo ${full_package}|cut -d'/' -f3)"
+	local filename="metadata.xml"
+
+	if [ -e ${PORTTREE}/${category}/${package}/metadata.xml ]; then
+		local maintainer="$(get_main_min "${category}/${package}")"
+	fi
+
+	output(){
+		local checkid=${1}
+		if ${SCRIPT_MODE}; then
+			echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+		else
+			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+		fi
+	}
+
+	# mixed indentation
+	if $(grep -q "^ " ${full_package}); then
+		if $(grep -q $'\t' ${full_package}); then
+			output 1
+		fi
+	fi
+	# missing proxy maintainer
+	local ok=false
+	if $(grep -q "proxy-maint@gentoo.org" ${full_package}); then
+		local i
+		for i in $(echo ${maintainer}|tr ':' '\n'); do
+			if ! $(echo ${i} | grep -q "@gentoo.org"); then
+				ok=true
+			fi
+		done
+
+		if ! ${ok}; then
+			output 6
+		fi
+	fi
 }
 
 depth_set ${1}
 cd ${PORTTREE}
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
-export -f main get_main_min array_names
-export -f pre_check_eapi6 pre_check_metadata_mixed_indentation pre_check_ebuild_description_over_80 pre_metadata_missing_proxy_maintainer pre_check_homepage_var
+
+export -f main main-xml get_main_min array_names
 export WORKDIR SCRIPT_SHORT
 
-# ebuild_trailing_whitespaces
-export NAME="${RUNNING_CHECKS[0]}"
-find ./${level} \( \
+find ./${level} -mindepth $(expr $MIND + 1) -maxdepth $(expr $MAXD + 1) \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -148,11 +180,9 @@ find ./${level} \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec egrep -l " +$" {} \; | parallel main {}
+	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel main {}
 
-# metadata_mixed_indentation
-export NAME="${RUNNING_CHECKS[1]}"
-find ./${level} -maxdepth 1 \( \
+find ./${level} -mindepth $MIND -maxdepth $(expr $MAXD + 1) \( \
 	-path ./scripts/\* -o \
 	-path ./profiles/\* -o \
 	-path ./packages/\* -o \
@@ -160,120 +190,43 @@ find ./${level} -maxdepth 1 \( \
 	-path ./distfiles/\* -o \
 	-path ./metadata/\* -o \
 	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "^ " {} \; | parallel pre_check_metadata_mixed_indentation {}
+	-path ./.git/\* \) -prune -o -type f -name "*.xml" -print | parallel main-xml {}
 
-# ebuild_obsolete_gentoo_mirror_usage
-export NAME="${RUNNING_CHECKS[2]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l 'mirror://gentoo' {} \; | parallel main {}
-
-# ebuild_epatch_in_eapi6
-export NAME="${RUNNING_CHECKS[3]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<epatch\>" {} \; | parallel pre_check_eapi6 {}
-
-# ebuild_dohtml_in_eapi6
-export NAME="${RUNNING_CHECKS[4]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "\<dohtml\>" {} \; | parallel pre_check_eapi6 {}
-
-# ebuild_description_over_80
-# only works with md5-cache
-if ${ENABLE_MD5}; then
-	export NAME="${RUNNING_CHECKS[5]}"
-	find ./${level} \( \
-		-path ./scripts/\* -o \
-		-path ./profiles/\* -o \
-		-path ./packages/\* -o \
-		-path ./licenses/\* -o \
-		-path ./distfiles/\* -o \
-		-path ./metadata/\* -o \
-		-path ./eclass/\* -o \
-		-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -print | parallel pre_check_ebuild_description_over_80 {}
-fi
-
-# metadata_missing_proxy_maintainer
-export NAME="${RUNNING_CHECKS[6]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.xml" -exec grep -l "proxy-maint@gentoo.org" {} \; | parallel pre_metadata_missing_proxy_maintainer {}
-
-# ebuild_variables_in_homepages
-export NAME="${RUNNING_CHECKS[7]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "HOMEPAGE=.*\${" {} \; | parallel pre_check_homepage_var {}
-
-# egit_repo_uri
-export NAME="${RUNNING_CHECKS[8]}"
-find ./${level} \( \
-	-path ./scripts/\* -o \
-	-path ./profiles/\* -o \
-	-path ./packages/\* -o \
-	-path ./licenses/\* -o \
-	-path ./distfiles/\* -o \
-	-path ./metadata/\* -o \
-	-path ./eclass/\* -o \
-	-path ./.git/\* \) -prune -o -type f -name "*.ebuild" -exec grep -l "EGIT_REPO_URI=\"git://" {} \; | parallel main {}
 
 if ${SCRIPT_MODE}; then
+	sort_result ${RUNNING_CHECKS[0]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
+	sort_result ${RUNNING_CHECKS[1]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[1]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 1
 
+	sort_result ${RUNNING_CHECKS[2]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[2]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 1
 
+	sort_result ${RUNNING_CHECKS[3]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[3]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 1
 
+	sort_result ${RUNNING_CHECKS[4]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[4]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 1
 
+	sort_result ${RUNNING_CHECKS[5]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[5]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[5]} 1
 
+	sort_result ${RUNNING_CHECKS[6]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[6]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[6]} 1
 
+	sort_result ${RUNNING_CHECKS[7]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[7]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[7]} 1
 
+	sort_result ${RUNNING_CHECKS[8]}
 	gen_sort_main_v2 ${RUNNING_CHECKS[8]} 3
 	gen_sort_pak_v2 ${RUNNING_CHECKS[8]} 1
 
