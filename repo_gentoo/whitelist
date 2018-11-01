@@ -404,4 +404,12 @@ white_list=(
 	"app-i18n/imhangul;xinput-imhangul3y;imhangul-2.1.0-r1.ebuild:imhangul-2.1.1.ebuild:imhangul-3.1.1.ebuild"
 	"app-i18n/imhangul;xinput-imhangulahn;imhangul-2.1.0-r1.ebuild:imhangul-2.1.1.ebuild:imhangul-3.1.1.ebuild"
 	"app-i18n/imhangul;xinput-imhangulro;imhangul-2.1.0-r1.ebuild:imhangul-2.1.1.ebuild:imhangul-3.1.1.ebuild"
+	"media-libs/libsndfile;libsndfile-1.0.28-CVE-2017-8362.patch;libsndfile-1.0.28-r4.ebuild"
+	"media-libs/libsndfile;libsndfile-1.0.28-CVE-2017-8365.patch;libsndfile-1.0.28-r4.ebuild"
+	"media-libs/libsndfile;libsndfile-1.0.28-CVE-2017-8363.patch;libsndfile-1.0.28-r4.ebuild"
+	"media-sound/timidity++;timidity++-2.14.0-CVE-2017-11546.patch;timidity++-2.14.0-r3.ebuild"
+	"media-sound/timidity++;timidity++-2.14.0-CVE-2017-11547.patch;timidity++-2.14.0-r3.ebuild"
+	"media-sound/wavpack;wavpack-5.1.0-CVE-2018-6767.patch;wavpack-5.1.0-r1.ebuild"
+	"media-sound/wavpack;wavpack-5.1.0-CVE-2018-7253.patch;wavpack-5.1.0-r1.ebuild"
+	"media-sound/wavpack;wavpack-5.1.0-CVE-2018-7254.patch;wavpack-5.1.0-r1.ebuild"
 )
