@@ -89,6 +89,7 @@ hash_start(){
 			# generate results file, based on the diffs from the full-last.log
 			# if this file doesn't exist nothing happen.
 			if [ -e ${HASHTREE}/full-last.log ]; then
+				mkdir -p ${HASHTREE}/results
 				touch ${HASHTREE}/results/results-${date_today}.log
 				# list every category, save hashes of today and yesterday, compare and
 				# if it doesn't match, check every package in that category
