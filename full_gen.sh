@@ -46,21 +46,25 @@ mkdir -p ${WORKDIR}/{sort-by-package,sort-by-maintainer}
 #
 # full list gen - maintainer sorting
 for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|sort); do
-	for main in $(ls ${check}/sort-by-maintainer/); do
-		echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-maintainer/${main}
-		cat ${check}/sort-by-maintainer/${main} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-maintainer/${main}
-	done
+	if [ -d ${check}/sort-by-maintainer/ ]; then
+		for main in $(ls ${check}/sort-by-maintainer/); do
+			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-maintainer/${main}
+			cat ${check}/sort-by-maintainer/${main} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-maintainer/${main}
+		done
+	fi
 done
 
 # full list gen - package sorting
 for check in $(find ${SITEDIR}/checks/ -mindepth 1 -maxdepth 1 -type d -print|sort); do
-	for cat in $(ls ${check}/sort-by-package/); do
-		mkdir -p ${WORKDIR}/sort-by-package/${cat}
-		for pack in $(ls ${check}/sort-by-package/${cat}/); do
-			echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
-			cat ${check}/sort-by-package/${cat}/${pack} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+	if [ -d ${check}/sort-by-package/ ]; then
+		for cat in $(ls ${check}/sort-by-package/); do
+			mkdir -p ${WORKDIR}/sort-by-package/${cat}
+			for pack in $(ls ${check}/sort-by-package/${cat}/); do
+				echo "<<< ${check##*/} >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+				cat ${check}/sort-by-package/${cat}/${pack} | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+			done
 		done
-	done
+	fi
 done
 
 # add bug information to the packages
