@@ -43,12 +43,15 @@ else
 	exit 1
 fi
 
-# only works with md5-cache
-${ENABLE_MD5} || exit 0
-
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="badstyle"
 SCRIPT_SHORT="BAS"
 SCRIPT_TYPE="checks"

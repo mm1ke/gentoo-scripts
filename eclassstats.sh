@@ -46,6 +46,12 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+#${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="eclassstats"
 SCRIPT_SHORT="ECS"
 SCRIPT_TYPE="stats"

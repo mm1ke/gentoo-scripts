@@ -47,8 +47,8 @@ fi
 # don't run on overlays because dependencies are most likely only
 # available at the main tree
 ${TREE_IS_MASTER} || exit 0
-# only works with md5-cache
 ${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
 
 #
 ### IMPORTANT SETTINGS START ###

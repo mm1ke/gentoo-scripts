@@ -43,13 +43,15 @@ else
 	exit 1
 fi
 
-# don't run on overlays because use.desc at overlays
-# might not exists
-${TREE_IS_MASTER} || exit 0
-
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+${TREE_IS_MASTER} || exit 0
+#${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="dupuse"
 SCRIPT_SHORT="DUU"
 SCRIPT_TYPE="checks"

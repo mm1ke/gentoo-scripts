@@ -46,6 +46,12 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
+
+# feature requirements
+#${TREE_IS_MASTER} || exit 0
+#${ENABLE_MD5} || exit 0
+#${ENABLE_GIT} || exit 0
+
 SCRIPT_NAME="deadeclasses"
 SCRIPT_SHORT="DEL"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
