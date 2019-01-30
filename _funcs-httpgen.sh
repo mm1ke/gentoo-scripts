@@ -29,6 +29,8 @@ if ! [ -e ${startdir}/_vars.sh ]; then
 	exit 1
 fi
 
+js_template="/home/bob/scripts/_files/_data_template.js"
+
 gen_http_sort_main_v2(){
 	local type="${1}"
 	local dir="${2}"
@@ -140,7 +142,6 @@ gen_html_out(){
 		# get the needed information from the _vars file
 		source ${startdir}/_vars.sh "${chart_name}"
 
-		local js_template="/root/scripts/_files/_data_template.js"
 		cp ${js_template} ${SITEDIR}/charts-gen/${chart_name}.js
 
 		# DBNAME comes from funcs.sh
