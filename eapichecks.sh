@@ -60,9 +60,9 @@ WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_cleanup_candidates"					#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"						#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"								#Index 2
+		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_cleanup_candidates"					#Index 0
+		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"						#Index 1
+		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"								#Index 2
 	)
 }
 array_names
@@ -95,10 +95,6 @@ main() {
 	local package_path="/${PORTTREE}/${category}/${package}"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local openbugs="$(get_bugs ${category}/${package})"
-	if ! [ -z "${openbugs}" ]; then
-		openbugs="${DL}${openbugs}"
-	fi
 
 	if [ "${name: -3}" = "-r${name: -1}" ]; then
 		start=$(expr ${name: -1} + 1)
@@ -118,17 +114,18 @@ main() {
 			local eapi_found_ebuild="$(get_eapi ${found_ebuild})"
 
 			if [ "${eapi_found_ebuild}" = "6" ] || [ "${eapi_found_ebuild}" = "7" ]; then
-				local old_file=""
-				local new_file=""
-				if ${ENABLE_GIT}; then
-					old_file="$(get_age "${category}/${package}/${org_name}.ebuild")${DL}"
-					new_file="$(get_age "${category}/${package}/${name}-r${i}.ebuild")${DL}"
-				fi
+
+				# get_age returns "-----" if ENABLE_GIT is disabled
+				# of=obsolete file
+				# lf=latest file
+				local of="$(get_age_date "${category}/${package}/${org_name}.ebuild")"
+				local lf="$(get_age_date "${category}/${package}/${name}-r${i}.ebuild")"
+
 				if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
-					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C4_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
 						"${RUNNING_CHECKS[0]##*/}"
 				else
-					output "${ebuild_eapi}${DL}${old_file}${eapi_found_ebuild}${DL}${new_file}${category}/${package}${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}${openbugs}" \
+					output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
 						"${RUNNING_CHECKS[1]##*/}"
 				fi
 				break 2
@@ -136,7 +133,10 @@ main() {
 		fi
 	done
 	if ! [ ${ebuild_eapi} = 5 ]; then
-		output "${ebuild_eapi}${DL}$(get_eapi_pak ${package_path})${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}${openbugs}" \
+		local eapilist="$(get_eapi_list ${package_path})"
+		local fileage="$(get_age_date ${full_package})"
+		# OUTPUT: 0|_|_|0:0:0:0:0:0:0|_|foo/bar|foo/bar-1.0.0|foo@gentoo
+		output "${ebuild_eapi}${DL}_C2_${DL}_C3_${DL}${eapilist}${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${fileage})${DL}${maintainer}" \
 			"${RUNNING_CHECKS[2]##*/}"
 	fi
 }
@@ -183,37 +183,61 @@ find_func(){
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
-		sort_result ${RUNNING_CHECKS[2]} "1,1 -k3,3"
-		sort_result ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
-		sort_result ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo "1,1 -k5,5" || echo "1,1 -k3,3")
+		sort_result ${RUNNING_CHECKS[0]} "1,1 -k6,6"
+		sort_result ${RUNNING_CHECKS[1]} "1,1 -k6,6"
+		sort_result ${RUNNING_CHECKS[2]} "1,1 -k6,6"
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 3
+		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 9
+		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 6
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 8 || echo 6)
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} $(${ENABLE_GIT} && echo 5 || echo 3)
+		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 9
+		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 6
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 8 || echo 6)
-		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} $(${ENABLE_GIT} && echo 5 || echo 3)
+		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 8
+		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 6
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
-increase_git_age(){
-	local fullfile=${1}
-	# before doing anything check if there even exists a full.txt
-	if [ -e "${fullfile}" ]; then
-		# count the occurences of '|' as it's possible to not have any git age
-		# information in the full file at all. If there is that information
-		# there must be either 7 or 8 occurences of '|'
-		local check_deli="$(head -n1 ${fullfile} | grep -o '|' | wc -l)"
-		if [ ${check_deli} -eq 8 ] || [ ${check_deli} -eq 7 ]; then
-			# increase the git age by +1 for both rows
-			gawk -i inplace -F'|' '{$2=$2+1}1' OFS='|' ${fullfile}
-			gawk -i inplace -F'|' '{$4=$4+1}1' OFS='|' ${fullfile}
-		fi
+upd_results(){
+	if [ "${1}" = "old" ]; then
+		x=( )
+		for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+			x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+		done
+		local RUNNING_CHECKS=( ${x[@]} )
 	fi
+
+	for rcid in $(seq 0 1); do
+		gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
+		for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+			local p="$(echo ${id}|cut -d'|' -f6)"
+			local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
+			local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
+
+			local of="$(get_age_v2 "${fd1}")"
+			local lf="$(get_age_v2 "${fd2}")"
+			$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+
+			local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
+
+			sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+		done
+	done
+	gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
+	for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
+		local p="$(echo ${id}|cut -d'|' -f6)"
+		local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
+
+		local lf="$(get_age_v2 "${fd1}")"
+		$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+		local bc="$(get_bugs_count ${p})"
+
+		local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
+
+		sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
+	done
 }
 
 if [ "${1}" = "diff" ]; then
@@ -249,33 +273,30 @@ if [ "${1}" = "diff" ]; then
 				fi
 			done
 
+			# remove dropped packages
+			diff_rm_dropped_paks 6
+			# run the script only on the changed packages
+			find_func ${1}
 			# special case for cleanup candidates and stable candidates.
 			# this increases the second and fourth row by 1. This row contain the git
 			# age of the ebuild which should got older by one day. Since we don't
 			# check full we have to increase it manually
-			increase_git_age "${RUNNING_CHECKS[0]}/full.txt"
-			increase_git_age "${RUNNING_CHECKS[1]}/full.txt"
-
-			# run the script only on the changed packages
-			find_func ${1}
-			# remove dropped packages
-			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 0
-			diff_rm_dropped_paks_v2 $(${ENABLE_GIT} && echo 5 || echo 3) 1
-			diff_rm_dropped_paks_v2 3 2
+			upd_results
 			gen_results
 
 		else
 			# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
 			# this case, increase the git age:
-			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/full.txt"
-			increase_git_age "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[1]/${WORKDIR}/}/full.txt"
+			upd_results old
 		fi
 	else
 		find_func full
+		upd_results
 		gen_results
 	fi
 else
 	find_func ${1}
+	upd_results
 	gen_results
 fi
 

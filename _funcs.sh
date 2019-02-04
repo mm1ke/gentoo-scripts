@@ -92,6 +92,29 @@ _update_buglists(){
 }
 _update_buglists
 
+# retruns true if bug is found, false if not
+get_bugs_bool(){
+	local value="${1}"
+
+	if $(grep -q ${value} ${BUGTMPDIR}/full-$(date -I).txt); then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# returns the amout of bugs found
+get_bugs_count(){
+	local value="${1}"
+	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | wc -l)"
+
+	if [ -n "${return}" ]; then
+		printf "%03d\n" "${return}"
+	else
+		echo "000"
+	fi
+}
+
 # returns a list of Bug Numbers for a given ebuild
 get_bugs(){
 	local value="${1}"
@@ -254,7 +277,32 @@ get_age() {
 		fileage="$(expr \( "${date_today}" - \
 			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${file} \
 			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
-		echo "${fileage}"
+		printf "%05d\n" "${fileage}"
+	else
+		echo "-----"
+	fi
+}
+
+get_age_v2() {
+	local filedate="${1}"
+	local date_today="$(date '+%s' -d today)"
+
+	if ${ENABLE_GIT}; then
+		fileage="$(expr \( "${date_today}" - "$(date '+%s' -d ${filedate})" \) / 86400 2>/dev/null)"
+		printf "%05d\n" "${fileage}"
+	else
+		echo "-----"
+	fi
+}
+
+# like get_age but returns the file creation date
+get_age_date() {
+	local file=${1}
+
+	if ${ENABLE_GIT}; then
+		filedate="$(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${file} \
+			| head -1|cut -d' ' -f1)"
+		echo "${filedate}"
 	else
 		echo ""
 	fi
@@ -485,4 +533,5 @@ END`
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
-	compare_keywords diff_rm_dropped_paks get_dead_age
+	compare_keywords diff_rm_dropped_paks get_dead_age get_bugs_bool get_bugs_count \
+	get_age_v2 get_age_date
