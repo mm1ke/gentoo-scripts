@@ -295,7 +295,7 @@ get_age_v2() {
 	fi
 }
 
-# like get_age but returns the file creation date
+# like get_age but returns the file creation date (or file removal date)
 get_age_date() {
 	local file=${1}
 
@@ -303,23 +303,6 @@ get_age_date() {
 		filedate="$(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${file} \
 			| head -1|cut -d' ' -f1)"
 		echo "${filedate}"
-	else
-		echo ""
-	fi
-}
-
-# get the date when the package got removed (removed via git)
-get_dead_age() {
-	local package=${1}
-	#local date_today="$(date '+%s' -d today)"
-
-	if ${ENABLE_GIT}; then
-		#deadage="$(expr \( "${date_today}" - \
-		#	"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${package} \
-		#	| head -1 | cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
-		deadage="$(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${package} \
-			| head -1 | cut -d' ' -f1)"
-		echo "${deadage}"
 	else
 		echo ""
 	fi
