@@ -516,5 +516,5 @@ END`
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
-	compare_keywords diff_rm_dropped_paks get_dead_age get_bugs_bool get_bugs_count \
+	compare_keywords diff_rm_dropped_paks get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date
