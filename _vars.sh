@@ -354,7 +354,7 @@ case ${dir} in
 		databasevalue="sValue"
 		label="Unattended ebuilds"
 		title="${label}"
-		info_full="EAPI | OTHER EAPI | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | OPENBUGS | BUGSCOUNT | OTHER EAPI | FILEAGE | CATEGORY/PACKAGE | EBUILD | MAINTAINER(S)"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
@@ -369,7 +369,7 @@ case ${dir} in
 		databasevalue="sValue"
 		label="Removal canditates"
 		title="${label}"
-		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | OPENBUGS | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S)"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
@@ -384,7 +384,7 @@ case ${dir} in
 		databasevalue="sValue"
 		label="Stable request canditates"
 		title="${label}"
-		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S) | OPENBUGS"
+		info_full="EAPI | FILE AGE | EAPI(NV) | FILE AGE(NV) | OPENBUGS | CATEGORY/PACKAGE | EBUILD | EBUILD (NV) | MAINTAINER(S)"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
