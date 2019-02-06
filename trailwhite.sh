@@ -131,7 +131,7 @@ find_func(){
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
-		sort_result ${RUNNING_CHECKS[@]}
+		sort_result ${RUNNING_CHECKS[0]}
 		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 4
 		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
 
