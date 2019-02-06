@@ -266,6 +266,116 @@ depth_set() {
 	fi
 }
 
+depth_set_v2() {
+	arg="${1}"
+
+	_default_full_search() {
+		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+		find_func
+		upd_results
+		gen_results
+	}
+
+
+	if [ -z "${arg}" ]; then
+		usage
+		exit 1
+	else
+		# test if user provided input exist
+		if [ -d "${PORTTREE}/${arg}" ]; then
+			MAXD=0
+			MIND=0
+			# case if user provides only category
+			# if there is a '/', everything after need to be empty
+			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
+			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
+				MAXD=1
+				MIND=1
+			fi
+			searchp=( ${arg} )
+			find_func
+			upd_results
+			gen_results
+		elif [ "${arg}" = "full" ]; then
+			_default_full_search
+		elif [ "${arg}" = "diff" ]; then
+
+			TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+
+			if ! [ -f "${TODAYCHECKS}" ]; then
+				echo "No diff file found"
+				exit 1
+			fi
+			searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+
+			# diff provides categories/package so we need maxd=1 and mind=1
+			# setting both vars to 0 because the find command adds 1 anyway
+			MAXD=0
+			MIND=0
+
+			# if /tmp/${SCRIPT_NAME} exist run in normal mode
+			# this way it's possible to override the diff mode
+			# this is usefull when the script got updates which should run
+			# on the whole tree
+			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+				# only run diff mode if todaychecks exist and doesn't have zero bytes
+				if [ -s ${TODAYCHECKS} ]; then
+					# we need to copy all existing results first and remove packages which
+					# were changed (listed in TODAYCHECKS). If no results file exists, do
+					# nothing - the script would create a new one anyway
+					for oldfull in ${RUNNING_CHECKS[@]}; do
+						# SCRIPT_TYPE isn't used in the ebuilds usually,
+						# thus it has to be set with the other important variables
+						#
+						# first set the full.txt path from the old log
+						OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+						# check if the oldlog exist (don't have to be)
+						if [ -e ${OLDLOG} ]; then
+							# copy old result file to workdir and filter the result
+							cp ${OLDLOG} ${oldfull}/
+							for cpak in $(cat ${TODAYCHECKS}); do
+								# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+								# will fail because '/' aren't escapted. also remove first slash
+								pakcat="${cpak:1}"
+								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+							done
+						fi
+					done
+
+					# remove dropped packages
+					diff_rm_dropped_paks_v3
+					# run the script only on the changed packages
+					find_func
+					# special case for cleanup candidates and stable candidates.
+					# this increases the second and fourth row by 1. This row contain the git
+					# age of the ebuild which should got older by one day. Since we don't
+					# check full we have to increase it manually
+					upd_results
+					gen_results
+
+				else
+					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
+					# this case, increase the git age:
+					upd_results old
+				fi
+			else
+				_default_full_search
+			fi
+		else
+			echo "${PORTTREE}/${arg}: Path not found"
+			exit 1
+		fi
+	fi
+}
+
 # this function get the age (file creation) of a particular ebuild file
 # depends on ${ENABLE_GIT}
 # returns the age in days
@@ -421,6 +531,40 @@ copy_checks() {
 	fi
 }
 
+diff_rm_dropped_paks_v3(){
+	local c
+	local p
+	local p_list=( )
+
+	# only run if we get a package location
+	for c in ${RUNNING_CHECKS[@]}; do
+		if [ -s ${c}/full.txt ]; then
+
+			# check the first 10 entries
+			for x in $(head -n10 ${c}/full.txt); do
+				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
+					if [ -d ${PORTTREE}/$(echo ${x}| cut -d'|' -f${i}) ]; then
+						local l=${i}
+						break 2
+					fi
+				done
+			done
+
+			if [ -n "${l}" ]; then
+				p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
+				for p in ${p_list[@]}; do
+					if ! [ -d ${PORTTREE}/${p} ]; then
+						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
+						if [ -d ${c}/sort-by-package ]; then
+							rm -rf ${c}/sort-by-package/${p}.txt
+						fi
+					fi
+				done
+			fi
+		fi
+	done
+}
+
 # remove dropped packages, needed for diff mode
 diff_rm_dropped_paks(){
 	local l=${1}			# package location (row)
@@ -479,6 +623,11 @@ diff_rm_dropped_paks_v2(){
 			done
 		fi
 	fi
+}
+
+# dummy function which can be used by script individually
+upd_results() {
+	return 0
 }
 
 get_main_min(){
