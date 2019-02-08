@@ -92,6 +92,24 @@ _update_buglists(){
 }
 _update_buglists
 
+_find_package_location(){
+	local rc_id=${1}
+	local x
+	local i
+	# find pakackge location in result first
+	if [ -s ${rc_id} ]; then
+		# check the first 10 entries
+		for x in $(head -n10 ${rc_id}); do
+			for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
+				if [ -d ${PORTTREE}/$(echo ${x}| cut -d'|' -f${i}) ]; then
+					echo ${i}
+					return 0
+				fi
+			done
+		done
+	fi
+}
+
 # retruns true if bug is found, false if not
 get_bugs_bool(){
 	local value="${1}"
@@ -155,6 +173,30 @@ sort_result(){
 	fi
 }
 
+sort_result_v2(){
+	local column="${1}"
+	local rc_id
+
+	for rc_id in ${RUNNING_CHECKS[@]}; do
+		# check input
+		if [ -d ${rc_id} ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				continue
+			fi
+		elif ! [ -e ${rc_id} ]; then
+			continue
+		fi
+
+		if [ -z "${column}" ]; then
+			sort -o ${rc_id} ${rc_id}
+		else
+			sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+		fi
+	done
+}
+
 compare_keywords(){
 	local ebuild1="${1}"
 	local ebuild2="${2}"
@@ -200,6 +242,52 @@ gen_sort_main_v2(){
 	done
 }
 
+gen_sort_main_v3(){
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local main
+	local rc_id
+
+	for rc_id in ${check_files[@]}; do
+		if [ -d ${rc_id} ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				continue
+			fi
+		elif ! [ -e ${rc_id} ]; then
+			continue
+		fi
+
+		# find pakackge location in result first
+		local pak_loc="$(_find_package_location "${rc_id}")"
+		if [ -s ${rc_id} ]; then
+			# check the first 10 entries
+			for x in $(head -n10 ${rc_id}); do
+				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
+				local pak_main="$(get_main_min ${pak})"
+				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
+					if [ "$(echo ${x}|cut -d'|' -f${i})" = "${pak_main}" ]; then
+						local main_loc=${i}
+						break 2
+					fi
+				done
+			done
+		fi
+		# generate maintainer sortings only if we find the location
+		if [ -n "${main_loc}" ]; then
+			mkdir -p ${rc_id%/*}/sort-by-maintainer
+			for main in $(cat ${rc_id} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
+				grep "${main}" ${rc_id} > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+			done
+		fi
+	done
+}
+
 # function which sorts a list by it's package
 gen_sort_pak_v2() {
 	local workfile="${1}"
@@ -222,6 +310,43 @@ gen_sort_pak_v2() {
 		f_pak="$(echo ${pack}|cut -d'/' -f2)"
 		mkdir -p ${workfile%/*}/sort-by-package/${f_cat}
 		grep "\<${pack}\>" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+	done
+}
+
+gen_sort_pak_v3() {
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local pack
+	local rc_id
+
+	for rc_id in ${check_files[@]}; do
+		# check input
+		if [ -d ${rc_id} ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				continue
+			fi
+		elif ! [ -e ${rc_id} ]; then
+			continue
+		fi
+
+		# find pakackge location in result
+		pak_loc="$(_find_package_location "${rc_id}")"
+		# only create package sorting if we found package location
+		if [ -n "${pak_loc}" ]; then
+			local f_packages="$(cat ${rc_id}| cut -d "${DL}" -f${pak_loc} |sort -u)"
+			for pack in ${f_packages}; do
+				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
+				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
+				mkdir -p ${rc_id%/*}/sort-by-package/${f_cat}
+				grep "\<${pack}\>" ${rc_id} > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+			done
+		fi
 	done
 }
 
