@@ -70,7 +70,6 @@ array_names
 ### IMPORTANT SETTINGS STOP ###
 #
 
-
 output() {
 	local text="${1}"
 	local type="${2}"
@@ -147,158 +146,70 @@ pre_check(){
 	fi
 }
 
-depth_set ${1}
-cd ${PORTTREE}
-export WORKDIR SCRIPT_SHORT
-export -f main output array_names pre_check
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
-
 find_func(){
-	if [ "${1}" = "full" ]; then
-		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
-			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-		# virtual wouldn't be included by the find command, adding it manually if
-		# it's present
-		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
-		# full provides only categories so we need maxd=2 and mind=2
-		# setting both vars to 1 because the find command adds 1 anyway
-		MAXD=1
-		MIND=1
-	elif [ "${1}" = "diff" ]; then
-		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
-		# diff provides categories/package so we need maxd=1 and mind=1
-		# setting both vars to 0 because the find command adds 1 anyway
-		MAXD=0
-		MIND=0
-	elif [ -z "${1}" ]; then
-		echo "No directory given. Please fix your script"
-		exit 1
-	else
-		searchp=( ${1} )
-	fi
-
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 		-type f -name "*.ebuild" -print | parallel pre_check {}
 }
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
-		sort_result ${RUNNING_CHECKS[0]} "1,1 -k6,6"
-		sort_result ${RUNNING_CHECKS[1]} "1,1 -k6,6"
-		sort_result ${RUNNING_CHECKS[2]} "1,1 -k6,6"
+		sort_result_v2 "1,1 -k6,6"
+		sort_result_v2 "1,1 -k6,6"
+		sort_result_v2 "1,1 -k6,6"
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 9
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 6
-
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 9
-		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 6
-
-		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 8
-		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 6
+		gen_sort_main_v3
+		gen_sort_pak_v3
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
 upd_results(){
-	if [ "${1}" = "old" ]; then
-		x=( )
-		for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-			x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
-		done
-		local RUNNING_CHECKS=( ${x[@]} )
-	fi
+	if ${SCRIPT_MODE}; then
+		if [ "${1}" = "old" ]; then
+			x=( )
+			for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+				x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+			done
+			local RUNNING_CHECKS=( ${x[@]} )
+		fi
 
-	for rcid in $(seq 0 1); do
-		gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
-		for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+		for rcid in $(seq 0 1); do
+			gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
+			for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+				local p="$(echo ${id}|cut -d'|' -f6)"
+				local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
+				local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
+
+				local of="$(get_age_v2 "${fd1}")"
+				local lf="$(get_age_v2 "${fd2}")"
+				$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+
+				local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
+
+				sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+			done
+		done
+		gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
+		for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
 			local p="$(echo ${id}|cut -d'|' -f6)"
-			local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
-			local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
+			local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
 
-			local of="$(get_age_v2 "${fd1}")"
-			local lf="$(get_age_v2 "${fd2}")"
+			local lf="$(get_age_v2 "${fd1}")"
 			$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+			local bc="$(get_bugs_count ${p})"
 
-			local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
+			local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
 
-			sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+			sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
 		done
-	done
-	gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
-	for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
-		local p="$(echo ${id}|cut -d'|' -f6)"
-		local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
-
-		local lf="$(get_age_v2 "${fd1}")"
-		$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
-		local bc="$(get_bugs_count ${p})"
-
-		local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
-
-		sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
-	done
+	fi
 }
 
-if [ "${1}" = "diff" ]; then
-	# if /tmp/${SCRIPT_NAME} exist run in normal mode
-	# this way it's possible to override the diff mode
-	# this is usefull when the script got updates which should run
-	# on the whole tree
-	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
-
-		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
-		# only run diff mode if todaychecks exist and doesn't have zero bytes
-		if [ -s ${TODAYCHECKS} ]; then
-
-			# we need to copy all existing results first and remove packages which
-			# were changed (listed in TODAYCHECKS). If no results file exists, do
-			# nothing - the script would create a new one anyway
-			for oldfull in ${RUNNING_CHECKS[@]}; do
-				# SCRIPT_TYPE isn't used in the ebuilds usually,
-				# thus it has to be set with the other important variables
-				#
-				# first set the full.txt path from the old log
-				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-				# check if the oldlog exist (don't have to be)
-				if [ -e ${OLDLOG} ]; then
-					# copy old result file to workdir and filter the result
-					cp ${OLDLOG} ${oldfull}/
-					for cpak in $(cat ${TODAYCHECKS}); do
-						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-						# will fail because '/' aren't escapted. also remove first slash
-						pakcat="${cpak:1}"
-						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-					done
-				fi
-			done
-
-			# remove dropped packages
-			diff_rm_dropped_paks 6
-			# run the script only on the changed packages
-			find_func ${1}
-			# special case for cleanup candidates and stable candidates.
-			# this increases the second and fourth row by 1. This row contain the git
-			# age of the ebuild which should got older by one day. Since we don't
-			# check full we have to increase it manually
-			upd_results
-			gen_results
-
-		else
-			# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
-			# this case, increase the git age:
-			upd_results old
-		fi
-	else
-		find_func full
-		upd_results
-		gen_results
-	fi
-else
-	find_func ${1}
-	upd_results
-	gen_results
-fi
-
+cd ${PORTTREE}
+export WORKDIR SCRIPT_SHORT
+export -f main output array_names pre_check
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+depth_set_v2 ${1}
 # cleanup tmp files
 ${SCRIPT_MODE} && rm -rf ${WORKDIR}

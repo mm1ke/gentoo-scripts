@@ -101,7 +101,7 @@ _find_package_location(){
 		# check the first 10 entries
 		for x in $(head -n10 ${rc_id}); do
 			for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-				if [ -d ${PORTTREE}/$(echo ${x}| cut -d'|' -f${i}) ]; then
+				if [ -d "${PORTTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
 					echo ${i}
 					return 0
 				fi
@@ -523,8 +523,12 @@ get_age_v2() {
 	local date_today="$(date '+%s' -d today)"
 
 	if ${ENABLE_GIT}; then
-		fileage="$(expr \( "${date_today}" - "$(date '+%s' -d ${filedate})" \) / 86400 2>/dev/null)"
-		printf "%05d\n" "${fileage}"
+		if [ -n "${filedate}" ]; then
+			fileage="$(expr \( "${date_today}" - "$(date '+%s' -d ${filedate})" \) / 86400 2>/dev/null)"
+			printf "%05d\n" "${fileage}"
+		else
+			echo "-----"
+		fi
 	else
 		echo "-----"
 	fi
@@ -668,7 +672,7 @@ diff_rm_dropped_paks_v3(){
 			# check the first 10 entries
 			for x in $(head -n10 ${c}/full.txt); do
 				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-					if [ -d ${PORTTREE}/$(echo ${x}| cut -d'|' -f${i}) ]; then
+					if [ -d "${PORTTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
 						local l=${i}
 						break 2
 					fi
