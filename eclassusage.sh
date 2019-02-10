@@ -155,46 +155,16 @@ main() {
 	fi
 }
 
-# set the search depth
-depth_set ${1}
-# switch to the PORTTREE dir
-cd ${PORTTREE}
-# export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names array_eclasses
-
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 
 find_func(){
-	if [ "${1}" = "full" ]; then
-		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
-			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-		# virtual wouldn't be included by the find command, adding it manually if
-		# it's present
-		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
-		# full provides only categories so we need maxd=2 and mind=2
-		# setting both vars to 1 because the find command adds 1 anyway
-		MAXD=1
-		MIND=1
-	elif [ "${1}" = "diff" ]; then
-		searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
-		# diff provides categories/package so we need maxd=1 and mind=1
-		# setting both vars to 0 because the find command adds 1 anyway
-		MAXD=0
-		MIND=0
-	elif [ -z "${1}" ]; then
-		echo "No directory given. Please fix your script"
-		exit 1
-	else
-		searchp=( ${1} )
-	fi
-
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 		-type f -name "*.ebuild" -exec egrep -l "inherit" {} \; | parallel main {}
 }
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
+		sort_result_v2 2
+
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
 				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
@@ -210,72 +180,29 @@ gen_results(){
 		done
 
 		for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-			gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
-			gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
+			gen_sort_main_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
+			gen_sort_pak_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
 		done
 
 		for ecd2 in $(ls ${RUNNING_CHECKS[1]}/sort-by-filter/); do
-			gen_sort_main_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 5
-			gen_sort_pak_v2 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2} 2
+			gen_sort_main_v3 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2}
+			gen_sort_pak_v3 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2}
 		done
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
-
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 2
+		gen_sort_main_v3
+		gen_sort_pak_v3
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
-if [ "${1}" = "diff" ]; then
-	# if /tmp/${SCRIPT_NAME} exist run in normal mode
-	# this way it's possible to override the diff mode
-	# this is usefull when the script got updates which should run
-	# on the whole tree
-	if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
-
-		TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
-		# only run diff mode if todaychecks exist and doesn't have zero bytes
-		if [ -s ${TODAYCHECKS} ]; then
-
-			# we need to copy all existing results first and remove packages which
-			# were changed (listed in TODAYCHECKS). If no results file exists, do
-			# nothing - the script would create a new one anyway
-			for oldfull in ${RUNNING_CHECKS[@]}; do
-				# SCRIPT_TYPE isn't used in the ebuilds usually,
-				# thus it has to be set with the other important variables
-				#
-				# first set the full.txt path from the old log
-				OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-				# check if the oldlog exist (don't have to be)
-				if [ -e ${OLDLOG} ]; then
-					# copy old result file to workdir and filter the result
-					cp ${OLDLOG} ${oldfull}/
-					for cpak in $(cat ${TODAYCHECKS}); do
-						# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-						# will fail because '/' aren't escapted. also remove first slash
-						pakcat="${cpak:1}"
-						sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-					done
-				fi
-			done
-
-			# run the script only on the changed packages
-			find_func ${1}
-			# remove dropped packages
-			diff_rm_dropped_paks 2
-			gen_results
-		fi
-	else
-		find_func full
-		gen_results
-	fi
-else
-	find_func ${1}
-	gen_results
-fi
-
+# switch to the PORTTREE dir
+cd ${PORTTREE}
+# export important variables
+export WORKDIR SCRIPT_SHORT
+export -f main array_names array_eclasses
+${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+# set the search depth
+depth_set_v2 ${1}
 # cleanup tmp files
 ${SCRIPT_MODE} && rm -rf ${WORKDIR}
