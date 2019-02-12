@@ -457,9 +457,7 @@ depth_set_v2() {
 					# were changed (listed in TODAYCHECKS). If no results file exists, do
 					# nothing - the script would create a new one anyway
 					for oldfull in ${RUNNING_CHECKS[@]}; do
-						# SCRIPT_TYPE isn't used in the ebuilds usually,
-						# thus it has to be set with the other important variables
-						#
+						# SCRIPT_TYPE = checks or stats
 						# first set the full.txt path from the old log
 						OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
 						# check if the oldlog exist (don't have to be)
@@ -475,23 +473,27 @@ depth_set_v2() {
 						fi
 					done
 
-					# remove dropped packages
+					# first: remove packages which doesn't exist anymore
 					diff_rm_dropped_paks_v3
-					# run the script only on the changed packages
+					# second: run the script only on the changed packages
 					find_func
-					# special case for cleanup candidates and stable candidates.
-					# this increases the second and fourth row by 1. This row contain the git
-					# age of the ebuild which should got older by one day. Since we don't
-					# check full we have to increase it manually
+					# third:
+					# special case for scripts who provide gitage or bugs information:
+					# following function can be configured in each script in order to
+					# update git_age or bug information (or anything else)
+					# in contrast to gen_results, this function would be also called if
+					# nothing changed since last run (see below)
 					upd_results
+					# forth: generate results
 					gen_results
 
 				else
 					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
-					# this case, increase the git age:
+					# this case, update old results (git_age or bugs information)
 					upd_results old
 				fi
 			else
+				# if override is enabled, do a normal full search.
 				_default_full_search
 			fi
 		else
