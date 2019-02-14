@@ -244,12 +244,6 @@ gen_results(){
 			" ${TMPFILE}
 		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
-		sort_result ${RUNNING_CHECKS[0]} 2
-		sort_result ${RUNNING_CHECKS[0]}/full-unfiltered.txt 2
-		sort_result ${RUNNING_CHECKS[1]} 3
-		sort_result ${RUNNING_CHECKS[2]} 2
-		sort_result ${RUNNING_CHECKS[3]} 2
-
 		# special filters - ebuild_homepage_upstream_shutdown
 		_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
 		for site in ${_filters[@]}; do
@@ -257,12 +251,10 @@ gen_results(){
 			if $(grep -q ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt); then
 				grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
 				grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
-				gen_sort_main_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 5
-				gen_sort_pak_v2 ${RUNNING_CHECKS[4]}/sort-by-filter/${site} 2
+				gen_sort_main_v3 ${RUNNING_CHECKS[4]}/sort-by-filter/${site}
+				gen_sort_pak_v3 ${RUNNING_CHECKS[4]}/sort-by-filter/${site}
 			fi
 		done
-		gen_sort_main_v2 ${RUNNING_CHECKS[4]} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[4]} 2
 
 		# ebuild_homepage_unsync
 		# find different homepages in same packages
@@ -278,27 +270,15 @@ gen_results(){
 			fi
 			if [ "${hp_lines}" -gt 1 ]; then
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
-				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt > ${RUNNING_CHECKS[5]}/sort-by-package/${i}.txt
+				# only category/package and maintainer went into the full.txt
+				# via cut ... -f2,5 (needs update if data format changes
 				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5  >> ${RUNNING_CHECKS[5]}/full.txt
 			fi
 		done
-		gen_sort_main_v2 ${RUNNING_CHECKS[5]} 2
 
-		# ebuild_homepage_redirection_http_to_https
-		gen_sort_pak_v2 ${RUNNING_CHECKS[3]} 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[3]} 5
-
-		# ebuild_homepage_redirection_missing_slash_www
-		gen_sort_pak_v2 ${RUNNING_CHECKS[2]} 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[2]} 5
-
-		# ebuild_homepage_301_redirections
-		gen_sort_pak_v2 ${RUNNING_CHECKS[1]} 3
-		gen_sort_main_v2 ${RUNNING_CHECKS[1]} 6
-
-		# ebuild_homepage_http_statuscode
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
+		sort_result_v2
+		gen_sort_pak_v3
+		gen_sort_main_v3
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
