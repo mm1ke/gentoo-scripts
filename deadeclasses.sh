@@ -103,6 +103,8 @@ find_func(){
 }
 
 gen_results(){
+	sort_result_v2
+
 	if ${SCRIPT_MODE}; then
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
@@ -112,12 +114,12 @@ gen_results(){
 		done
 
 		for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-			gen_sort_main_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 5
-			gen_sort_pak_v2 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd} 2
+			gen_sort_main_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
+			gen_sort_pak_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
 		done
 
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 2
+		gen_sort_main_v3
+		gen_sort_pak_v3
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
