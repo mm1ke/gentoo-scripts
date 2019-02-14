@@ -128,8 +128,9 @@ find_func(){
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
-		gen_sort_main_v2 ${RUNNING_CHECKS[0]} 3
-		gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 1
+		sort_result_v2
+		gen_sort_main_v3
+		gen_sort_pak_v3
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
