@@ -145,9 +145,9 @@ array_names
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time ${TIMEOUT} --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_ebuild})${DL}${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
-			echo "$(get_eapi ${full_ebuild})${DL}${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
+			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
 		fi
 	fi
 }
@@ -272,11 +272,11 @@ gen_results(){
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
 				# only category/package and maintainer went into the full.txt
 				# via cut ... -f2,5 (needs update if data format changes
-				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5  >> ${RUNNING_CHECKS[5]}/full.txt
+				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
 			fi
 		done
 
-		sort_result_v2
+		sort_result_v2 2
 		gen_sort_pak_v3
 		gen_sort_main_v3
 
