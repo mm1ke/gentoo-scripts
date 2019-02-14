@@ -47,6 +47,9 @@ fi
 [ -z "${SITEDIR}" ] && \
 	SITEDIR="${HOME}/checks-${RANDOM}/" && \
 	export SITEDIR
+[ -z "${REPOCHECK}" ] && \
+	REPOCHECK=false && \
+	export REPOCHECK
 
 ENABLE_GIT=false
 ENABLE_MD5=false
@@ -453,6 +456,13 @@ depth_set_v2() {
 			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
 				# only run diff mode if todaychecks exist and doesn't have zero bytes
 				if [ -s ${TODAYCHECKS} ]; then
+					# special case for repomancheck
+					# copying old sort-by-packages files are only important for repomancheck
+					# because these files aren't generated via gen_sort_pak (like on other scripts)
+					if ${REPOCHECK}; then
+						cp -r ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+					fi
+
 					# we need to copy all existing results first and remove packages which
 					# were changed (listed in TODAYCHECKS). If no results file exists, do
 					# nothing - the script would create a new one anyway
@@ -469,6 +479,10 @@ depth_set_v2() {
 								# will fail because '/' aren't escapted. also remove first slash
 								pakcat="${cpak:1}"
 								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+								# like before, only important for repomancheck
+								if ${REPOCHECK}; then
+									rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+								fi
 							done
 						fi
 					done
