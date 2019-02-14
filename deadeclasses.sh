@@ -103,7 +103,7 @@ find_func(){
 }
 
 gen_results(){
-	sort_result_v2
+	sort_result_v2 2
 
 	if ${SCRIPT_MODE}; then
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
