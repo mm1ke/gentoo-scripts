@@ -271,7 +271,9 @@ gen_results(){
 			if [ "${hp_lines}" -gt 1 ]; then
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
 				# only category/package and maintainer went into the full.txt
-				# via cut ... -f2,5 (needs update if data format changes
+				# via cut ... -f2,5 (needs update if data format changes)
+				# also important to list every package atom once, otherwise we would
+				# have a wrong count
 				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
 			fi
 		done
