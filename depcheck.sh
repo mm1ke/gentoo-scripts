@@ -114,7 +114,7 @@ find_func(){
 
 gen_results() {
 	if ${SCRIPT_MODE}; then
-		sort_result_v2
+		sort_result_v2 2
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 			for fp in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
