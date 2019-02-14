@@ -302,7 +302,7 @@ case ${dir} in
 		databasevalue="sValue"
 		label="Redirected Sites"
 		title="${label}"
-		info_full="EAPI | (Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
+		info_full="(Real)HTTPCODE | CATEGORY/PACKAGE | HOMEPAGE | HOMEPAGE(Real) | MAINTAINER(S)"
 		info_main="${info_full}"
 		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
@@ -341,9 +341,9 @@ case ${dir} in
 		databasevalue="sValue"
 		label="Unsync Homepages"
 		title="${label}"
-		info_full="CATEGORY/PACKAGE | MAINTAINER(S)"
+		info_full="DIFFERNT SITES | CATEGORY/PACKAGE | MAINTAINER(S)"
 		info_main="${info_full}"
-		info_pack="HTTPCODE | CATEGORY/PACKAGE | EBUILD | HOMEPAGE | MAINTAINER(S)"
+		info_pack="${info_full}"
 		read -r -d '' chart_description <<- EOM
 		Lists packages who have different homepages over it's ebuild versions.
 		EOM
