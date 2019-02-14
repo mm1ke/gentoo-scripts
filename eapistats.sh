@@ -106,7 +106,7 @@ find_func(){
 
 gen_results() {
 	if ${SCRIPT_MODE}; then
-		sort_result_v2
+		sort_result_v2 2
 		# filter after EAPI
 		for eapi in $(cut -c-1 ${RUNNING_CHECKS[0]}/full.txt|sort -u); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}
