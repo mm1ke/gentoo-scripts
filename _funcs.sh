@@ -152,30 +152,8 @@ get_bugs_full(){
 	[ -n "${return}" ] && echo "${return}"
 }
 
-# function to sort the output, takes two argument, where the second is optional.
-# The first argument is the file to sort (usually full.txt)
-# the second is the column number to sort after
-sort_result(){
-	local workfile="${1}"
-	local column="${2}"
-
-	if [ -d ${workfile} ]; then
-		if [ -e "${workfile}/full.txt" ]; then
-			local workfile="${workfile}/full.txt"
-		else
-			return 1
-		fi
-	elif ! [ -e ${workfile} ]; then
-		return 1
-	fi
-
-	if [ -z "${column}" ]; then
-		sort -o ${workfile} ${workfile}
-	else
-		sort -t"${DL}" -k${column} -o${workfile} ${workfile}
-	fi
-}
-
+# function to sort the output, takes one argument (optional)
+# the argument is the column number to sort after
 sort_result_v2(){
 	local column="${1}"
 	local rc_id
@@ -224,27 +202,6 @@ compare_keywords(){
 }
 
 # function which sorts a list by it's maintainer
-gen_sort_main_v2(){
-	local workfile="${1}"
-	local main_loc="${2}"
-	local main
-
-	if [ -d ${workfile} ]; then
-		if [ -e "${workfile}/full.txt" ]; then
-			local workfile="${workfile}/full.txt"
-		else
-			return 1
-		fi
-	elif ! [ -e ${workfile} ]; then
-		return 1
-	fi
-
-	mkdir -p ${workfile%/*}/sort-by-maintainer
-	for main in $(cat ${workfile} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
-		grep "${main}" ${workfile} > ${workfile%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-	done
-}
-
 gen_sort_main_v3(){
 	if [ -z "${1}" ]; then
 		local check_files=( "${RUNNING_CHECKS[@]}" )
@@ -292,30 +249,6 @@ gen_sort_main_v3(){
 }
 
 # function which sorts a list by it's package
-gen_sort_pak_v2() {
-	local workfile="${1}"
-	local pak_loc="${2}"
-	local pack
-
-	if [ -d ${workfile} ]; then
-		if [ -e "${workfile}/full.txt" ]; then
-			local workfile="${workfile}/full.txt"
-		else
-			return 1
-		fi
-	elif ! [ -e ${workfile} ]; then
-		return 1
-	fi
-
-	local f_packages="$(cat ${workfile}| cut -d "${DL}" -f${pak_loc} |sort -u)"
-	for pack in ${f_packages}; do
-		f_cat="$(echo ${pack}|cut -d'/' -f1)"
-		f_pak="$(echo ${pack}|cut -d'/' -f2)"
-		mkdir -p ${workfile%/*}/sort-by-package/${f_cat}
-		grep "\<${pack}\>" ${workfile} > ${workfile%/*}/sort-by-package/${f_cat}/${f_pak}.txt
-	done
-}
-
 gen_sort_pak_v3() {
 	if [ -z "${1}" ]; then
 		local check_files=( "${RUNNING_CHECKS[@]}" )
@@ -362,36 +295,6 @@ usage() {
 	echo -e "\tCheck against the category app-admin"
 	echo "${0} app-admin/diradm"
 	echo -e "\tCheck against the package app-admin/diradm"
-}
-
-depth_set() {
-	arg="${1}"
-
-	if [ -z "${arg}" ]; then
-		usage
-		exit 1
-	else
-		# test if user provided input exist
-		if [ -d "${PORTTREE}/${arg}" ]; then
-			level="${arg}"
-			MAXD=0
-			MIND=0
-			# case if user provides only category
-			# if there is a '/', everything after need to be empty
-			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
-			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
-				MAXD=1
-				MIND=1
-			fi
-		elif [ "${arg}" = "full" ] || [ "${arg}" = "diff" ]; then
-			level=""
-			MAXD=2
-			MIND=2
-		else
-			echo "${PORTTREE}/${arg}: Path not found"
-			exit 1
-		fi
-	fi
 }
 
 depth_set_v2() {
@@ -676,6 +579,7 @@ copy_checks() {
 	fi
 }
 
+# remove dropped packages, needed for diff mode
 diff_rm_dropped_paks_v3(){
 	local c
 	local p
@@ -708,66 +612,6 @@ diff_rm_dropped_paks_v3(){
 			fi
 		fi
 	done
-}
-
-# remove dropped packages, needed for diff mode
-diff_rm_dropped_paks(){
-	local l=${1}			# package location (row)
-	local c
-	local p
-	local p_list=( )
-
-	# only run if we get a package location
-	if [ -n "${l}" ]; then
-		for c in ${RUNNING_CHECKS[@]}; do
-			if [ -s ${c}/full.txt ]; then
-				p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
-				for p in ${p_list[@]}; do
-					if ! [ -d ${PORTTREE}/${p} ]; then
-						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
-						if [ -d ${c}/sort-by-package ]; then
-							rm -rf ${c}/sort-by-package/${p}.txt
-						fi
-					fi
-				done
-			fi
-		done
-	fi
-}
-
-diff_rm_dropped_paks_v2(){
-	local l=${1}			# package location (row)
-	local id=${2}			# RUNNING_CHECKS Id (can be empty)
-	local c
-	local p
-
-	p_list=( )
-
-	_cleanup() {
-		local file=${1}
-		for p in ${p_list[@]}; do
-			if ! [ -d ${PORTTREE}/${p} ]; then
-				sed -i "/${p//\//\\/}${DL}/d" ${file}
-			fi
-		done
-	}
-
-	# only run if we get a package location
-	if [ -n "${l}" ]; then
-		if [ -n "${id}" ]; then
-			if [ -s ${RUNNING_CHECKS[${id}]} ]; then
-				p_list=( $(cut -d'|' -f${l} ${RUNNING_CHECKS[${id}]}/full.txt) )
-				_cleanup "${RUNNING_CHECKS[${id}]}/full.txt"
-			fi
-		else
-			for c in ${RUNNING_CHECKS[@]}; do
-				if [ -s ${c}/full.txt ]; then
-					p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
-					_cleanup "${c}/full.txt"
-				fi
-			done
-		fi
-	fi
 }
 
 # dummy function which can be used by script individually
@@ -809,6 +653,6 @@ END`
 }
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
-	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list sort_result \
-	compare_keywords diff_rm_dropped_paks get_bugs_bool get_bugs_count \
+	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
+	compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date
