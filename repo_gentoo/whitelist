@@ -429,4 +429,11 @@ white_list=(
 	"dev-libs/libzia;libzia-4.14-ldadd.patch;libzia-4.14.ebuild"
 	"app-editors/notepadqq;notepadqq-1.4.8-qt-5.11.patch;notepadqq-1.4.8.ebuild"
 	"app-editors/notepadqq;notepadqq-1.4.8-qt-5.11-QDateTime.patch;notepadqq-1.4.8.ebuild"
+	"www-apps/karma-bin;karma-0.24.yaml;karma-bin-0.24.ebuild"
+	"mail-client/balsa;balsa-2.5.6-fix-older-webkit1.patch;balsa-2.5.6-r1.ebuild"
+	"mail-client/balsa;balsa-2.5.6-fix-older-webkit2.patch;balsa-2.5.6-r1.ebuild"
+	"x11-wm/muffin;muffin-4.0-clutter-configure.patch;muffin-4.0.3.ebuild"
+	"x11-wm/muffin;muffin-4.0-cogl-configure.patch;muffin-4.0.3.ebuild"
+	"app-crypt/rhash;darwin-triplet.patch;rhash-1.3.6-r1.ebuild"
+	"app-crypt/rhash;freebsd-triplet.patch;rhash-1.3.6-r1.ebuild"
 )
