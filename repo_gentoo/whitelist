@@ -440,4 +440,6 @@ white_list=(
 	"app-crypt/rhash;darwin-triplet.patch;rhash-1.3.6-r1.ebuild"
 	"app-crypt/rhash;freebsd-triplet.patch;rhash-1.3.6-r1.ebuild"
 	"games-puzzle/brainworkshop;brainworkshop-5-fix-paths.patch;brainworkshop-5_beta20180712.ebuild"
+	"gnome-base/nautilus;3.30.5-thumbnailer-updates2.patch;nautilus-3.30.5.ebuild"
+	"gnome-base/nautilus;3.30.5-thumbnailer-updates.patch;nautilus-3.30.5.ebuild"
 )
