@@ -21,6 +21,8 @@ white_list=(
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
 	"dev-util/wxglade;wxglade-0.6.3-wxversion.patch;*"		#https://github.com/gentoo/gentoo/pull/9293
+	"app-emulation/docker-compose;docker-compose-1.22.0-setup-py.patch;*" https://github.com/gentoo/gentoo/pull/11347
+	"app-emulation/docker-compose;docker-compose-1.23.0-setup-py.patch;*" https://github.com/gentoo/gentoo/pull/11347
 	"app-emulation/playonlinux;playonlinux.1;playonlinux-4.2.12.ebuild"
 	"app-emulation/playonlinux;playonlinux-pkg.1;playonlinux-4.2.12.ebuild"
 	"sys-boot/milo;linux-2.2.25-gcc3-milo.diff;milo-2.4.18.ebuild"
