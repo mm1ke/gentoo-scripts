@@ -195,7 +195,7 @@ upd_results(){
 			local p="$(echo ${id}|cut -d'|' -f6)"
 			local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
 
-			local lf="$(get_age_v2 "${fd1}")"
+			local lf="$(get_age_v2 "${fd}")"
 			$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
 			local bc="$(get_bugs_count ${p})"
 
