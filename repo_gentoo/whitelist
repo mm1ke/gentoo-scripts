@@ -16,7 +16,7 @@ white_list=(
 	"sys-libs/libcxx;prepare_snapshot.sh;*"
 	"sys-libs/libcxxrt;prepare_snapshot.sh;*"
 	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
-	"app-portage/eclass-manpages;eclass-to-manpage.awk;*"
+	"app-doc/eclass-manpages;eclass-to-manpage.awk;*"
 	"sys-apps/portage;README.RESCUE;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
