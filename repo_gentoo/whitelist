@@ -307,7 +307,7 @@ white_list=(
 	"sci-mathematics/maxima;emacs-27.patch;maxima-5.41.0-r2.ebuild"
 	"sci-mathematics/maxima;xdg-utils-1.patch;maxima-5.41.0-r2.ebuild:maxima-5.42.1.ebuild"
 	"sci-mathematics/maxima;ecls-3.patch;maxima-5.42.1.ebuild"
-	"net-libs/xrootd;cmsd.initd;xrootd-4.4.0.ebuild:xrootd-4.5.0.ebuild"
+	"net-libs/xrootd;cmsd.initd;xrootd-4.8.3.ebuild:xrootd-4.9.0.ebuild"
 	"net-libs/xrootd;frm_purged.initd;xrootd-4.4.0.ebuild:xrootd-4.5.0.ebuild:xrootd-4.8.3.ebuild"
 	"net-libs/xrootd;frm_xfrd.initd;xrootd-4.4.0.ebuild:xrootd-4.5.0.ebuild:xrootd-4.8.3.ebuild"
 	"net-libs/xrootd;xrootd.initd;xrootd-4.4.0.ebuild:xrootd-4.5.0.ebuild:xrootd-4.8.3.ebuild"
