@@ -175,34 +175,38 @@ upd_results(){
 		fi
 
 		for rcid in $(seq 0 1); do
-			gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
-			for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+			if [ -e ${RUNNING_CHECKS[${rcid}]}/full.txt ]; then
+				gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
+				for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+					local p="$(echo ${id}|cut -d'|' -f6)"
+					local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
+					local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
+
+					local of="$(get_age_v2 "${fd1}")"
+					local lf="$(get_age_v2 "${fd2}")"
+					$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+
+					local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
+
+					sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+				done
+			fi
+		done
+		if [ -e ${RUNNING_CHECKS[2]}/full.txt ]; then
+			gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
+			for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
 				local p="$(echo ${id}|cut -d'|' -f6)"
-				local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
-				local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
+				local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
 
-				local of="$(get_age_v2 "${fd1}")"
-				local lf="$(get_age_v2 "${fd2}")"
+				local lf="$(get_age_v2 "${fd}")"
 				$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
+				local bc="$(get_bugs_count ${p})"
 
-				local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
+				local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
 
-				sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+				sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
 			done
-		done
-		gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
-		for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
-			local p="$(echo ${id}|cut -d'|' -f6)"
-			local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
-
-			local lf="$(get_age_v2 "${fd}")"
-			$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
-			local bc="$(get_bugs_count ${p})"
-
-			local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
-
-			sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
-		done
+		fi
 	fi
 }
 
