@@ -43,11 +43,11 @@ gen_http_sort_main_v2(){
 	case ${type} in
 		results)
 			local value_title="${dir##*/}"
-			local value_line="Checks proceeded: <b>$(find ${dir} -mindepth 1 -maxdepth 1 -type d|wc -l)"
+			local value_line="Checks proceeded: <b>$(find ${dir} -mindepth 1 -maxdepth 1 -type d 2>/dev/null|wc -l)"
 			;;
 		main)
 			local value_title="${dir##*/}"
-			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type f|wc -l)"
+			local value_line="Total Maintainers: <b>$(find ${dir}/sort-by-maintainer/ -mindepth 1 -maxdepth 1 -type f 2>/dev/null|wc -l)"
 			if [ -e ${dir}/full.txt ];then
 				local value_full="<a href=\"full.txt\">TXT-full.txt</a>"
 			fi
@@ -92,7 +92,7 @@ EOM
 	case ${type} in
 		results)
 			echo "QTY     Check"
-			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d|sort ); do
+			for u in $(find ${dir} -maxdepth 1 -mindepth 1 -type d 2>/dev/null|sort ); do
 				if ! [ -e ${u}/full.txt ]; then
 					val="0"
 				else
@@ -106,7 +106,7 @@ EOM
 			;;
 		main)
 			echo "QTY     Maintainer"
-			for i in $(for x in $(ls ${dir}/sort-by-maintainer/); do echo "$(cat ${dir}/sort-by-maintainer/$x|wc -l)|$x"; done|sort -nr); do
+			for i in $(for x in $(ls ${dir}/sort-by-maintainer/ 2>/dev/null); do echo "$(cat ${dir}/sort-by-maintainer/$x|wc -l)|$x"; done|sort -nr); do
 				main="${i##*|}"
 				val="$(cat ${dir}/sort-by-maintainer/${main} | wc -l)"
 
@@ -117,7 +117,7 @@ EOM
 			;;
 		fullpak)
 			echo "QTY     Package"
-			for z in $(for b in $(find ${dir}/sort-by-package/ -type f); do echo "$(grep "<<<" ${b}|wc -l)|${b/${dir}\/sort-by-package\//}"; done|sort -nr); do
+			for z in $(for b in $(find ${dir}/sort-by-package/ -type f 2>/dev/null); do echo "$(grep "<<<" ${b}|wc -l)|${b/${dir}\/sort-by-package\//}"; done|sort -nr); do
 				local tmp_pak="${z##*|}"
 				local pak="${tmp_pak/\//-}"
 				local val="${z%%|*}"
