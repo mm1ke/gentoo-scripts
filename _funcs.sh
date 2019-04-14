@@ -620,7 +620,8 @@ upd_results() {
 }
 
 get_main_min(){
-	local maint=`/usr/bin/python3 - "${1}" <<END
+	if [ -e "${PORTTREE}/${1}/metadata.xml" ]; then
+		local maint=`/usr/bin/python3 - "${1}" <<END
 import xml.etree.ElementTree
 import sys
 pack = str(sys.argv[1])
@@ -631,6 +632,7 @@ for x in e.iterfind("./maintainer/email"):
 	c+=(x.text+':')
 print(c)
 END`
+	fi
 	maint=${maint// /_}
 	if [ -z "${maint}" ]; then
 		echo "maintainer-needed@gentoo.org"
