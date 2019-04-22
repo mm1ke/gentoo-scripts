@@ -431,4 +431,6 @@ white_list=(
 	"games-puzzle/brainworkshop;brainworkshop-5-fix-paths.patch;brainworkshop-5_beta20180712.ebuild"
 	"gnome-base/nautilus;3.30.5-thumbnailer-updates2.patch;nautilus-3.30.5.ebuild"
 	"gnome-base/nautilus;3.30.5-thumbnailer-updates.patch;nautilus-3.30.5.ebuild"
+	"dev-java/openjdk-jre-bin;openjdk-jre-bin-11.env.sh;openjdk-jre-bin-11.0.2_p9.ebuild:openjdk-jre-bin-11.0.3_p7.ebuild"
+	"dev-java/openjdk-jre-bin;openjdk-jre-bin-8.env.sh;openjdk-jre-bin-8.202_p08.ebuild:openjdk-jre-bin-8.212_p03.ebuild"
 )
