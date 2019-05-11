@@ -1,4 +1,5 @@
 white_list=(
+	"app-text/pdf2djvu;pdf2djvu-0.9.12-poppler-0.76-3.patch;*" #https://github.com/gentoo/gentoo/pull/11952
 	"app-portage/gpyutils;implementations.txt;*"
 	"sys-apps/superiotool;make-tarball.sh;*"
 	"app-office/libreoffice-l10n;lo_gen_langs.sh;*"
@@ -411,7 +412,7 @@ white_list=(
 	"dev-java/openjdk-bin;openjdk-bin-11.env.sh;openjdk-bin-11.0.3_p7.ebuild:openjdk-bin-11.0.3_p7-r1.ebuild"
 	"dev-java/openjdk-bin;openjdk-bin-8.env.sh;openjdk-bin-8.191_p12.ebuild:openjdk-bin-8.202_p08.ebuild"
 	"dev-java/openjdk;openjdk-11.env.sh;openjdk-11.0.3_p7.ebuild:openjdk-11.0.3_p7-r1.ebuild"
-	"dev-java/openjdk;openjdk-8.env.sh;openjdk-8.212_p3.ebuild:openjdk-8.212_p3-r1.ebuild"
+	"dev-java/openjdk;openjdk-8.env.sh;openjdk-8.212_p03.ebuild:openjdk-8.212_p03-r1.ebuild"
 	"app-text/texlive-core;texlive-core-2017-poppler069.patch;texlive-core-2017-r4.ebuild"
 	"app-text/texlive-core;texlive-core-2017-poppler071.patch;texlive-core-2017-r4.ebuild"
 	"app-text/texlive-core;texlive-core-2017-poppler072.patch;texlive-core-2017-r4.ebuild"
