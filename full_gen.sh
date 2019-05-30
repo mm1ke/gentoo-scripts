@@ -70,9 +70,12 @@ done
 # add bug information to the packages
 for cat in $(ls ${WORKDIR}/sort-by-package/); do
 	for pack in $(ls ${WORKDIR}/sort-by-package/${cat}/); do
-		echo "<<< open bugs >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
 		openbugs="$(get_bugs_full "${cat}/${pack::-4}")"
-		echo "${openbugs}" | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+		# only add openbugs information when they are any open bugs
+		if [ -n "${openbugs}" ]; then
+			echo "<<< open bugs >>>" >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+			echo "${openbugs}" | sed 's/^/  /g' >> ${WORKDIR}/sort-by-package/${cat}/${pack}
+		fi
 	done
 done
 ### full list generation end ###
