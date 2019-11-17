@@ -15,6 +15,16 @@ white_list=(
 	"sys-libs/libcxxrt;prepare_snapshot.sh;*"
 	"media-tv/kodi;generate.sh;*"
 	"sys-devel/gcc;fix_libtool_files.sh;*"
+	"sys-devel/gcc;c89;*" #used as long as toolchain.eclass is used
+	"sys-devel/gcc;c99;*" #used as long as toolchain.eclass is used
+	"sys-devel/gcc;gcc-configure-LANG.patch;*" #used as long as toolchain.eclass is used
+	"sys-devel/gcc;gcc-configure-texinfo.patch;*" #used as long as toolchain.eclass is used
+	"sys-devel/kgcc64;gcc-configure-LANG.patch;*" #used as long as toolchain.eclass is used
+	"sys-devel/kgcc64;gcc-configure-texinfo.patch;*" #used as long as toolchain.eclass is used
+	"dev-lang/gnat-gpl;c89;*" #used as long as toolchain.eclass is used
+	"dev-lang/gnat-gpl;c99;*" #used as long as toolchain.eclass is used
+	"dev-lang/gnat-gpl;gcc-configure-LANG.patch;*" #used as long as toolchain.eclass is used
+	"dev-lang/gnat-gpl;gcc-configure-texinfo.patch;*" #used as long as toolchain.eclass is used
 	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
 	"sys-apps/portage;README.RESCUE;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
@@ -330,16 +340,6 @@ white_list=(
 	"media-radio/ax25-apps;ax25-apps-0.8.4-tinfo.patch;ax25-apps-0.0.8_rc4.ebuild"
 	"media-radio/unixcw;unixcw-3.5-tinfo.patch;unixcw-3.5.1.ebuild"
 	"media-radio/unixcw;unixcw-tests.patch;unixcw-3.5.1.ebuild"
-	"sys-devel/gcc;c89;gcc-3.3.6-r5.ebuild:gcc-3.4.6-r5.ebuild:gcc-4.0.4-r3.ebuild:gcc-4.1.2-r2.ebuild:gcc-4.2.4-r4.ebuild:gcc-4.3.6-r4.ebuild:gcc-4.4.7-r3.ebuild:gcc-4.5.4-r3.ebuild:gcc-4.6.4-r3.ebuild:gcc-4.7.4-r3.ebuild:gcc-4.8.5-r3.ebuild:gcc-4.9.4-r1.ebuild:gcc-5.4.0-r4.ebuild:gcc-5.4.0-r6.ebuild:gcc-5.5.0.ebuild:gcc-6.5.0-r1.ebuild:gcc-7.3.0-r3.ebuild:gcc-7.3.0-r6.ebuild:gcc-7.4.0-r2.ebuild:gcc-7.5.0.ebuild:gcc-8.2.0-r6.ebuild:gcc-8.3.0-r1.ebuild:gcc-8.3.0-r3.ebuild:gcc-9.2.0-r2.ebuild"
-	"sys-devel/gcc;c99;gcc-3.3.6-r5.ebuild:gcc-3.4.6-r5.ebuild:gcc-4.0.4-r3.ebuild:gcc-4.1.2-r2.ebuild:gcc-4.2.4-r4.ebuild:gcc-4.3.6-r4.ebuild:gcc-4.4.7-r3.ebuild:gcc-4.5.4-r3.ebuild:gcc-4.6.4-r3.ebuild:gcc-4.7.4-r3.ebuild:gcc-4.8.5-r3.ebuild:gcc-4.9.4-r1.ebuild:gcc-5.4.0-r4.ebuild:gcc-5.4.0-r6.ebuild:gcc-5.5.0.ebuild:gcc-6.5.0-r1.ebuild:gcc-7.3.0-r3.ebuild:gcc-7.3.0-r6.ebuild:gcc-7.4.0-r2.ebuild:gcc-7.5.0.ebuild:gcc-8.2.0-r6.ebuild:gcc-8.3.0-r1.ebuild:gcc-8.3.0-r3.ebuild:gcc-9.2.0-r2.ebuild"
-	"sys-devel/gcc;gcc-configure-LANG.patch;gcc-3.3.6-r5.ebuild:gcc-3.4.6-r5.ebuild:gcc-4.0.4-r3.ebuild:gcc-4.1.2-r2.ebuild:gcc-4.2.4-r4.ebuild:gcc-4.3.6-r4.ebuild:gcc-4.4.7-r3.ebuild:gcc-4.5.4-r3.ebuild:gcc-4.6.4-r3.ebuild:gcc-4.7.4-r3.ebuild:gcc-4.8.5-r3.ebuild:gcc-4.9.4-r1.ebuild:gcc-5.4.0-r4.ebuild:gcc-5.4.0-r6.ebuild:gcc-5.5.0.ebuild:gcc-6.5.0-r1.ebuild:gcc-7.3.0-r3.ebuild:gcc-7.3.0-r6.ebuild:gcc-7.4.0-r2.ebuild:gcc-7.5.0.ebuild:gcc-8.2.0-r6.ebuild:gcc-8.3.0-r1.ebuild:gcc-8.3.0-r3.ebuild:gcc-9.2.0-r2.ebuild"
-	"sys-devel/gcc;gcc-configure-texinfo.patch;gcc-3.3.6-r5.ebuild:gcc-3.4.6-r5.ebuild:gcc-4.0.4-r3.ebuild:gcc-4.1.2-r2.ebuild:gcc-4.2.4-r4.ebuild:gcc-4.3.6-r4.ebuild:gcc-4.4.7-r3.ebuild:gcc-4.5.4-r3.ebuild:gcc-4.6.4-r3.ebuild:gcc-4.7.4-r3.ebuild:gcc-4.8.5-r3.ebuild:gcc-4.9.4-r1.ebuild:gcc-5.4.0-r4.ebuild:gcc-5.4.0-r6.ebuild:gcc-5.5.0.ebuild:gcc-6.5.0-r1.ebuild:gcc-7.3.0-r3.ebuild:gcc-7.3.0-r6.ebuild:gcc-7.4.0-r2.ebuild:gcc-7.5.0.ebuild:gcc-8.2.0-r6.ebuild:gcc-8.3.0-r1.ebuild:gcc-8.3.0-r3.ebuild:gcc-9.2.0-r2.ebuild"
-	"sys-devel/kgcc64;gcc-configure-LANG.patch;kgcc64-4.2.4.ebuild:kgcc64-4.4.5.ebuild:kgcc64-4.5.3.ebuild:kgcc64-4.6.4.ebuild:kgcc64-4.7.4.ebuild:kgcc64-4.8.5.ebuild:kgcc64-5.4.0.ebuild:kgcc64-6.4.0.ebuild:kgcc64-4.1.2.ebuild:kgcc64-4.3.5.ebuild:kgcc64-4.4.6.ebuild:kgcc64-4.5.4.ebuild:kgcc64-4.7.3.ebuild:kgcc64-4.8.3.ebuild:kgcc64-4.9.4.ebuild:kgcc64-6.3.0.ebuild:kgcc64-7.2.0.ebuild"
-	"sys-devel/kgcc64;gcc-configure-texinfo.patch;kgcc64-4.2.4.ebuild:kgcc64-4.4.5.ebuild:kgcc64-4.5.3.ebuild:kgcc64-4.6.4.ebuild:kgcc64-4.7.4.ebuild:kgcc64-4.8.5.ebuild:kgcc64-5.4.0.ebuild:kgcc64-6.4.0.ebuild:kgcc64-4.1.2.ebuild:kgcc64-4.3.5.ebuild:kgcc64-4.4.6.ebuild:kgcc64-4.5.4.ebuild:kgcc64-4.7.3.ebuild:kgcc64-4.8.3.ebuild:kgcc64-4.9.4.ebuild:kgcc64-6.3.0.ebuild:kgcc64-7.2.0.ebuild"
-	"dev-lang/gnat-gpl;c89;gnat-gpl-2016.ebuild:gnat-gpl-2017.ebuild"
-	"dev-lang/gnat-gpl;c99;gnat-gpl-2016.ebuild:gnat-gpl-2017.ebuild"
-	"dev-lang/gnat-gpl;gcc-configure-LANG.patch;gnat-gpl-2016.ebuild:gnat-gpl-2017.ebuild"
-	"dev-lang/gnat-gpl;gcc-configure-texinfo.patch;gnat-gpl-2016.ebuild:gnat-gpl-2017.ebuild"
 	"app-admin/mms-agent;mms-monitoring-agent.initd;mms-agent-3.7.0.212_p1.ebuild:mms-agent-6.0.0.381_p1.ebuild"
 	"media-plugins/vdr-duplicates;duplicates-0.0.5_Makefile-new.diff;vdr-duplicates-0.0.5-r1.ebuild"
 	"media-plugins/vdr-extrecmenu;dvdarchive-2.3-beta-configfile.patch;vdr-extrecmenu-1.2.2-r2.ebuild:vdr-extrecmenu-1.2.4.ebuild"
