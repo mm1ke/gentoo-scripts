@@ -530,7 +530,7 @@ check_eclasses_usage() {
 		search_pattern="${eclass_var}\=\|inherit"
 	fi
 
-	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q "\"${eclass_var}\"\\| ${eclass_name} \\| ${eclass_name}\$"); then
+	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q "\"${eclass_var}\"\\| ${eclass_name} \\|${eclass_name} \\| ${eclass_name}\$"); then
 		return 0
 	else
 		return 1
