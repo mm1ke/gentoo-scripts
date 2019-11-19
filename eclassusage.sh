@@ -121,13 +121,13 @@ main() {
 
 			# check if ebuild uses ${eclass}
 			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
-				if ! $(grep -qE "${eclass_funcs}" ${full_path_ebuild}); then
+				if ! $(grep -qE "\<${eclass_funcs}\>" ${full_path_ebuild}); then
 					obsol_ecl+=( ${eclass} )
 				fi
 			# if ebuild doesn't use eclass check the ebuild if one of the functions
 			# are used over implicited inheriting
 			else
-				if $(grep -qE "${eclass_funcs}" ${full_path_ebuild}); then
+				if $(grep -qE "\<${eclass_funcs}\>" ${full_path_ebuild}); then
 					missing_ecl+=( ${eclass} )
 				fi
 			fi
