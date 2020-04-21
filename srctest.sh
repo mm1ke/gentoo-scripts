@@ -118,6 +118,45 @@ main() {
 	sys-devel/binutils
 	sys-devel/binutils-hppa64
 	sys-libs/glibc
+	app-text/texlive-core
+	dev-texlive/texlive-basic
+	dev-texlive/texlive-bibtexextra
+	dev-texlive/texlive-context
+	dev-texlive/texlive-fontsextra
+	dev-texlive/texlive-fontsrecommended
+	dev-texlive/texlive-fontutils
+	dev-texlive/texlive-formatsextra
+	dev-texlive/texlive-games
+	dev-texlive/texlive-humanities
+	dev-texlive/texlive-langarabic
+	dev-texlive/texlive-langchinese
+	dev-texlive/texlive-langcjk
+	dev-texlive/texlive-langcyrillic
+	dev-texlive/texlive-langczechslovak
+	dev-texlive/texlive-langenglish
+	dev-texlive/texlive-langeuropean
+	dev-texlive/texlive-langfrench
+	dev-texlive/texlive-langgerman
+	dev-texlive/texlive-langgreek
+	dev-texlive/texlive-langitalian
+	dev-texlive/texlive-langjapanese
+	dev-texlive/texlive-langkorean
+	dev-texlive/texlive-langother
+	dev-texlive/texlive-langpolish
+	dev-texlive/texlive-langportuguese
+	dev-texlive/texlive-langspanish
+	dev-texlive/texlive-latex
+	dev-texlive/texlive-latexextra
+	dev-texlive/texlive-latexrecommended
+	dev-texlive/texlive-luatex
+	dev-texlive/texlive-mathscience
+	dev-texlive/texlive-metapost
+	dev-texlive/texlive-music
+	dev-texlive/texlive-pictures
+	dev-texlive/texlive-plaingeneric
+	dev-texlive/texlive-pstricks
+	dev-texlive/texlive-publishers
+	dev-texlive/texlive-xetex
 	)
 	for iglist in ${_ignore_list[@]}; do
 		if [ "${category}/${package}" = "${iglist}" ]; then
