@@ -102,7 +102,7 @@ main(){
 			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
 
 			# special naming
-			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=|^X509_VER" ${ebuild} >/dev/null); then
+			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=|^X509_VER|^HPN_VER" ${ebuild} >/dev/null); then
 				# set variables
 				local var_my_pn='${MY_PN}'
 				local var_my_p='${MY_P}'
@@ -110,6 +110,7 @@ main(){
 				local var_mod_ver='${MODULE_VERSION}'
 				local var_dist_ver='${DIST_VERSION}'
 				local var_x509_ver='${X509_VER}'
+				local var_hpn_ver='${HPN_VER}'
 
 				local package_name_ver="${package}-${ebuild_version}"
 
@@ -120,6 +121,7 @@ main(){
 				my_mod_ver="$(grep ^MODULE_VERSION\= ${ebuild})"
 				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild})"
 				my_x509_ver="$(grep ^X509_VER\= ${ebuild}|cut -d' ' -f1)"
+				my_hpn_ver="$(grep ^HPN_VER\= ${ebuild})"
 
 				# this needs some better explanaition
 				[ -n "${my_pn_name}" ] && \
@@ -135,8 +137,10 @@ main(){
 					eval my_dist_ver="$(echo ${my_dist_ver:13})" >/dev/null 2>&1
 				[ -n "${my_x509_ver}" ] && \
 					eval my_x509_ver="$(echo ${my_x509_ver:9})" >/dev/null 2>&1
+				[ -n "${my_hpn_ver}" ] && \
+					eval my_hpn_ver="$(echo ${my_hpn_ver:8})" >/dev/null 2>&1
 
-				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver"
+				$DEBUG && >&2 echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver"
 
 				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
 				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
@@ -157,6 +161,13 @@ main(){
 				if [ -n "${my_x509_ver}" ]; then
 					cn+=("${patchfile/${my_x509_ver}/${var_x509_ver}}")
 					n2="${patchfile/${my_x509_ver}/${var_x509_ver}}"
+					cn+=("${n2/${package}/${pn}}")
+					cn+=("${n2/${package}-${ebuild_version}/${p}}")
+				fi
+
+				if [ -n "${my_hpn_ver}" ]; then
+					cn+=("${patchfile/${my_hpn_ver}/${var_hpn_ver}}")
+					n2="${patchfile/${my_hpn_ver}/${var_hpn_ver}}"
 					cn+=("${n2/${package}/${pn}}")
 					cn+=("${n2/${package}-${ebuild_version}/${p}}")
 				fi
