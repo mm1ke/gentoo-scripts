@@ -81,7 +81,7 @@ array_eclasses(){
 		"versionator;get_all_version_components:get_version_components:get_major_version:get_version_component_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
 		"user;egetent:enewuser:enewgroup:egethome:egetshell:esethome" \
 		"flag-o-matic;filter-flags:filter-lfs-flags:filter-ldflags:append-cppflags:append-cflags:append-cxxflags:append-fflags:append-lfs-flags:append-ldflags:append-flags:replace-flags:replace-cpu-flags:is-flagq:is-flag:is-ldflagq:is-ldflag:filter-mfpmath:strip-flags:test-flag-CC:test-flag-CXX:test-flag-F77:test-flag-FC:test-flags-CC:test-flags-CXX:test-flags-F77:test-flags-FC:test-flags:test_version_info:strip-unsupported-flags:get-flag:replace-sparc64-flags:append-libs:raw-ldflags:no-as-needed" \
-		"xdg-utils;xdg_environment_reset:xdg_desktop_database_update:xdg_mimeinfo_database_update" \
+		"xdg-utils;xdg_environment_reset:xdg_desktop_database_update:xdg_icon_cache_update:xdg_mimeinfo_database_update" \
 		"libtool;elibtoolize" \
 		"udev;udev_get_udevdir:get_udevdir:udev_dorules:udev_newrules:udev_reload" \
 		"eapi7-ver;ver_cut:ver_rs:ver_test" \
