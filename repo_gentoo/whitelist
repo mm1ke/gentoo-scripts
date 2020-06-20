@@ -397,7 +397,7 @@ white_list=(
 	"app-text/pdf2djvu;pdf2djvu-0.9.12-poppler-0.76-2.patch;pdf2djvu-0.9.12.ebuild"
 	"dev-util/apitrace;apitrace-8.0-system-snappy1.patch;apitrace-8.0.ebuild"
 	"dev-util/apitrace;apitrace-8.0-system-snappy2.patch;apitrace-8.0.ebuild"
-	"sci-libs/flann;flann-1.9.1-cmake-3.11-1.patch;flann-1.9.1-r2.ebuild"
+	"sci-libs/flann;flann-1.9.1-cmake-3.11-1.patch;flann-1.9.1-r3.ebuild"
 	"app-office/calligra;calligra-3.1.0-poppler-0.69.patch;calligra-3.1.0-r4.ebuild"
 	"app-office/calligra;calligra-3.1.0-poppler-0.71.patch;calligra-3.1.0-r4.ebuild"
 	"app-office/calligra;calligra-3.1.0-poppler-0.72.patch;calligra-3.1.0-r4.ebuild"
