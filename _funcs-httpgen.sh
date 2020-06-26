@@ -142,6 +142,7 @@ gen_html_out(){
 		# get the needed information from the _vars file
 		source ${startdir}/_vars.sh "${chart_name}"
 
+		mkdir -p ${SITEDIR}/charts-gen/
 		cp ${js_template} ${SITEDIR}/charts-gen/${chart_name}.js
 
 		# DBNAME comes from funcs.sh
