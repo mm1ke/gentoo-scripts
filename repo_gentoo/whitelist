@@ -165,7 +165,7 @@ white_list=(
 	"dev-java/icedtea-web;icedtea-web-1.6-unused-libs.patch;icedtea-web-1.6.1-r1.ebuild:icedtea-web-1.6.2.ebuild"
 	"dev-java/saxon;9.2-build.xml;saxon-9.2.0.6-r2.ebuild"
 	"dev-java/saxon;9.2-edition.properties;saxon-9.2.0.6-r2.ebuild"
-	"www-servers/tomcat;tomcat-instance-manager-r1.bash;tomcat-7.0.103.ebuild"
+	"www-servers/tomcat;tomcat-instance-manager-r1.bash;tomcat-7.0.104.ebuild"
 	"www-servers/tomcat;tomcat-instance-manager-r2.bash;tomcat-8.5.54.ebuild:tomcat-8.5.55.ebuild:tomcat-9.0.34.ebuild:tomcat-9.0.35.ebuild"
 	"www-servers/tomcat;tomcat-r1.init;tomcat-7.0.103.ebuild:tomcat-8.5.54.ebuild:tomcat-8.5.55.ebuild:tomcat-9.0.34.ebuild:tomcat-9.0.35.ebuild"
 	"app-admin/salt;api-confd-1;salt-2019.2.5.ebuild:salt-3000.2-r4.ebuild:salt-3000.3.ebuild"
@@ -453,4 +453,6 @@ white_list=(
 	"sys-cluster/kubernetes;kube-scheduler.logrotated;kubernetes-1.16.9.ebuild:kubernetes-1.17.5.ebuild:kubernetes-1.18.1.ebuild:kubernetes-1.16.8.ebuild:kubernetes-1.17.4.ebuild:kubernetes-1.18.0.ebuild:kubernetes-1.18.2.ebuild"
 	"www-apps/octoprint;octoprint.confd;octoprint-1.4.0_rc5.ebuild"
 	"www-apps/octoprint;octoprint.initd;octoprint-1.4.0_rc5.ebuild"
+	"sys-devel/prelink;prelink.service;prelink-20151030-r1.ebuild:prelink-99999999.ebuild"
+	"sys-devel/prelink;prelink.timer;prelink-20151030-r1.ebuild:prelink-99999999.ebuild"
 )
