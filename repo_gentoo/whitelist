@@ -363,7 +363,7 @@ white_list=(
 	"media-sound/snapcast;snapclient.initd;snapcast-0.15.0-r1.ebuild:snapcast-9999.ebuild"
 	"media-sound/snapcast;snapserver.confd;snapcast-0.15.0-r1.ebuild:snapcast-9999.ebuild"
 	"media-sound/snapcast;snapserver.initd;snapcast-0.15.0-r1.ebuild:snapcast-9999.ebuild"
-	"app-admin/mcelog;mcelog-0.8_pre1-timestamp-mcelog.patch;mcelog-162.ebuild:mcelog-167.ebuild:mcelog-168.ebuild"
+	"app-admin/mcelog;mcelog-0.8_pre1-timestamp-mcelog.patch;mcelog-170.ebuild"
 	"net-firewall/nftables;nftables-mk.confd;nftables-0.9.0-r5.ebuild:nftables-0.9.0-r6.ebuild:nftables-0.9.1-r2.ebuild:nftables-0.9.2-r2.ebuild:nftables-0.9.3-r1.ebuild"
 	"net-firewall/nftables;nftables.confd;nftables-0.9.0-r5.ebuild:nftables-0.9.0-r6.ebuild:nftables-0.9.1-r2.ebuild:nftables-0.9.2-r2.ebuild:nftables-0.9.3-r1.ebuild"
 	"net-firewall/nftables;nftables-mk.init;nftables-0.9.0-r5.ebuild:nftables-0.9.0-r6.ebuild:nftables-0.9.1-r2.ebuild:nftables-0.9.2-r2.ebuild:nftables-0.9.3-r1.ebuild"
