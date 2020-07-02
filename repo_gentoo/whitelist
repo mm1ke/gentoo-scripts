@@ -455,4 +455,5 @@ white_list=(
 	"www-apps/octoprint;octoprint.initd;octoprint-1.4.0_rc5.ebuild"
 	"sys-devel/prelink;prelink.service;prelink-20151030-r1.ebuild:prelink-99999999.ebuild"
 	"sys-devel/prelink;prelink.timer;prelink-20151030-r1.ebuild:prelink-99999999.ebuild"
+	"sys-fs/hfsutils;hfsutils-3.2.6-fix-tcl-8.6.patch;hfsutils-3.2.6_p14.ebuild"
 )
