@@ -120,12 +120,14 @@ main() {
 				local of="$(get_age_date "${category}/${package}/${org_name}.ebuild")"
 				local lf="$(get_age_date "${category}/${package}/${name}-r${i}.ebuild")"
 
-				if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
-					output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C4_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
-						"${RUNNING_CHECKS[0]##*/}"
-				else
-					output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
-						"${RUNNING_CHECKS[1]##*/}"
+				if $(count_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
+					if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
+						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C4_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
+							"${RUNNING_CHECKS[0]##*/}"
+					else
+						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
+							"${RUNNING_CHECKS[1]##*/}"
+					fi
 				fi
 				break 2
 			fi

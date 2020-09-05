@@ -178,22 +178,53 @@ sort_result_v2(){
 	done
 }
 
+count_keywords(){
+	local ebuild1="${1}"
+	local ebuild2="${2}"
+	local category="${3}"
+	local package="${4}"
+
+	local a b
+
+	if ${ENABLE_MD5}; then
+		a="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})"
+		b="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})"
+		if [ $(echo ${a}|wc -w) -eq $(echo ${b}|wc -w) ]; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		a="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
+		b="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
+		if [ $(echo ${a}|wc -w) -eq $(echo ${b}|wc -w) ]; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+}
+
 compare_keywords(){
 	local ebuild1="${1}"
 	local ebuild2="${2}"
 	local category="${3}"
 	local package="${4}"
 
+	local a b
+
 	if ${ENABLE_MD5}; then
-		if [ "$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})" = \
-			"$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})" ]; then
+		a="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})"
+		b="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})"
+		if [ "${a}" = "${b}" ]; then
 			return 0
 		else
 			return 1
 		fi
 	else
-		if [ "$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')" = \
-			"$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')" ]; then
+		a="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
+		b="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
+		if [ "${a}" = "${b}" ]; then
 			return 0
 		else
 			return 1
@@ -656,5 +687,5 @@ END`
 
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
-	compare_keywords get_bugs_bool get_bugs_count \
+	count_keywords compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date
