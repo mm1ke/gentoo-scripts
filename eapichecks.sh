@@ -122,7 +122,7 @@ main() {
 
 				if $(count_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
 					if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
-						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C4_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
+						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
 							"${RUNNING_CHECKS[0]##*/}"
 					else
 						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
@@ -175,25 +175,30 @@ upd_results(){
 			done
 			local RUNNING_CHECKS=( ${x[@]} )
 		fi
-
+		# stable/cleanup candidates
 		for rcid in $(seq 0 1); do
 			if [ -e ${RUNNING_CHECKS[${rcid}]}/full.txt ]; then
+				# replace all certain columns with keywords (_C2_, _C4_, ...)
 				gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
 				for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
+					# get package (app-arch/foo)
 					local p="$(echo ${id}|cut -d'|' -f6)"
+					# get dates (yyyy-mm-dd) from both files (old/new)
 					local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
 					local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
-
+					# calculate age in days
 					local of="$(get_age_v2 "${fd1}")"
 					local lf="$(get_age_v2 "${fd2}")"
+					# check for open bugs
 					$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
 
+					# replace keyword with the correct information
 					local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
-
 					sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
 				done
 			fi
 		done
+		# obsolet eapi
 		if [ -e ${RUNNING_CHECKS[2]}/full.txt ]; then
 			gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
 			for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do

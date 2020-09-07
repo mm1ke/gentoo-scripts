@@ -489,8 +489,17 @@ get_age_date() {
 	local file=${1}
 
 	if ${ENABLE_GIT}; then
-		filedate="$(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A -- ${PORTTREE}/${file} \
-			| head -1|cut -d' ' -f1)"
+		filedate="$(git -C ${PORTTREE} log --format="format:%cs" --diff-filter=A -- ${PORTTREE}/${file} | tail -1)"
+		echo "${filedate}"
+	else
+		echo ""
+	fi
+}
+
+get_age_last_modified() {
+	local file=${1}
+	if ${ENABLE_GIT}; then
+		filedate="$(git -C ${PORTTREE} log --format="format:%cs" --diff-filter=M -- ${PORTTREE}/${file} | head -1)"
 		echo "${filedate}"
 	else
 		echo ""
