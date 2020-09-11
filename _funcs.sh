@@ -178,6 +178,39 @@ sort_result_v2(){
 	done
 }
 
+sort_result_v3(){
+	local column="${1}"
+	local rc_id
+
+	for rc_id in ${RUNNING_CHECKS[@]}; do
+		# check input
+		if [ -d ${rc_id} ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				continue
+			fi
+		elif ! [ -e ${rc_id} ]; then
+			continue
+		fi
+
+		# find pakackge location in result
+		local pak_loc="$(_find_package_location "${rc_id}")"
+
+		if [ -z "${column}" ]; then
+			# default: normal sorting
+			sort -o ${rc_id} ${rc_id}
+		else
+			# sorting after certain column and pakage location
+			if [ -n "${pak_loc}" ]; then
+				sort -t"${DL}" -k${column} -k${pak_loc} -o${rc_id} ${rc_id}
+			else
+				sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+			fi
+		fi
+	done
+}
+
 count_keywords(){
 	local ebuild1="${1}"
 	local ebuild2="${2}"
@@ -342,7 +375,6 @@ depth_set_v2() {
 		MAXD=1
 		MIND=1
 		find_func
-		upd_results
 		gen_results
 	}
 
@@ -364,7 +396,6 @@ depth_set_v2() {
 			fi
 			searchp=( ${arg} )
 			find_func
-			upd_results
 			gen_results
 		elif [ "${arg}" = "full" ]; then
 			_default_full_search
@@ -425,20 +456,24 @@ depth_set_v2() {
 					diff_rm_dropped_paks_v3
 					# second: run the script only on the changed packages
 					find_func
-					# third:
-					# special case for scripts who provide gitage or bugs information:
-					# following function can be configured in each script in order to
-					# update git_age or bug information (or anything else)
-					# in contrast to gen_results, this function would be also called if
-					# nothing changed since last run (see below)
-					upd_results
-					# forth: generate results
+					# third: generate results and copy to SITEDIR
 					gen_results
 
 				else
 					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
 					# this case, update old results (git_age or bugs information)
-					upd_results old
+					# this is a special case for scripts who provide gitage or bugs information:
+					# following function can be configured in each script in order to
+					# update git_age or bug information (or anything else)
+					# in contrast to gen_results, this function would be also called if
+					# nothing changed since last run (see below)
+					local x=( )
+					local i
+					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+						x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+					done
+					local RUNNING_CHECKS=( ${x[@]} )
+					upd_results
 				fi
 			else
 				# if override is enabled, do a normal full search.
@@ -484,6 +519,36 @@ get_age_v2() {
 	fi
 }
 
+get_age_v3() {
+	local filedate="${1}"
+	local date_today="$(date '+%s' -d today)"
+
+	if ${ENABLE_GIT}; then
+		if [ -n "${filedate}" ]; then
+			fileage="$(expr \( "${date_today}" - "${filedate}" \) / 86400 2>/dev/null)"
+			printf "%05d\n" "${fileage}"
+		else
+			echo "-----"
+		fi
+	else
+		echo "-----"
+	fi
+}
+
+date_update(){
+	local datevalue="${1}"
+	local timediff="${2}"
+	if [ "${datevalue}" = "-----" ]; then
+		echo "-----"
+	elif [ ${#datevalue} -eq 10 ]; then
+		echo "$(get_age_v3 ${datevalue})"
+	else
+		if [ -n "${timediff}" ]; then
+			printf "%05d\n" "$(expr ${datevalue} + ${timediff})"
+		fi
+	fi
+}
+
 # like get_age but returns the file creation date (or file removal date)
 get_age_date() {
 	local file=${1}
@@ -496,13 +561,51 @@ get_age_date() {
 	fi
 }
 
-get_age_last_modified() {
-	local file=${1}
+get_git_age() {
+	local file="${1}"
+	local time_format="${2}"
+	local diff_filter="${3}"
+	local position="${4}"
+
 	if ${ENABLE_GIT}; then
-		filedate="$(git -C ${PORTTREE} log --format="format:%cs" --diff-filter=M -- ${PORTTREE}/${file} | head -1)"
+		case "${position}" in
+			first)
+				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file} | tail -1)"
+			;;
+			last)
+				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file} | head -1)"
+			;;
+			all)
+				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file})"
+			;;
+		esac
+		if [ "${diff_filter}" = "M" ] && [ -z "${filedate}" ]; then
+			filedate="-----"
+		fi
 		echo "${filedate}"
 	else
-		echo ""
+		echo "-----"
+	fi
+}
+
+get_time_diff() {
+	local running_check="${1}"
+	if ${ENABLE_GIT}; then
+		if [ -e "${running_check}" ]; then
+			local list_age="$(grep "generated" ${running_check} | grep -o 20........)"
+			local date_today="$(date '+%s' -d today)"
+			if [ -n "${list_age}" ]; then
+				local time_diff="$(expr \( "${date_today}" - "$(date '+%s' -d ${list_age})" \) / 86400 2>/dev/null)"
+				# since all scripts run daily this always should return 1
+				echo "${time_diff}"
+			else
+				echo "0"
+			fi
+		else
+			echo "0"
+		fi
+	else
+		echo "0"
 	fi
 }
 
@@ -697,4 +800,7 @@ END`
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
-	get_age_v2 get_age_date
+	get_age_v2 get_age_date get_git_age get_age_v3 date_update sort_result_v3 \
+	get_time_diff
+
+

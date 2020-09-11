@@ -114,18 +114,32 @@ main() {
 
 			if [ "${eapi_found_ebuild}" = "6" ] || [ "${eapi_found_ebuild}" = "7" ]; then
 
-				# get_age returns "-----" if ENABLE_GIT is disabled
-				# of=obsolete file
-				# lf=latest file
-				local of="$(get_age_date "${category}/${package}/${org_name}.ebuild")"
-				local lf="$(get_age_date "${category}/${package}/${name}-r${i}.ebuild")"
+				local old_ebuild="${category}/${package}/${org_name}.ebuild"
+				local new_ebuild="${category}/${package}/${name}-r${i}.ebuild"
 
 				if $(count_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
+
+					local old_ebuild_created="$(get_git_age ${old_ebuild} "ct" "A" "first")"
+					local old_ebuild_last_modified="$(get_git_age ${old_ebuild} "ct" "M" "last")"
+					local new_ebuild_created="$(get_git_age ${new_ebuild} "ct" "A" "first")"
+					local new_ebuild_last_modified="$(get_git_age ${new_ebuild} "ct" "M" "last")"
+					local package_bugs="__C6__"
+
 					if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
-						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
+						output "${ebuild_eapi}\
+${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
+${DL}${eapi_found_ebuild}\
+${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
+${DL}${package_bugs}${DL}${category}/${package}\
+${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
 							"${RUNNING_CHECKS[0]##*/}"
 					else
-						output "${ebuild_eapi}${DL}_C2_${DL}${eapi_found_ebuild}${DL}_C4_${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${of})${DL}${name}-r${i}(${lf})${DL}${maintainer}" \
+						output "${ebuild_eapi}\
+${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
+${DL}${eapi_found_ebuild}\
+${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
+${DL}${package_bugs}${DL}${category}/${package}\
+${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
 							"${RUNNING_CHECKS[1]##*/}"
 					fi
 				fi
@@ -135,9 +149,11 @@ main() {
 	done
 	if ! [ ${ebuild_eapi} = 5 ]; then
 		local eapilist="$(get_eapi_list ${package_path})"
-		local fileage="$(get_age_date ${full_package})"
+		local eapi4_fileage="$(get_git_age ${full_package} "ct" "A" "first")"
 		# OUTPUT: 0|_|_|0:0:0:0:0:0:0|_|foo/bar|foo/bar-1.0.0|foo@gentoo
-		output "${ebuild_eapi}${DL}_C2_${DL}_C3_${DL}${eapilist}${DL}_C5_${DL}${category}/${package}${DL}${org_name}(${fileage})${DL}${maintainer}" \
+		output "${ebuild_eapi}\
+${DL}__C2__${DL}__C3__${DL}${eapilist}${DL}${eapi4_fileage}\
+${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" \
 			"${RUNNING_CHECKS[2]##*/}"
 	fi
 }
@@ -153,67 +169,73 @@ find_func(){
 		-type f -name "*.ebuild" -print | parallel pre_check {}
 }
 
-gen_results(){
-	if ${SCRIPT_MODE}; then
-		sort_result_v2 "1,1 -k6,6"
-		sort_result_v2 "1,1 -k6,6"
-		sort_result_v2 "1,1 -k6,6"
-
-		gen_sort_main_v3
-		gen_sort_pak_v3
-
-		copy_checks ${SCRIPT_TYPE}
-	fi
-}
-
 upd_results(){
 	if ${SCRIPT_MODE}; then
-		if [ "${1}" = "old" ]; then
-			x=( )
-			for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-				x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
-			done
-			local RUNNING_CHECKS=( ${x[@]} )
-		fi
-		# stable/cleanup candidates
 		for rcid in $(seq 0 1); do
 			if [ -e ${RUNNING_CHECKS[${rcid}]}/full.txt ]; then
-				# replace all certain columns with keywords (_C2_, _C4_, ...)
-				gawk -i inplace -F'|' '{$2="_C2_"; $4="_C4_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[${rcid}]}/full.txt
+				#get time diff since last run
+				local indexfile="${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${rcid}]/${WORKDIR}/}/index.html"
+				local time_diff="$(get_time_diff "${indexfile}")"
 				for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
-					# get package (app-arch/foo)
-					local p="$(echo ${id}|cut -d'|' -f6)"
-					# get dates (yyyy-mm-dd) from both files (old/new)
-					local fd1="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
-					local fd2="$(echo ${id}|cut -d'(' -f3|cut -d')' -f1)"
-					# calculate age in days
-					local of="$(get_age_v2 "${fd1}")"
-					local lf="$(get_age_v2 "${fd2}")"
-					# check for open bugs
-					$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
 
-					# replace keyword with the correct information
-					local id_new="$(echo ${id}| sed -e "s/_C2_/${of}/g" -e "s/_C4_/${lf}/g" -e "s/_C5_/${ob}/g")"
-					sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+					local old_ebuild_created="$(date_update "$(echo ${id}|cut -d'|' -f2)" "${time_diff}")"
+					local old_ebuild_last_modified="$(date_update "$(echo ${id}|cut -d'|' -f3)" "${time_diff}")"
+					local new_ebuild_created="$(date_update "$(echo ${id}|cut -d'|' -f5)" "${time_diff}")"
+					local new_ebuild_last_modified="$(date_update "$(echo ${id}|cut -d'|' -f6)" "${time_diff}")"
+					#local package_bugs="$(echo ${id}|cut -d'|' -f7)"
+					local package="$(echo ${id}|cut -d'|' -f8)"
+					$(get_bugs_bool "${package}") && local package_bugs="+" || local package_bugs="-"
+
+					local new_id=$(
+						echo "${id}" | gawk -F'|' '{$2=v2; $3=v3; $5=v5; $6=v6; $7=v7}1' \
+						v2="${old_ebuild_created}" \
+						v3="${old_ebuild_last_modified}" \
+						v5="${new_ebuild_created}" \
+						v6="${new_ebuild_last_modified}" \
+						v7="${package_bugs}" OFS='|'
+					)
+
+					sed -i "s ${id} ${new_id} g" ${RUNNING_CHECKS[${rcid}]}/full.txt
+
 				done
 			fi
 		done
 		# obsolet eapi
 		if [ -e ${RUNNING_CHECKS[2]}/full.txt ]; then
-			gawk -i inplace -F'|' '{$2="_C2_"; $3="_C3_"; $5="_C5_"}1' OFS='|' ${RUNNING_CHECKS[2]}/full.txt
+			#get time diff since last run
+			local indexfile="${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[2]/${WORKDIR}/}/index.html"
+			local time_diff="$(get_time_diff "${indexfile}")"
 			for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
-				local p="$(echo ${id}|cut -d'|' -f6)"
-				local fd="$(echo ${id}|cut -d'(' -f2|cut -d')' -f1)"
 
-				local lf="$(get_age_v2 "${fd}")"
-				$(get_bugs_bool ${p}) && local ob="*" || local ob="-"
-				local bc="$(get_bugs_count ${p})"
+				local package="$(echo ${id}|cut -d'|' -f6)"
+				local old_ebuild_created="$(date_update "$(echo ${id}|cut -d'|' -f5)" "${time_diff}")"
+				$(get_bugs_bool "${package}") && local package_bugs="+" || local package_bugs="-"
+				local package_bugs_count="$(get_bugs_count ${package})"
 
-				local id_new="$(echo ${id}|sed -e "s/_C2_/${ob}/g" -e "s/_C3_/${bc}/g" -e "s/_C5_/${lf}/g")"
+				local new_id=$(
+					echo "${id}" | gawk -F'|' '{$2=v2; $3=v3; $5=v5}1' \
+					v2="${package_bugs}" \
+					v3="${package_bugs_count}" \
+					v5="${old_ebuild_created}" OFS='|'
+				)
 
-				sed -i "s ${id} ${id_new} g" ${RUNNING_CHECKS[2]}/full.txt
+				sed -i "s ${id} ${new_id} g" ${RUNNING_CHECKS[2]}/full.txt
 			done
 		fi
+	fi
+}
+
+gen_results(){
+	if ${SCRIPT_MODE}; then
+		# update results with actual git age/bugs information
+		upd_results
+		# sort the results
+		sort_result_v3 "1,1"
+		# create maintainer/package listings
+		gen_sort_main_v3
+		gen_sort_pak_v3
+		# copy results to sitedir
+		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
