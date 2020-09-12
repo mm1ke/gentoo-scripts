@@ -75,7 +75,8 @@ array_eclasses(){
 		"wrapper;make_wrapper" \
 		"edos2unix;edos2unix" \
 		"ltprune;prune_libtool_files" \
-		"eutils;emktemp:strip-linguas:path_exists:use_if_iuse:ebeep:in_iuse" \
+		"l10n;strip-linguas:l10n_get_locales:l10n_find_plocales_changes:l10n_for_each_disabled_locale_do:l10n_for_each_locale_do" \
+		"eutils;emktemp:path_exists:use_if_iuse:ebeep:in_iuse" \
 		"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
 		"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
 		"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
