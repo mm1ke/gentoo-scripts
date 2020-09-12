@@ -71,9 +71,11 @@ array_names
 
 array_eclasses(){
 	ECLASSES=( \
-		"optfeature;optfeature"
+		"optfeature;optfeature" \
+		"wrapper;make_wrapper" \
+		"edos2unix;edos2unix" \
 		"ltprune;prune_libtool_files" \
-		"eutils;emktemp:edos2unix:strip-linguas:make_wrapper:path_exists:use_if_iuse:ebeep:in_iuse" \
+		"eutils;emktemp:strip-linguas:path_exists:use_if_iuse:ebeep:in_iuse" \
 		"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
 		"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
 		"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
