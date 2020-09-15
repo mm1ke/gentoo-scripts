@@ -47,6 +47,7 @@ fi
 #
 
 # feature requirements
+# uncomment if feature is required
 #${TREE_IS_MASTER} || exit 0
 #${ENABLE_MD5} || exit 0
 #${ENABLE_GIT} || exit 0
@@ -86,7 +87,8 @@ array_names
 	local cat=${2}
 	local pak=${3}
 	local main=${4}
-	local full_ebuild=${5}
+	local ebuild="$(basename ${5})"
+	local ebuild_eapi=${6}
 
 	local found=false
 	local lastchar="${hp: -1}"
@@ -106,9 +108,9 @@ array_names
 			if [ ${_code} = 200 ]; then
 				found=true
 				if ${SCRIPT_MODE}; then
-					echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
+					echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
 				else
-					echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+					echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
 				fi
 				break
 			fi
@@ -131,9 +133,9 @@ array_names
 				if [ ${_code} = 200 ]; then
 					found=true
 					if ${SCRIPT_MODE}; then
-						echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
+						echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
 					else
-						echo "$(get_eapi ${full_ebuild})${DL}${cat}/${pak}${DL}${hp}${DL}${sitemut}${DL}${main}"
+						echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
 					fi
 					break
 				fi
@@ -145,9 +147,9 @@ array_names
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time ${TIMEOUT} --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
 		if ${SCRIPT_MODE}; then
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
+			echo "${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
 		else
-			echo "${new_code}${DL}${cat}/${pak}${DL}${hp}${DL}${correct_site}${DL}${main}"
+			echo "${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}"
 		fi
 	fi
 }
@@ -177,6 +179,8 @@ main() {
 	fi
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
+
+		local ebuild_eapi="$(get_eapi ${eb})"
 		ebuild=$(basename ${eb%.*})
 
 		if ${ENABLE_MD5}; then
@@ -191,21 +195,21 @@ main() {
 				local _checktmp="$(grep "${DL}${i}${DL}" ${TMPCHECK}|head -1)"
 
 				if echo ${i}|grep ^ftp >/dev/null;then
-					mode "FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
+					mode "${ebuild_eapi}${DL}FTP${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 				elif echo ${i}|grep '${' >/dev/null; then
-					mode "VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
+					mode "${ebuild_eapi}${DL}VAR${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
 				elif [ -n "${_checktmp}" ]; then
 					# don't check again
-					mode "${_checktmp:0:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:4:-1}${DL}${maintainer}${openbugs}"
+					mode "${ebuild_eapi}${DL}${_checktmp:2:3}${DL}${category}/${package}${DL}${ebuild}${DL}${_checktmp:6:-1}${DL}${maintainer}${openbugs}"
 				else
 					# get http status code
 					_code="$(get_code ${i})"
-					mode "${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
-					echo "${_code}${DL}${i}${DL}" >> ${TMPCHECK}
+					mode "${ebuild_eapi}${DL}${_code}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}"
+					echo "${ebuild_eapi}${DL}${_code}${DL}${i}${DL}" >> ${TMPCHECK}
 
 					case ${_code} in
 						301)
-							301check "${i}" "${category}" "${package}" "${maintainer}" "${eb}"
+							301check "${i}" "${category}" "${package}" "${maintainer}" "${eb}" "${ebuild_eapi}"
 							;;
 						esac
 
@@ -232,15 +236,15 @@ gen_results(){
 		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full-unfiltered.txt
 
 		# copy full log, ignoring "good" codes
-		sed -i "/^VAR/d; \
-			/^FTP/d; \
-			/^200/d; \
-			/^301/d; \
-			/^302/d; \
-			/^307/d; \
-			/^400/d; \
-			/^503/d; \
-			/^429/d; \
+		sed -i "/${DL}VAR${DL}/d; \
+			/${DL}FTP${DL}/d; \
+			/${DL}200${DL}/d; \
+			/${DL}301${DL}/d; \
+			/${DL}302${DL}/d; \
+			/${DL}307${DL}/d; \
+			/${DL}400${DL}/d; \
+			/${DL}503${DL}/d; \
+			/${DL}429${DL}/d; \
 			" ${TMPFILE}
 		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
@@ -258,7 +262,7 @@ gen_results(){
 
 		# ebuild_homepage_unsync
 		# find different homepages in same packages
-		for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f2|sort -u); do
+		for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f3|sort -u); do
 			# get all HOMEPAGEs from every package,
 			# lists them and count the lines.
 			# if homepages are sync, the line count should be 1
@@ -271,14 +275,14 @@ gen_results(){
 			if [ "${hp_lines}" -gt 1 ]; then
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
 				# only category/package and maintainer went into the full.txt
-				# via cut ... -f2,5 (needs update if data format changes)
+				# via cut ... -f2,5 (cat/pak + maintainer) (needs update if data format changes)
 				# also important to list every package atom once, otherwise we would
 				# have a wrong count
-				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f2,5 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
+				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f3,6 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
 			fi
 		done
 
-		sort_result_v2 2
+		sort_result_v3
 		gen_sort_pak_v3
 		gen_sort_main_v3
 

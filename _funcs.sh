@@ -195,19 +195,12 @@ sort_result_v3(){
 		fi
 
 		# find pakackge location in result
-		local pak_loc="$(_find_package_location "${rc_id}")"
-
 		if [ -z "${column}" ]; then
-			# default: normal sorting
-			sort -o ${rc_id} ${rc_id}
-		else
-			# sorting after certain column and pakage location
-			if [ -n "${pak_loc}" ]; then
-				sort -t"${DL}" -k${column} -k${pak_loc} -o${rc_id} ${rc_id}
-			else
-				sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
-			fi
+			local pak_loc="$(_find_package_location "${rc_id}")"
+			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
 		fi
+
+		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
 	done
 }
 
