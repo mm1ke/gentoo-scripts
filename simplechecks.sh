@@ -50,6 +50,7 @@ fi
 #
 
 # feature requirements
+# uncomment required features
 #${TREE_IS_MASTER} || exit 0
 ${ENABLE_MD5} || exit 0
 #${ENABLE_GIT} || exit 0
@@ -85,13 +86,14 @@ main() {
 	local filename="$(echo ${full_package}|cut -d'/' -f3)"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
+	local ebuild_eapi="$(get_eapi ${full_package})"
 
 	output(){
 		local checkid=${1}
 		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+			echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[${checkid}]}/full.txt
 		else
-			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+			echo "${ebuild_eapi}${DL}${RUNNING_CHECKS[${checkid}]##*/}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
 		fi
 	}
 
@@ -104,7 +106,7 @@ main() {
 		output 2
 	fi
 
-	if [ "$(get_eapi ${full_package})" = "6" ]; then
+	if [ "${ebuild_eapi}" = "6" ]; then
 		# epatch usage
 		if $(grep -q "\<epatch\>" ${full_package}); then
 			output 3
@@ -183,7 +185,7 @@ find_func(){
 
 gen_results(){
 	if ${SCRIPT_MODE}; then
-		sort_result_v2
+		sort_result_v3
 		gen_sort_main_v3
 		gen_sort_pak_v3
 		copy_checks ${SCRIPT_TYPE}
