@@ -181,7 +181,7 @@ main() {
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
 
 		local ebuild_eapi="$(get_eapi ${eb})"
-		ebuild=$(basename ${eb%.*})
+		local ebuild=$(basename ${eb%.*})
 
 		if ${ENABLE_MD5}; then
 			_hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
