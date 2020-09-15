@@ -169,6 +169,7 @@ main() {
 	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
 
 	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
+		local ebuild_eapi="$(get_eapi ${eb})"
 		local ebuild=$(basename ${eb%.*})
 
 		local _src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
@@ -185,33 +186,33 @@ main() {
 					if [ "${_fileformat}" = ".zip" ]; then
 						if ! $(grep "app-arch/unzip" ${PORTTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
 							mode ${RUNNING_CHECKS[2]} \
-									"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+									"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 									missing_zip
 						fi
 					fi
 					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
 						mode ${RUNNING_CHECKS[0]} \
-							"${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" \
+							"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" \
 							"$(echo ${_checktmp} | cut -d' ' -f1)"
 					else
 						if $(get_status ${i} "${code_available}"); then
 							mode ${RUNNING_CHECKS[0]} \
-								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 								available
 							echo "available ${i}" >> ${TMPCHECK}
 						elif $(get_status ${i} "${maybe_available}"); then
 							mode ${RUNNING_CHECKS[0]} \
-								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 								maybe_available
 							echo "maybe_available ${i}" >> ${TMPCHECK}
 						else
 							mode ${RUNNING_CHECKS[0]} \
-								"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 								not_available
 							if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
 								mode ${RUNNING_CHECKS[1]} \
-									"${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
+									"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
 									offline
 							fi
 							echo "not_available ${i}" >> ${TMPCHECK}
@@ -234,7 +235,7 @@ gen_results() {
 		cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt 2>/dev/null
 		cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt 2>/dev/null
 
-		sort_result_v2
+		sort_result_v3
 		gen_sort_main_v3
 		gen_sort_pak_v3
 
