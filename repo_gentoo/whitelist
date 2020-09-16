@@ -387,6 +387,12 @@ white_list=(
 	"dev-db/sqlite;sqlite-3.32.3-backports_1.patch;sqlite-3.32.3-r1.ebuild"
 	"dev-db/sqlite;sqlite-3.32.3-backports_2.patch;sqlite-3.32.3-r1.ebuild"
 	"dev-db/sqlite;sqlite-3.32.3-backports_3.patch;sqlite-3.32.3-r1.ebuild"
+	"dev-db/sqlite;sqlite-3.32.1-full_archive-build_1.patch;sqlite-3.32.3-r1.ebuild"
+	"dev-db/sqlite;sqlite-3.32.1-full_archive-build_2.patch;sqlite-3.32.3-r1.ebuild"
+	"dev-db/sqlite;sqlite-3.33.0-build_1.1.patch;sqlite-3.33.0.ebuild"
+	"dev-db/sqlite;sqlite-3.33.0-build_1.2.patch;sqlite-3.33.0.ebuild"
+	"dev-db/sqlite;sqlite-3.33.0-build_2.1.patch;sqlite-3.33.0.ebuild"
+	"dev-db/sqlite;sqlite-3.33.0-build_2.2.patch;sqlite-3.33.0.ebuild"
 	"gui-libs/libhandy;0.0.13-glade3.36-compat1.patch;libhandy-0.0.13.ebuild"
 	"gui-libs/libhandy;0.0.13-glade3.36-compat2.patch;libhandy-0.0.13.ebuild"
 )
