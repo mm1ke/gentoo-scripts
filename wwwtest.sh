@@ -227,7 +227,7 @@ find_func() {
 gen_results(){
 	if ${SCRIPT_MODE}; then
 		# sort after http codes (including all codes)
-		for i in $(cat ${TMPFILE}|cut -d "${DL}" -f1|sort -u); do
+		for i in $(cat ${TMPFILE}|cut -d "${DL}" -f2|sort -u); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
 			grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
 		done
@@ -275,7 +275,7 @@ gen_results(){
 			if [ "${hp_lines}" -gt 1 ]; then
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
 				# only category/package and maintainer went into the full.txt
-				# via cut ... -f2,5 (cat/pak + maintainer) (needs update if data format changes)
+				# via cut ... -f3,6 (cat/pak + maintainer) (needs update if data format changes)
 				# also important to list every package atom once, otherwise we would
 				# have a wrong count
 				grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f3,6 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
