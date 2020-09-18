@@ -229,7 +229,7 @@ gen_results(){
 		# sort after http codes (including all codes)
 		for i in $(cat ${TMPFILE}|cut -d "${DL}" -f2|sort -u); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
-			grep "^${i}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
+			grep "${DL}${i}${DL}" ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/full.txt
 		done
 
 		# copy full log
