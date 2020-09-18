@@ -230,7 +230,9 @@ gen_results(){
 		# update results with actual git age/bugs information
 		upd_results
 		# sort the results
-		sort_result_v3 "1,1"
+		sort_result_v4 "1,1 -k8,8" 0
+		sort_result_v4 "1,1 -k8,8" 1
+		sort_result_v4 "1,1 -k6,6" 2
 		# create maintainer/package listings
 		gen_sort_main_v3
 		gen_sort_pak_v3

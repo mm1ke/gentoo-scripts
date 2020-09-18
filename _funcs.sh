@@ -204,6 +204,47 @@ sort_result_v3(){
 	done
 }
 
+sort_result_v4(){
+	local column="${1}"
+	local single_rc="${2}"
+	local rc_id
+
+	# find pakackge location in result
+	_file_sort(){
+		if [ -z "${column}" ]; then
+			local pak_loc="$(_find_package_location "${rc_id}")"
+			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
+		fi
+
+		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+	}
+
+	# check input
+	_file_check(){
+		if [ -d ${rc_id} ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+				return 0
+			else
+				return 1
+			fi
+		elif ! [ -e ${rc_id} ]; then
+			return 1
+		else
+			return 0
+		fi
+	}
+
+	if [ -z "${single_rc}" ]; then
+		for rc_id in ${RUNNING_CHECKS[@]}; do
+			_file_check && _file_sort
+		done
+	else
+		rc_id="${RUNNING_CHECKS[${single_rc}]}"
+		_file_check && _file_sort
+	fi
+}
+
 count_keywords(){
 	local ebuild1="${1}"
 	local ebuild2="${2}"
@@ -794,6 +835,6 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date get_git_age get_age_v3 date_update sort_result_v3 \
-	get_time_diff
+	get_time_diff sort_result_v4
 
 
