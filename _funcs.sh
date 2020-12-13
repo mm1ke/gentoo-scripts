@@ -21,47 +21,86 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Discription:
-# this file only provides functions for different scripts
+# this file provides functions and default values for scripts
+
+#
+# repo configuration
+# this only applies if REPO_TO_CHECK is set to non-zero and the repo set in the
+# variable exists in the _repos.sh file. Otherwise the script simply exists.
+# if REPO_TO_CHECK is set to zero default values or overrides in every script
+# are used.
+# Values from _repos.sh are going to be exported as well and can be used in the
+# scripts.
+#
+realdir="$(dirname $(readlink -f $BASH_SOURCE))"
+if [ -n "${REPO_TO_CHECK}" ]; then
+	if [ -e ${realdir}/_repos.sh ]; then
+		source ${realdir}/_repos.sh ${REPO_TO_CHECK}
+		# exit script if the repo doesn't exist in _repos.sh
+		${REPO_ERROR} && exit 1
+	else
+		echo "Missing _repos.sh"
+		exit 1
+	fi
+fi
 
 #
 # globally vars - can be used everywhere (exported)
 #
 # enabling debuging (if available)
 BUGTMPDIR="/tmp/buglists/"
-DEBUG=false
 DL='|'
 
-# set the PORTTREE
+# check and set DEBUG
+[ -z "${DEBUG}" ] && DEBUG=false
+[ -z "${DRYRUN}" ] && DRYRUN=false
+# check and set set the PORTTREE
 if [ -z "${PORTTREE}" ]; then
-	if [ -e /usr/portage/metadata/ ]; then
+	if [ -d /usr/portage/metadata/ ]; then
 		PORTTREE="/usr/portage/"
 		export PORTTREE
 	else
 		exit "No portage tree set"
 		exit 1
 	fi
+else
+	if ! [ -d ${PORTTREE} ]; then
+		echo "${PORTTREE} doesn't exists"
+		exit 1
+	fi
 fi
-[ -z "${SCRIPT_MODE}" ] && \
-	SCRIPT_MODE=false && \
-	export SCRIPT_MODE
-[ -z "${SITEDIR}" ] && \
-	SITEDIR="${HOME}/checks-${RANDOM}/" && \
-	export SITEDIR
-[ -z "${REPOCHECK}" ] && \
-	REPOCHECK=false && \
-	export REPOCHECK
+[ -z "${SCRIPT_MODE}" ] && SCRIPT_MODE=false
+[ -z "${SITEDIR}" ] && SITEDIR="${HOME}/checks-${RANDOM}/"
+[ -z "${REPOCHECK}" ] && REPOCHECK=false
 
+# Feature settings
 ENABLE_GIT=false
 ENABLE_MD5=false
 TREE_IS_MASTER=false
-if [ -e ${PORTTREE} ]; then
-	[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
-	[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
-	[ "$(cat ${PORTTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
-fi
+[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
+[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
+[ "$(cat ${PORTTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
 
-export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER
+export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER \
+	SCRIPT_MODE SITEDIR REPOCHECK DRYRUN
 #
+# globaly vars END
+#
+
+# DRYRUN - only print vars and exit
+if ${DRYRUN}; then
+	echo "Repo: ${REPO}"
+	echo "Porttree: ${PORTTREE}"
+	echo "Enable git: ${ENABLE_GIT}"
+	echo "Enable md5: ${ENABLE_MD5}"
+	echo "Tree is master: ${TREE_IS_MASTER}"
+	echo "Sitedir: ${SITEDIR}"
+	echo "Repocheck: ${REPOCHECK}"
+	echo "ScriptMode: ${SCRIPT_MODE}"
+	echo "Debug: ${DEBUG}"
+	echo "Whitelist: ${PT_WHITELIST}"
+	exit 1
+fi
 
 _update_buglists(){
 	local bug_files="UNCONFIRMED CONFIRMED IN_PROGRESS"

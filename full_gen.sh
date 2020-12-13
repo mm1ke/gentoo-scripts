@@ -23,12 +23,6 @@
 # Discription:
 # create full bug lists per packages and maintainers
 
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
-
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs-httpgen.sh ]; then
 	source ${realdir}/_funcs.sh

@@ -28,12 +28,6 @@
 #export SCRIPT_MODE=true
 #export SITEDIR="${HOME}/eclassstats/"
 
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
-
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs.sh ]; then
@@ -46,11 +40,9 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-
-# feature requirements
-#${TREE_IS_MASTER} || exit 0
-#${ENABLE_MD5} || exit 0
-#${ENABLE_GIT} || exit 0
+#${TREE_IS_MASTER} || exit 0		# only works with gentoo main tree
+#${ENABLE_MD5} || exit 0				# only works with md5 cache
+#${ENABLE_GIT} || exit 0				# only works with git tree
 
 SCRIPT_NAME="eclassstats"
 SCRIPT_SHORT="ECS"
@@ -64,7 +56,7 @@ array_names(){
 }
 array_names
 #
-### IMPORTANT SETTINGS STOP ###
+### IMPORTANT SETTINGS END ###
 #
 
 main() {

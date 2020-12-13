@@ -29,12 +29,6 @@
 #export SCRIPT_MODE=true
 #export SITEDIR="${HOME}/depcheck/"
 
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
-
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs.sh ]; then
@@ -44,15 +38,15 @@ else
 	exit 1
 fi
 
-# don't run on overlays because dependencies are most likely only
-# available at the main tree
-${TREE_IS_MASTER} || exit 0
-${ENABLE_MD5} || exit 0
-#${ENABLE_GIT} || exit 0
-
 #
 ### IMPORTANT SETTINGS START ###
 #
+# don't run on overlays because dependencies are most likely only
+# available at the main tree
+${TREE_IS_MASTER} || exit 0 		# only works with gentoo main tree
+${ENABLE_MD5} || exit 0					# only works with md5 cache
+#${ENABLE_GIT} || exit 0				# only works with git tree
+
 SCRIPT_NAME="depcheck"
 SCRIPT_SHORT="DEC"
 WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
@@ -65,7 +59,7 @@ array_names(){
 }
 array_names
 #
-### IMPORTANT SETTINGS STOP ###
+### IMPORTANT SETTINGS END ###
 #
 
 main() {

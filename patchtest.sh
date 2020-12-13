@@ -28,12 +28,6 @@
 #export SITEDIR="${HOME}/patchtest/"
 #export PORTTREE=/usr/portage/
 
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
-
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs.sh ]; then
@@ -46,11 +40,16 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
+#${TREE_IS_MASTER} || exit 0		# only works with gentoo main tree
+#${ENABLE_MD5} || exit 0				# only works with md5 cache
+#${ENABLE_GIT} || exit 0				# only works with git tree
 
-# feature requirements
-#${TREE_IS_MASTER} || exit 0
-#${ENABLE_MD5} || exit 0
-#${ENABLE_GIT} || exit 0
+if [ -z "${PT_WHITELIST}" ]; then
+	WFILE="${realdir}/whitelist"
+else
+	WFILE="${realdir}/${PT_WHITELIST}"
+fi
+
 
 SCRIPT_NAME="patchtest"
 SCRIPT_SHORT="PAT"
@@ -63,7 +62,7 @@ array_names(){
 }
 array_names
 #
-### IMPORTANT SETTINGS STOP ###
+### IMPORTANT SETTINGS END ###
 #
 
 main(){
@@ -313,9 +312,12 @@ main(){
 		# white list checking
 		white_check(){
 			local pfile=${1}
-			if [ -e ${startdir}/whitelist ]; then
-				source ${startdir}/whitelist
+			$DEBUG && >&2 echo "*DEBUG: whitelist: checking ${pfile} in ${WFILE}"
+
+			if [ -e ${WFILE} ]; then
+				source ${WFILE}
 			else
+				$DEBUG && >&2 echo "*DEBUG: whitelist: ${WFILE} - file not found"
 				echo false
 			fi
 
@@ -326,11 +328,13 @@ main(){
 					local white_ebuild="$(echo ${white}|cut -d';' -f3)"
 					if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
 						if [ "${white_ebuild}" = "*" ]; then
+							$DEBUG && >&2 echo "**DEBUG: whitelist: found patch ${pfile} in all ebuilds"
 							echo true
 							break
 						else
 							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
 								if [ -e ${PORTTREE}/${full_package}/${wbuild} ]; then
+									$DEBUG && >&2 echo "**DEBUG: whitelist: found patch ${pfile} in ${wbuild}"
 									echo true
 									break 2
 								fi
@@ -343,9 +347,9 @@ main(){
 			else
 				echo false
 			fi
-
 		}
 
+		$DEBUG && >&2 echo "DEBUG: prechecks: whitelist and special eclasses"
 		for file in ${fullpath}/files/*; do
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
@@ -535,7 +539,7 @@ gen_results() {
 
 cd ${PORTTREE}
 export -f main get_perm get_main_min array_names
-export WORKDIR startdir SCRIPT_SHORT
+export WORKDIR SCRIPT_SHORT WFILE
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
 ${SCRIPT_MODE} && rm -rf ${WORKDIR}

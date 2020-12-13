@@ -28,12 +28,6 @@
 #export SITEDIR="${HOME}/eapistats/"
 #export PORTTREE=/usr/portage/
 
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
-
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs.sh ]; then
@@ -47,11 +41,11 @@ fi
 ### IMPORTANT SETTINGS START ###
 #
 [ -z "${HASHTREE}" ] && HASHTREE="/var/tmp/"
-[ -s "${REPO}" ] && REPO="gentoo"
+[ -z "${REPO}" ] && REPO="gentoo"
 SCRIPT_NAME="treehashgen"
 WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
 #
-### IMPORTANT SETTINGS STOP ###
+### IMPORTANT SETTINGS END ###
 #
 
 date_today="$(date -I)"
