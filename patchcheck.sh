@@ -75,7 +75,7 @@ _gen_whitelist(){
 
 main(){
 	array_names
-	local eclasses="apache-module|elisp|vdr-plugin-2|games-mods|ruby-ng|readme.gentoo|readme.gentoo-r1|bzr|bitcoincore|gnatbuild|gnatbuild-r1|java-vm-2|mysql-cmake|mysql-multilib-r1|php-ext-source-r2|php-ext-source-r3|php-pear-r1|selinux-policy-2|toolchain-binutils|toolchain-glibc|x-modular"
+	local eclasses="apache-module|elisp|vdr-plugin-2|ruby-ng|readme.gentoo|readme.gentoo-r1|java-vm-2|php-ext-source-r3|selinux-policy-2|toolchain-glibc"
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f1)"
 	local package_name="$(echo ${full_package}|cut -d'/' -f2)"

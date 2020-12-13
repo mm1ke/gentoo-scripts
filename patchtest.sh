@@ -362,12 +362,6 @@ main(){
 						# check for vdr-plugin-2 eclass which installs confd files if exists
 						elif [ "${file}" = "confd" ]; then
 							$(grep -q vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-						# check for games-mods eclass which install server.cfg files
-						elif [ "${file}" = "server.cfg" ]; then
-							$(grep -q games-mods ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
-						# check for mysql cnf files
-						elif [ "${file%%-*}" = "my.cnf" ]; then
-							$(grep -q mysql-multilib-r1 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
 						# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
 						elif [ "${file##*.}" = "conf" ]; then
 							$(grep -q apache-module ${fullpath}/*.ebuild > /dev/null) && \
