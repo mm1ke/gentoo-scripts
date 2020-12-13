@@ -152,6 +152,13 @@ get_bugs_full(){
 	[ -n "${return}" ] && echo "${return}"
 }
 
+count_ebuilds(){
+	local epath="${1}"
+	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
+
+	[ -n "${return}" ] && echo "${return}"
+}
+
 # function to sort the output, takes one argument (optional)
 # the argument is the column number to sort after
 sort_result_v2(){
@@ -835,6 +842,6 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date get_git_age get_age_v3 date_update sort_result_v3 \
-	get_time_diff sort_result_v4
+	get_time_diff sort_result_v4 count_ebuilds
 
 

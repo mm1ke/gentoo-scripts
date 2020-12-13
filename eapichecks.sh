@@ -147,26 +147,21 @@ ${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
 			fi
 		fi
 	done
-	if ! [ ${ebuild_eapi} = 5 ]; then
+	# everything below EAPI=6 is considered obsolete
+	if [ ${ebuild_eapi} -lt 6 ]; then
 		local eapilist="$(get_eapi_list ${package_path})"
-		local eapi4_fileage="$(get_git_age ${full_package} "ct" "A" "first")"
+		local eapi_fileage="$(get_git_age ${full_package} "ct" "A" "first")"
 		# OUTPUT: 0|_|_|0:0:0:0:0:0:0|_|foo/bar|foo/bar-1.0.0|foo@gentoo
 		output "${ebuild_eapi}\
-${DL}__C2__${DL}__C3__${DL}${eapilist}${DL}${eapi4_fileage}\
+${DL}__C2__${DL}__C3__${DL}${eapilist}${DL}${eapi_fileage}\
 ${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" \
 			"${RUNNING_CHECKS[2]##*/}"
 	fi
 }
 
-pre_check(){
-	if ! [ "$(get_eapi ${1})" = "6" ] && ! [ "$(get_eapi ${1})" = "7" ]; then
-		main ${1}
-	fi
-}
-
 find_func(){
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" -print | parallel pre_check {}
+		-type f -name "*.ebuild" -print | parallel main {}
 }
 
 upd_results(){
@@ -243,7 +238,7 @@ gen_results(){
 
 cd ${PORTTREE}
 export WORKDIR SCRIPT_SHORT
-export -f main output array_names pre_check
+export -f main output array_names
 ${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
 # cleanup tmp files
