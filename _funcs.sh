@@ -487,7 +487,7 @@ depth_set_v2() {
 				echo "No diff file found"
 				exit 1
 			fi
-			searchp=( $(sed -e 's/^.//' ${TODAYCHECKS}) )
+			searchp=( $(sed -e 's/^.//' ${TODAYCHECKS} | sort -u) )
 
 			# diff provides categories/package so we need maxd=1 and mind=1
 			# setting both vars to 0 because the find command adds 1 anyway
