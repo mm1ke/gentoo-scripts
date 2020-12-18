@@ -198,6 +198,19 @@ count_ebuilds(){
 	[ -n "${return}" ] && echo "${return}"
 }
 
+check_mask(){
+	local ebuild="${1}"
+	if [ -e ${PORTTREE}/profiles/package.mask ]; then
+		if $(grep -q ${ebuild} ${PORTTREE}/profiles/package.mask); then
+			return 0
+		else
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
+
 # function to sort the output, takes one argument (optional)
 # the argument is the column number to sort after
 sort_result_v2(){
@@ -881,6 +894,4 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_date get_git_age get_age_v3 date_update sort_result_v3 \
-	get_time_diff sort_result_v4 count_ebuilds
-
-
+	get_time_diff sort_result_v4 count_ebuilds check_mask

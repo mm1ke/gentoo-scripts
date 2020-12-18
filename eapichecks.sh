@@ -98,13 +98,13 @@ main() {
 
 	local i
 
-	# check for maximal 10 reversion
-	for i in $(seq $start 10); do
+	# check for maximal 9 reversion
+	for i in $(seq $start 9); do
 		if [ -e ${package_path}/${name}-r${i}.ebuild ]; then
-			local found_ebuild="${package_path}/${name}-r${i}.ebuild"
-			local eapi_found_ebuild="$(get_eapi ${found_ebuild})"
+			local found_ebuild="${category}/${name}-r${i}"
+			local eapi_found_ebuild="$(get_eapi ${package_path}/${name}-r${i}.ebuild)"
 
-			if [ "${eapi_found_ebuild}" = "6" ] || [ "${eapi_found_ebuild}" = "7" ]; then
+			if [ ${eapi_found_ebuild} -ge 6 ] && ! $(check_mask ${found_ebuild}); then
 
 				local old_ebuild="${category}/${package}/${org_name}.ebuild"
 				local new_ebuild="${category}/${package}/${name}-r${i}.ebuild"
