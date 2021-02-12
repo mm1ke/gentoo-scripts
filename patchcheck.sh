@@ -44,6 +44,12 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
+if [ -z "${PT_WHITELIST}" ]; then
+	WFILE="${realdir}/whitelist"
+else
+	WFILE="${realdir}/${PT_WHITELIST}"
+fi
+
 SCRIPT_NAME="patchcheck"
 SCRIPT_SHORT="PAC"
 SCRIPT_TYPE="checks"
@@ -60,8 +66,8 @@ array_names
 #
 
 _gen_whitelist(){
-	if [ -e ${startdir}/whitelist ]; then
-		source ${startdir}/whitelist
+	if [ -e ${WFILE} ]; then
+		source ${WFILE}
 		for i in ${white_list[@]}; do
 			whitelist+=("$(echo ${i}|cut -d';' -f1)")
 		done
