@@ -156,6 +156,13 @@ gen_html_out(){
 			${SITEDIR}/charts-gen/${chart_name}.js
 		chmod 755 ${SITEDIR}/charts-gen/${chart_name}.js
 
+		local value_filter=""
+		if [ -d ${SITEDIR}/${type}/${chart}/sort-by-filter/ ];then
+			local value_filter=" | <a href=\"${type}/${chart}/sort-by-filter\">filter</a>"
+		elif [ -d ${SITEDIR}/${type}/${chart}/sort-by-eapi/ ];then
+			local value_filter=" | <a href=\"${type}/${chart}/sort-by-eapi\">eapi</a>"
+		fi
+
 		read -r -d '' OUT <<- EOM
 		\t\t\t<li>
 		\t\t\t\t<script type="text/javascript" src="charts-gen/${chart_name}.js"></script>
@@ -163,7 +170,7 @@ gen_html_out(){
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
 		\t\t\t\t<h3><a href="${type}/${chart}/">${chart_name}</a></h3>
-		\t\t\t\t<pre><a href="${type}/${chart}/full.txt">full</a> | <a href="${type}/${chart}/sort-by-maintainer">main</a> | <a href="${type}/${chart}/sort-by-package">pack</a>
+		\t\t\t\t<pre><a href="${type}/${chart}/full.txt">full</a> | <a href="${type}/${chart}/sort-by-maintainer">main</a> | <a href="${type}/${chart}/sort-by-package">pack</a>${value_filter}
 		<p>${chart_description}</p>
 		<a href="${type}/${chart}/full.txt">full</a>     ${info_full}
 		<a href="${type}/${chart}/sort-by-maintainer">main</a>     ${info_main}
