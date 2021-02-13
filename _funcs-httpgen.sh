@@ -163,7 +163,7 @@ gen_html_out(){
 		\t\t\t\t\t<canvas id="${chart_name}"></canvas>
 		\t\t\t\t</div>
 		\t\t\t\t<h3><a href="${type}/${chart}/">${chart_name}</a></h3>
-		\t\t\t\t<pre><p><a href="${type}/${chart}/full.txt">full</a> | <a href="${type}/${chart}/sort-by-maintainer">main</a> | <a href="${type}/${chart}/sort-by-package">pack</a></p>
+		\t\t\t\t<pre><a href="${type}/${chart}/full.txt">full</a> | <a href="${type}/${chart}/sort-by-maintainer">main</a> | <a href="${type}/${chart}/sort-by-package">pack</a>
 		<p>${chart_description}</p>
 		<a href="${type}/${chart}/full.txt">full</a>     ${info_full}
 		<a href="${type}/${chart}/sort-by-maintainer">main</a>     ${info_main}
