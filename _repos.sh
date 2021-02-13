@@ -29,7 +29,7 @@ repo="${1}"
 # if the repo isn't found (case '*'), this variable is set to "true" and script
 # will exit before running anything
 export REPO_ERROR=false
-# if DRYRUN is set to try, scripts are going to exit after sourcing _funcs.sh
+# if DRYRUN is set to true, scripts are going to exit after sourcing _funcs.sh
 # and printing out some variables.
 export DRYRUN=false
 
