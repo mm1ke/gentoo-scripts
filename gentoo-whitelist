@@ -172,8 +172,8 @@ white_list=(
 	"www-apps/trac;postinst-en.txt;trac-1.2.5.ebuild"
 	"www-apps/trac;postupgrade-en.txt;trac-1.2.5.ebuild"
 	"net-ftp/gftp;gftp-2.0.19-gftp-expand-path-sigsegv.patch;gftp-2.0.19-r3.ebuild"
-	"gnustep-base/gnustep-make;gnustep-5.csh;gnustep-make-2.6.8.ebuild:gnustep-make-2.7.0.ebuild"
-	"gnustep-base/gnustep-make;gnustep-5.sh;gnustep-make-2.6.8.ebuild:gnustep-make-2.7.0.ebuild"
+	"gnustep-base/gnustep-make;gnustep-5.csh;gnustep-make-2.8.0.ebuild"
+	"gnustep-base/gnustep-make;gnustep-5.sh;gnustep-make-2.8.0.ebuild"
 	"net-analyzer/munin;munin-graph.service;munin-2.0.52.ebuild:munin-2.0.56.ebuild:munin-2.0.57.ebuild:munin-2.0.59.ebuild:munin-2.0.61.ebuild"
 	"net-analyzer/munin;munin-graph.socket;munin-2.0.52.ebuild:munin-2.0.56.ebuild:munin-2.0.57.ebuild:munin-2.0.59.ebuild:munin-2.0.61.ebuild"
 	"net-analyzer/munin;munin-html.service;munin-2.0.52.ebuild:munin-2.0.56.ebuild:munin-2.0.57.ebuild:munin-2.0.59.ebuild:munin-2.0.61.ebuild"
@@ -426,4 +426,5 @@ white_list=(
 	"x11-misc/xsri;xsri-2.1.0-configure.patch;xsri-2.1.0_p17_p12.ebuild"
 	"x11-plugins/lurch;lurch-0.6.8-axc-0.3.3-libsignal-protocol-c.patch;lurch-0.6.8-r2.ebuild"
 	"app-admin/apg;apg-2.3.0b-crypt_password.patch;apg-2.3.0b_p20150129.ebuild"
+	"kde-frameworks/kdelibs4support;kdelibs4support-5.77.0-no-kdesignerplugin.patch;kdelibs4support-5.77.0.ebuild"
 )
