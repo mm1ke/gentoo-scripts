@@ -427,4 +427,5 @@ white_list=(
 	"x11-plugins/lurch;lurch-0.6.8-axc-0.3.3-libsignal-protocol-c.patch;lurch-0.6.8-r2.ebuild"
 	"app-admin/apg;apg-2.3.0b-crypt_password.patch;apg-2.3.0b_p20150129.ebuild"
 	"kde-frameworks/kdelibs4support;kdelibs4support-5.77.0-no-kdesignerplugin.patch;kdelibs4support-5.77.0.ebuild"
+	"kde-frameworks/kdelibs4support;kdelibs4support-5.77.0-no-kdesignerplugin-1.patch;kdelibs4support-5.77.0.ebuild"
 )
