@@ -208,7 +208,7 @@ white_list=(
 	"dev-db/myodbc;odbcinst.ini.m4;myodbc-8.0.22.ebuild"
 	"mail-filter/mailfilter;rcfile.example1;mailfilter-0.8.2.ebuild:mailfilter-0.8.4.ebuild"
 	"mail-filter/mailfilter;rcfile.example2;mailfilter-0.8.2.ebuild:mailfilter-0.8.4.ebuild"
-	"mail-mta/postfix;postfix.rc6.2.7;postfix-3.5.6.ebuild:postfix-3.5.7.ebuild:postfix-3.5.8.ebuild:postfix-3.6_pre20201104.ebuild"
+	"mail-mta/postfix;postfix.rc6.2.7;postfix-3.5.8-r1.ebuild:postfix-3.5.9-r1.ebuild:postfix-3.6_pre20210201.ebuild"
 	"net-mail/cmd5checkpw;euid_030.diff;cmd5checkpw-0.30-r2.ebuild:cmd5checkpw-0.30-r3.ebuild"
 	"app-benchmarks/acovea-gtk;acovea-gtk-1.0.1-gcc4.3.patch;acovea-gtk-1.0.1.ebuild"
 	"app-benchmarks/acovea-gtk;acovea-gtk-1.0.1-libbrahe.patch;acovea-gtk-1.0.1.ebuild"
