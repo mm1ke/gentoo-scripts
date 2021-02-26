@@ -210,7 +210,7 @@ white_list=(
 	"app-benchmarks/acovea-gtk;acovea-gtk-1.0.1-libbrahe.patch;acovea-gtk-1.0.1.ebuild"
 	"app-benchmarks/acovea-gtk;acovea-gtk-1.0.1-libsigc.patch;acovea-gtk-1.0.1.ebuild"
 	"dev-perl/Math-Pari;pari-2.3.5-no-dot-inc.patch;Math-Pari-2.10.809.0-r1.ebuild"
-	"dev-db/postgresql;postgresql-9.6.3-no-server.patch;postgresql-9.6.20.ebuild"
+	"dev-db/postgresql;postgresql-9.6.3-no-server.patch;postgresql-9.6.21.ebuild"
 	"sys-devel/gcc-apple;gcc-apple-4.2.1-autoconf-m4-precious.patch;gcc-apple-4.2.1_p5666-r2.ebuild"
 	"sys-devel/gcc-apple;gcc-apple-4.2.1-dsymutil.patch;gcc-apple-4.2.1_p5666-r2.ebuild"
 	"sys-devel/gcc-apple;gcc-apple-4.2.1-texinfo.patch;gcc-apple-4.2.1_p5666-r2.ebuild"
