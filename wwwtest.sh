@@ -23,9 +23,9 @@
 # Discription:
 # simple scirpt to find broken websites
 
-#export SCRIPT_MODE=true
-#export PORTTREE="/usr/portage/"
-#export SITEDIR="${HOME}/wwwtest/"
+#export FILERESULTS=true
+#export REPOTREE="/usr/portage/"
+#export RESULTSDIR="${HOME}/wwwtest/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -43,26 +43,104 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="wwwtest"
-SCRIPT_SHORT="WWT"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-TMPFILE="/tmp/${SCRIPT_NAME}-$(date +%y%m%d)-${RANDOM}.txt"
-TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
+WORKDIR="/tmp/wwwtest-${RANDOM}"
+TMPFILE="/tmp/wwwtest-$(date +%y%m%d)-${RANDOM}.txt"
+TMPCHECK="/tmp/wwwtest-tmp-${RANDOM}.txt"
 JOBS="50"
 TIMEOUT="20"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_http_statuscode"									#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_301_redirections"									#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_missing_slash_www"		#Index 2
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_redirection_http_to_https"				#Index 3
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_homepage_upstream_shutdown"								#Index 4
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_homepage_unsync"														#Index 5
+		"${WORKDIR}/ebuild_homepage_http_statuscode"									#Index 0
+		"${WORKDIR}/ebuild_homepage_301_redirections"									#Index 1
+		"${WORKDIR}/ebuild_homepage_redirection_missing_slash_www"		#Index 2
+		"${WORKDIR}/ebuild_homepage_redirection_http_to_https"				#Index 3
+		"${WORKDIR}/ebuild_homepage_upstream_shutdown"								#Index 4
+		"${WORKDIR}/ebuild_homepage_unsync"														#Index 5
 	)
 }
-array_names
+output_format(){
+	index=(
+		not_used0
+		"${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}"
+		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
+		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
+		not_used4
+		not_used5
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+This checks tests every homepage and gets their http return code. The list contain packages with
+a bad returncode.
+Following statuscodes are ignored: VAR, FTP, 200, 301, 302, 307, 400, 503.
+<a href="ebuild_homepage_http_statuscode-detailed.html">Status Code History</a>
+
+||F  +---> ebuild EAPI          +---> full ebuild name           ebuild maintainer(s) <---+
+D|O  |                          |                                                         |
+A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | developer@gentoo.org | 754124:612230
+T|M       |      |                                   |                                                   |
+A|A       |      +---> package category/name         +--> homepage corresponding with the statuscode     |
+||T       +--> http statuscode                                  open bug ids related to this package <---+
+EOM
+read -r -d '' info_index1 <<- EOM
+Lists ebuilds with a Homepage which actually redirects to another sites.
+
+||F  +---> ebuild EAPI          +---> full ebuild name                               +---> redirected homepage
+D|O  |                          |                                                    |
+A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | https://bar.foo.com | developer@gentoo.org
+T|M       |      |                                   |                                                         |
+A|A       |      +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
+||T       +--> http statuscode of redirected website
+EOM
+read -r -d '' info_index2 <<- EOM
+Lists ebuild who's homepage redirects to the same site only including a "www" or a missing "/" at the end (or both)
+
+||F
+D|O  +---> ebuild EAPI          +---> full ebuild name              +---> eg: same homepage, only with a slash at the end
+A|R  |                          |                                   |
+T|M  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | https://foo.bar.com/ | developer@gentoo.org
+A|A        |                                   |                                                         |
+||T        +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
+EOM
+read -r -d '' info_index3 <<- EOM
+Lists ebuids who's homepage redirects to the same site only via HTTPS.
+
+||F
+D|O  +---> ebuild EAPI          +---> full ebuild name                   +---> same homepage, only with https
+A|R  |                          |                                        |
+T|M  7 | dev-libs/foo | foo-1.12-r2.ebuild | http://foo.bar.com | https://foo.bar.com | developer@gentoo.org
+A|A        |                                   |                                                         |
+||T        +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
+EOM
+read -r -d '' info_index4 <<- EOM
+This checks lists ebuilds which still use a homepage of a know dead site.
+Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
+
+||F  +---> ebuild EAPI          +---> full ebuild name           ebuild maintainer(s) <---+
+D|O  |                          |                                                         |
+A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | developer@gentoo.org | 754124:612230
+T|M       |      |                                   |                                                   |
+A|A       |      +---> package category/name         +--> homepage which are going to be removed         |
+||T       +--> http statuscode                                  open bug ids related to this package <---+
+EOM
+read -r -d '' info_index5 <<- EOM
+Lists packages who have different homepages over it's ebuild versions.
+
+||F              +----> package category/name
+D|O              |
+A|R  3 | metadata.xml | developer@gentoo.org
+T|M  |                                    |
+A|A  |          ebuild maintainer(s) <----+
+||T  +----> number of differnt homepages found
+EOM
+
+	description=( "${info_index0}" "${info_index1}" "${info_index2}" \
+		"${info_index3}" "${info_index4}" "${info_index5}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -82,6 +160,15 @@ array_names
 	local found=false
 	local lastchar="${hp: -1}"
 
+	output(){
+		local checkid=${1}
+		if ${FILERESULTS}; then
+			output_format ${checkid} >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+		else
+			output_format ${checkid}
+		fi
+	}
+
 	if echo ${hp}|grep 'http://' > /dev/null; then
 
 		_sitemuts=("${hp/http:\/\//https:\/\/}" \
@@ -96,11 +183,7 @@ array_names
 			local _code="$(get_code ${sitemut})"
 			if [ ${_code} = 200 ]; then
 				found=true
-				if ${SCRIPT_MODE}; then
-					echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[3]}/full.txt
-				else
-					echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
-				fi
+				output 3
 				break
 			fi
 		done
@@ -121,11 +204,7 @@ array_names
 				local _code="$(get_code ${sitemut})"
 				if [ ${_code} = 200 ]; then
 					found=true
-					if ${SCRIPT_MODE}; then
-						echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}" >> ${RUNNING_CHECKS[2]}/full.txt
-					else
-						echo "${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
-					fi
+					output 2
 					break
 				fi
 			done
@@ -135,11 +214,7 @@ array_names
 	if ! ${found}; then
 		local correct_site="$(curl -Ls -o /dev/null --silent --max-time ${TIMEOUT} --head -w %{url_effective} ${hp})"
 		new_code="$(get_code ${correct_site})"
-		if ${SCRIPT_MODE}; then
-			echo "${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}" >> ${RUNNING_CHECKS[1]}/full.txt
-		else
-			echo "${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}"
-		fi
+		output 1
 	fi
 }
 
@@ -151,7 +226,7 @@ get_code() {
 main() {
 	mode() {
 		local msg=${1}
-		if ${SCRIPT_MODE}; then
+		if ${FILERESULTS}; then
 			echo "${msg}" >> ${TMPFILE}
 		else
 			echo "${msg}"
@@ -167,13 +242,13 @@ main() {
 		openbugs="${DL}${openbugs}"
 	fi
 
-	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
+	for eb in ${REPOTREE}/${full_package}/*.ebuild; do
 
 		local ebuild_eapi="$(get_eapi ${eb})"
 		local ebuild=$(basename ${eb%.*})
 
 		if ${ENABLE_MD5}; then
-			_hp="$(grep ^HOMEPAGE= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
+			_hp="$(grep ^HOMEPAGE= ${REPOTREE}/metadata/md5-cache/${category}/${ebuild})"
 			_hp="${_hp:9}"
 		else
 			_hp="$(grep ^HOMEPAGE= ${eb}|cut -d'"' -f2)"
@@ -214,7 +289,8 @@ find_func() {
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		# sort after http codes (including all codes)
 		for i in $(cat ${TMPFILE}|cut -d "${DL}" -f2|sort -u); do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${i}/
@@ -257,9 +333,9 @@ gen_results(){
 			# if homepages are sync, the line count should be 1
 			# --- works best with the md5-cache ---
 			if ${ENABLE_MD5}; then
-				hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
+				hp_lines="$(grep "HOMEPAGE=" ${REPOTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
 			else
-				hp_lines="$(grep "HOMEPAGE=" ${PORTTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
+				hp_lines="$(grep "HOMEPAGE=" ${REPOTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
 			fi
 			if [ "${hp_lines}" -gt 1 ]; then
 				mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
@@ -279,19 +355,20 @@ gen_results(){
 	fi
 }
 
-cd ${PORTTREE}
+array_names
+cd ${REPOTREE}
 # touch file first, otherwise the _checktmp could fail because of
 # the missing file
 touch ${TMPCHECK}
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # for parallel execution
-export -f main get_code 301check array_names
-export TMPCHECK TMPFILE WORKDIR SCRIPT_SHORT TIMEOUT
+export -f main get_code 301check array_names output_format
+export TMPCHECK TMPFILE WORKDIR TIMEOUT
 if [ "${1}" = "diff" ]; then
 	depth_set_v2 full
 else
 	depth_set_v2 ${1}
 fi
-${SCRIPT_MODE} && rm ${TMPFILE}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm ${TMPFILE}
+${FILERESULTS} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}

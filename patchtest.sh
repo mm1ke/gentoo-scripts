@@ -23,10 +23,10 @@
 # Discription:
 # simple scirpt to find unused patches in the gentoo portage tree
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/patchtest/"
-#export PORTTREE=/usr/portage/
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/patchtest/"
+#export REPOTREE=/usr/portage/
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -50,17 +50,33 @@ else
 	WFILE="${realdir}/${PT_WHITELIST}"
 fi
 
-
-SCRIPT_NAME="patchtest"
-SCRIPT_SHORT="PAT"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
+WORKDIR="/tmp/patchtest-${RANDOM}/"
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_unused_patches"									#Index 0
+		"${WORKDIR}/ebuild_unused_patches"									#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${category}/${package}${DL}${upatch}${DL}${main}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Extensive check to find unused pachtes. In order to reduce flase positives it uses a whilelist to exclude them.
+
+||F                  +------->  patch which is not used by any ebuild
+D|O                  |
+A|R  dev-libs/foo | foo-fix-1.2.patch | developer@gentoo.org
+T|M    |                                           |
+A|A    |               ebuild maintainer(s)  <-----+
+||T    +---> package category/name
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -299,7 +315,7 @@ main(){
 	local category="$(echo ${full_package}|cut -d'/' -f1)"
 	package="$(echo ${full_package}|cut -d'/' -f2)"
 
-	fullpath="/${PORTTREE}/${full_package}"
+	fullpath="/${REPOTREE}/${full_package}"
 
 	$DEBUG && >&2 echo "DEBUG: checking: ${category}/${package}"
 	# check if the patches folder exist
@@ -333,7 +349,7 @@ main(){
 							break
 						else
 							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
-								if [ -e ${PORTTREE}/${full_package}/${wbuild} ]; then
+								if [ -e ${REPOTREE}/${full_package}/${wbuild} ]; then
 									$DEBUG && >&2 echo "**DEBUG: whitelist: found patch ${pfile} in ${wbuild}"
 									echo true
 									break 2
@@ -490,17 +506,22 @@ main(){
 
 		main="$(get_main_min "${category}/${package}")"
 
-		array_names
-		if [ ${#unused_patches[@]} -gt 0 ]; then
-			if ${SCRIPT_MODE}; then
+		output() {
+			local id=${1}
+			if ${FILERESULTS}; then
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package}${DL}${upatch}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
+					output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
 				done
 			else
 				for upatch in "${unused_patches[@]}"; do
-					echo -e "${category}/${package}${DL}${upatch}${DL}${main}"
+					output_format ${id}
 				done
 			fi
+		}
+
+		array_names
+		if [ ${#unused_patches[@]} -gt 0 ]; then
+			output 0
 		fi
 
 		$DEBUG && >&2 echo && >&2 echo
@@ -522,7 +543,8 @@ find_func(){
 }
 
 gen_results() {
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2
 		gen_sort_main_v3
 		gen_sort_pak_v3
@@ -531,9 +553,10 @@ gen_results() {
 	fi
 }
 
-cd ${PORTTREE}
-export -f main get_perm get_main_min array_names
-export WORKDIR SCRIPT_SHORT WFILE
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+array_names
+cd ${REPOTREE}
+export -f main array_names output_format
+export WORKDIR WFILE
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

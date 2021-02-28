@@ -23,10 +23,10 @@
 # Discription:
 # lists eclass uses of the tree
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/eclassstats/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/eclassstats/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,17 +44,35 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="eclassstats"
-SCRIPT_SHORT="ECS"
 SCRIPT_TYPE="stats"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/eclassstats-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eclass_statistics"				#Index 0
+		"${WORKDIR}/ebuild_eclass_statistics"				#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Lists the eclasses used by every ebuild.
+Not including packages which don't inherit anything. Also not included are eclasses inherited by other eclasses.
+
+||F  +---> ebuild EAPI   +---> full ebuild name     ebuild maintainer(s) <---+
+D|O  |                   |                                                   |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | eutils:elisp | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +---> eclasses which the ebuilds inherit
+||T                                                 not included are implicit inherit
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -66,20 +84,25 @@ main() {
 	local package="$(echo ${relative_path}|cut -d'/' -f2)"
 	local filename="$(echo ${relative_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
-	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
+	local full_path="${REPOTREE}/${category}/${package}"
+	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local full_md5path="${PORTTREE}/metadata/md5-cache/${category}/${packagename}"
+	local full_md5path="${REPOTREE}/metadata/md5-cache/${category}/${packagename}"
 
 	ebuild_eclass_file=$(get_eclasses_file ${full_md5path} ${full_path_ebuild})
 	#ebuild_eclass_real=$(get_eclasses_real ${full_md5path})
 
-	if [ -n "${ebuild_eclass_file}" ]; then
-		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
 		else
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${ebuild_eclass_file}${DL}${maintainer}"
+			output_format ${id}
 		fi
+	}
+
+	if [ -n "${ebuild_eclass_file}" ]; then
+		output 0
 	fi
 }
 
@@ -90,7 +113,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2 2
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
@@ -112,12 +136,12 @@ gen_results(){
 	fi
 }
 
-if ${SCRIPT_MODE}; then
+if ${FILERESULTS}; then
 	# create a list and create corresponding folders and files of all available
 	# eclasses before running the check.
 	# this way we also see eclasses without customers
 	if ${TREE_IS_MASTER}; then
-		eclass_list=( $(ls ${PORTTREE}/eclass/*.eclass) )
+		eclass_list=( $(ls ${REPOTREE}/eclass/*.eclass) )
 		eclass_list=( ${eclass_list[@]##*/} )
 		for ecl in ${eclass_list[@]}; do
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ecl}
@@ -126,12 +150,13 @@ if ${SCRIPT_MODE}; then
 	fi
 fi
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export WORKDIR
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

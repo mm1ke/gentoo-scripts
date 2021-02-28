@@ -23,10 +23,10 @@
 # Discription:
 # lists deprecated eclasses
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/deadeclasses/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/deadeclasses/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -45,17 +45,34 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="deadeclasses"
-SCRIPT_SHORT="DEL"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/deadeclasses-${RANDOM}"
 SCRIPT_TYPE="checks"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_deprecated_eclasses"				#Index 0
+		"${WORKDIR}/ebuild_deprecated_eclasses"				#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage[@]}|tr ' ' ':')${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Lists ebuilds who use deprecated or obsolete eclasses.
+
+||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
+D|O  |                   |                                                     |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +---> list obsolete eclasses, multiple
+||T                                                 eclasses are seperated by ':'
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -67,12 +84,21 @@ main() {
 	local package="$(echo ${relative_path}|cut -d'/' -f2)"
 	local filename="$(echo ${relative_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
-	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
+	local full_path="${REPOTREE}/${category}/${package}"
+	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 	# https://github.com/gentoo/portage/blob/master/repoman/lib/repoman/modules/linechecks/deprecated/inherit.py
 	local dead_eclasses=( readme.gentoo autotools-multilib autotools-utils base bash-completion boost-utils clutter cmake-utils confutils distutils epatch fdo-mime games gems git-2 gpe gst-plugins-bad gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins10 ltprune mono python ruby user versionator x-modular xfconf )
 	local found_usage=( )
+
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+		else
+			output_format ${id}
+		fi
+	}
 
 	for eclass in ${dead_eclasses[@]}; do
 		if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
@@ -82,11 +108,7 @@ main() {
 
 
 	if [ -n "${found_usage}" ]; then
-		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-		else
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${found_usage[@]}|tr ' ' ':')${DL}${maintainer}"
-		fi
+		output 0
 	fi
 }
 
@@ -96,9 +118,9 @@ find_func(){
 }
 
 gen_results(){
-	sort_result_v2 2
-
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
+		sort_result_v2 2
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
 			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
 				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
@@ -118,13 +140,14 @@ gen_results(){
 	fi
 }
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export WORKDIR
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
 # cleanup
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

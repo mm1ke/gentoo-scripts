@@ -23,10 +23,10 @@
 # Discription:
 # simple scirpt to find unused scripts directories in the gentoo tree
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/patchcheck/"
-#export PORTTREE=/usr/portage/
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/patchcheck/"
+#export REPOTREE=/usr/portage/
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -50,17 +50,34 @@ else
 	WFILE="${realdir}/${PT_WHITELIST}"
 fi
 
-SCRIPT_NAME="patchcheck"
-SCRIPT_SHORT="PAC"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}/"
+WORKDIR="/tmp/patchcheck-${RANDOM}/"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_unused_patches_simple"									#Index 0
+		"${WORKDIR}/ebuild_unused_patches_simple"									#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${category}/${package_name}${DL}${main}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Very limited check to find unused patches, mostly without false positives
+
+||F
+D|O       ebuild maintainer(s)  <-----+
+A|R                                   |
+T|M  dev-libs/foo | developer@gentoo.org
+A|A    |
+||T    +---> package category/name
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -85,23 +102,27 @@ main(){
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f1)"
 	local package_name="$(echo ${full_package}|cut -d'/' -f2)"
-	local fullpath="/${PORTTREE}/${full_package}"
+	local fullpath="/${REPOTREE}/${full_package}"
+
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+		else
+			output_format ${id}
+		fi
+	}
+
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
 		if ! echo ${whitelist[@]}|grep "${category}/${package_name}" > /dev/null; then
 			if ! grep -E ".diff|.patch|FILESDIR|${eclasses}" ${fullpath}/*.ebuild >/dev/null; then
 				main=$(get_main_min "${category}/${package_name}")
-
-				if ${SCRIPT_MODE}; then
-					echo -e "${category}/${package_name}${DL}${main}" >> ${RUNNING_CHECKS[0]}/full.txt
-				else
-					echo "${category}/${package_name}${DL}${main}"
-				fi
+				output 0
 			fi
 		fi
 	fi
 }
-
 
 find_func(){
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
@@ -109,7 +130,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2
 		gen_sort_main_v3
 		gen_sort_pak_v3
@@ -118,10 +140,11 @@ gen_results(){
 	fi
 }
 
-cd ${PORTTREE}
-export -f main get_main_min array_names
-export WORKDIR startdir SCRIPT_SHORT
+array_names
+cd ${REPOTREE}
+export WORKDIR
 export whitelist=$(_gen_whitelist)
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

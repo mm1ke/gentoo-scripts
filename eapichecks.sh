@@ -24,10 +24,10 @@
 # This scripts checks eapi usage. it looks for ebuils with old eapi
 # and checks if there is a revision/version bump with a newer eapi
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/eapichecks/"
-#export PORTTREE="/usr/portage/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/eapichecks/"
+#export REPOTREE="/usr/portage/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -45,33 +45,84 @@ fi
 #${ENABLE_MD5} || exit 0					# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="eapichecks"
-SCRIPT_SHORT="EAC"
 SCRIPT_TYPE="stats"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/eapichecks-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_cleanup_candidates"					#Index 0
-		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_stable_candidates"						#Index 1
-		"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_obsolete_eapi"								#Index 2
+		"${WORKDIR}/ebuild_cleanup_candidates"					#Index 0
+		"${WORKDIR}/ebuild_stable_candidates"						#Index 1
+		"${WORKDIR}/ebuild_obsolete_eapi"								#Index 2
 	)
 }
-array_names
+output_format(){
+	index=(
+"${ebuild_eapi}\
+${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
+${DL}${eapi_found_ebuild}\
+${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
+${DL}${package_bugs}${DL}${category}/${package}\
+${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}"
+"${ebuild_eapi}\
+${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
+${DL}${eapi_found_ebuild}\
+${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
+${DL}${package_bugs}${DL}${category}/${package}\
+${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}"
+"${ebuild_eapi}\
+${DL}__C2__${DL}__C3__${DL}${eapilist}${DL}${eapi_fileage}\
+${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_default0 <<- EOM
+|||  +---> EAPI ebuild (old)                  ebuild name (old) <--------+
+|||  |    +--> days since created     candidate for stabilzation/cleanup |
+||F  |    |       +--> days since modified                               |    ebuild maintainer(s) <---+
+D|O  |    |       |                                                      |                             |
+A|R  6 | 01865 | 01311 | 6 | 00649 | ----- | + | dev-libs/foo | foo-1.12-r2 | foo-1.12-r2 | developer@gentoo.org
+T|M                      |      |      |     |    |                             |
+A|A  EAPI ebuild (new) <-+      |      |     |    +---> package category/name   +--> ebuild name (new)
+||T      days since created <---+      |     |
+|||           days since modified <----+     +-> indicates if bugs are open (+=yes, -=no)
+EOM
+
+read -r -d '' info_index0 <<- EOM
+This script searches if there is a newer revision (-rX) available. In case a newer revision is found KEYWORDS are
+gonna be checked as well. If both keywords are the same for both ebuilds the older one is considered as a removal
+candidate
+
+${info_default0}
+EOM
+read -r -d '' info_index1 <<- EOM
+This script searches if there is a newer revision (-rX) available. In case a newer revision is found KEYWORDS are
+gonna be checked as well. In case keywords differ, the newer ebuild is considered as a candidate for
+stablization
+
+${info_default0}
+EOM
+read -r -d '' info_index2 <<- EOM
+This scirpt lists every ebuild with a EAPI <6. The first column prints the ebuilds EAPI, the second column
+prints the EAPI Versions of the packages other version (if available). This should make easier to find packages which
+can be removed and also package which need some attention.
+
+|||      +--> indicates if bugs are open (+=yes, -=no)
+|||      |    +--> number of bugs found         +--> package category/name
+||F      |    |   days since created <--+       |                +--> full ebuild name
+D|O      |    |                         |       |                |
+A|R  5 | - | 000 | 0:0:0:0:0:1:0:0 | 02016 | dev-libs/foo | foo-1.12-r2 | developer@gentoo.org
+T|M  |              |                                                                     |
+A|A  |              +--> list of available EAPIs each number represents a                 |
+||T  |                   EAPI version (first EAPI0, last EAPI7)                           |
+|||  +---> ebuild EAPI                                           ebuild maintainer(s) <---+
+EOM
+	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
-
-output() {
-	local text="${1}"
-	local type="${2}"
-
-	if ${SCRIPT_MODE}; then
-		echo "${text}" >> /${WORKDIR}/${type}/full.txt
-	else
-		echo "${text}${DL}${type}"
-	fi
-}
 
 main() {
 	array_names
@@ -83,7 +134,7 @@ main() {
 	local ebuild_eapi="$(get_eapi ${full_package})"
 
 	local date_today="$(date '+%s' -d today)"
-	local package_path="/${PORTTREE}/${category}/${package}"
+	local package_path="/${REPOTREE}/${category}/${package}"
 
 	local maintainer="$(get_main_min "${category}/${package}")"
 
@@ -95,6 +146,15 @@ main() {
 		start=1
 		org_name=${name}
 	fi
+
+	output(){
+		local checkid=${1}
+		if ${FILERESULTS}; then
+			output_format ${checkid} >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+		else
+			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}$(output_format ${checkid})"
+		fi
+	}
 
 	local i
 
@@ -118,21 +178,9 @@ main() {
 					local package_bugs="__C6__"
 
 					if $(compare_keywords "${org_name}" "${name}-r${i}" ${category} ${package}); then
-						output "${ebuild_eapi}\
-${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
-${DL}${eapi_found_ebuild}\
-${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
-${DL}${package_bugs}${DL}${category}/${package}\
-${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
-							"${RUNNING_CHECKS[0]##*/}"
+						output 0
 					else
-						output "${ebuild_eapi}\
-${DL}${old_ebuild_created}${DL}${old_ebuild_last_modified}\
-${DL}${eapi_found_ebuild}\
-${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
-${DL}${package_bugs}${DL}${category}/${package}\
-${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
-							"${RUNNING_CHECKS[1]##*/}"
+						output 1
 					fi
 				fi
 				break 2
@@ -143,11 +191,7 @@ ${DL}${org_name}${DL}${name}-r${i}${DL}${maintainer}" \
 	if [ ${ebuild_eapi} -lt 6 ]; then
 		local eapilist="$(get_eapi_list ${package_path})"
 		local eapi_fileage="$(get_git_age ${full_package} "ct" "A" "first")"
-		# OUTPUT: 0|_|_|0:0:0:0:0:0:0|_|foo/bar|foo/bar-1.0.0|foo@gentoo
-		output "${ebuild_eapi}\
-${DL}__C2__${DL}__C3__${DL}${eapilist}${DL}${eapi_fileage}\
-${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}" \
-			"${RUNNING_CHECKS[2]##*/}"
+		output 2
 	fi
 }
 
@@ -157,11 +201,11 @@ find_func(){
 }
 
 upd_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
 		for rcid in $(seq 0 1); do
 			if [ -e ${RUNNING_CHECKS[${rcid}]}/full.txt ]; then
 				#get time diff since last run
-				local indexfile="${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${rcid}]/${WORKDIR}/}/index.html"
+				local indexfile="${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${rcid}]/${WORKDIR}/}/index.html"
 				local time_diff="$(get_time_diff "${indexfile}")"
 				for id in $(cat "${RUNNING_CHECKS[${rcid}]}/full.txt"); do
 
@@ -190,7 +234,7 @@ upd_results(){
 		# obsolet eapi
 		if [ -e ${RUNNING_CHECKS[2]}/full.txt ]; then
 			#get time diff since last run
-			local indexfile="${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[2]/${WORKDIR}/}/index.html"
+			local indexfile="${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[2]/${WORKDIR}/}/index.html"
 			local time_diff="$(get_time_diff "${indexfile}")"
 			for id in $(cat "${RUNNING_CHECKS[2]}/full.txt"); do
 
@@ -213,7 +257,8 @@ upd_results(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		# update results with actual git age/bugs information
 		upd_results
 		# sort the results
@@ -228,10 +273,11 @@ gen_results(){
 	fi
 }
 
-cd ${PORTTREE}
-export WORKDIR SCRIPT_SHORT
-export -f main output array_names
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+array_names
+cd ${REPOTREE}
+export WORKDIR
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
 # cleanup tmp files
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

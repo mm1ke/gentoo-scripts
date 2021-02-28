@@ -23,34 +23,41 @@
 # Discription:
 #	script to generate hashes of the gentoo tree
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/eapistats/"
-#export PORTTREE=/usr/portage/
+#override REPOTREE settings
+#REPOTREE=/usr/portage/
+#REPO=gentoo
+#HASHTREE=/tmp/treehashtmp
 
-# get dirpath and load funcs.sh
-realdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -e ${realdir}/_funcs.sh ]; then
-	source ${realdir}/_funcs.sh
-else
-	echo "Missing _funcs.sh"
-	exit 1
-fi
+
+# check and set DEBUG/DRYRUN
+[ -z "${DEBUG}" ] && DEBUG=false
+[ -z "${DRYRUN}" ] && DRYRUN=false
+
+# check and set set the REPOTREE
+[ -z "${REPOTREE}" ] && DRYRUN=true
+[ -z "${REPO}" ] && DRYRUN=true
+[ -z "${HASHTREE}" ] && DRYRUN=true
 
 #
 ### IMPORTANT SETTINGS START ###
 #
-[ -z "${HASHTREE}" ] && HASHTREE="/var/tmp/"
-[ -z "${REPO}" ] && REPO="gentoo"
-SCRIPT_NAME="treehashgen"
-WORKDIR="/var/tmp/${SCRIPT_NAME}/${REPO}"
+WORKDIR="/var/tmp/treehashgen/${REPO}"
 #
 ### IMPORTANT SETTINGS END ###
 #
 
-date_today="$(date -I)"
+# DRYRUN - only print vars and exit
+if ${DRYRUN}; then
+	echo treehashgen
+	echo "Repo: ${REPO}"
+	echo "Porttree: ${REPOTREE}"
+	echo "Debug: ${DEBUG}"
+	echo "Hashtree: ${HASHTREE}"
+	exit 1
+fi
 
 hash_start(){
+	date_today="$(date -I)"
 	mkdir -p ${HASHTREE}
 	# only run if there doesn't exists a result for today
 	if ! [ -e ${HASHTREE}/full-${date_today}.log ]; then
@@ -58,15 +65,15 @@ hash_start(){
 
 		# generate hashes for every package
 		# list every category
-		local searchp="${PORTTREE}/*-*"
-		local searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*") )
-		[ -d "${PORTTREE}/virtual" ] && searchp+=( "${PORTTREE%/}/virtual" )
+		local searchp="${REPOTREE}/*-*"
+		local searchp=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*") )
+		[ -d "${REPOTREE}/virtual" ] && searchp+=( "${REPOTREE%/}/virtual" )
 
 		for cate in ${searchp[@]}; do
 			for paka in $(find ${cate} -mindepth 1 -maxdepth 1 -type d); do
-				mkdir -p ${WORKDIR}/${paka/${PORTTREE}/}
+				mkdir -p ${WORKDIR}/${paka/${REPOTREE}/}
 				# list all files in each directory and create hash
-				find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${PORTTREE}/}/package-xhash.xha
+				find ${paka} -type f -exec xxh64sum {} \; > ${WORKDIR}/${paka/${REPOTREE}/}/package-xhash.xha
 				#echo ${paka} >> /tmp/package-ng-new.log
 			done
 		done
@@ -104,24 +111,4 @@ hash_start(){
 	fi
 }
 
-hash_stop(){
-	# copy todays full result to the full-last.log
-	# only after all scripts were proceded.
-	cp ${HASHTREE}/full-${date_today}.log ${HASHTREE}/full-last.log
-	gzip ${HASHTREE}/full-$(date -I -d -2days).log
-	gzip ${HASHTREE}/results/results-$(date -I -d -2days).log
-}
-
-arg="${1}"
-if [ -z "${arg}" ]; then
-	exit 1
-else
-	if [ "${arg}" = "hstart" ]; then
-		hash_start
-	elif [ "${arg}" = "hstop" ]; then
-		hash_stop
-	else
-		echo "Please use start or stop"
-		exit 1
-	fi
-fi
+hash_start

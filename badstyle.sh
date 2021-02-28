@@ -23,10 +23,10 @@
 # Discription:
 #	checks for multiple package dependencies in one line
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=false
-#export SITEDIR="${HOME}/badstyle/"
-#export PORTTREE=/usr/portage/
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/badstyle/"
+#export REPOTREE=/usr/portage/
 
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
 if [ -e ${realdir}/_funcs.sh ]; then
@@ -43,17 +43,41 @@ fi
 ${ENABLE_MD5} || exit 0					# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="badstyle"
-SCRIPT_SHORT="BAS"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/badstyle-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_multiple_deps_per_line"					#Index 0
+		"${WORKDIR}/ebuild_multiple_deps_per_line"					#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Ebuilds which have multiple dependencies written in one line like:
+	|| ( app-arch/foo app-arch/bar )
+Should look like:
+	|| (
+		app-arch/foo
+		app-arch/bar
+	)
+Also see at: <a href="https://devmanual.gentoo.org/general-concepts/dependencies/">Link</a>
+
+||F  +----> ebuild EAPI     +----> full ebuild filename
+D|O  |                      |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
+T|M       |                                                  |
+A|A       |                        ebuild maintainer(s) <----+
+||T       +----> package category/name
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -67,13 +91,23 @@ main() {
 	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local maintainer="$(get_main_min "${category}/${package}")"
+	local ebuild_eapi="$(get_eapi ${absolute_path})"
 
 	local used_cats=( )
 	for cat in ${all_cat[@]}; do
-		if $(grep DEPEND /${PORTTREE}/metadata/md5-cache/${category}/${packagename} | grep -q ${cat}); then
+		if $(grep DEPEND /${REPOTREE}/metadata/md5-cache/${category}/${packagename} | grep -q ${cat}); then
 			used_cats+=( "${cat}" )
 		fi
 	done
+
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+		else
+			output_format ${id}
+		fi
+	}
 
 	if [ -n "${used_cats}" ]; then
 		#remove duplicates from found categories
@@ -97,19 +131,15 @@ main() {
 
 
 		if $(grep "^[^#;]" ${absolute_path} | egrep -q "$(echo ${z[@]}|tr ' ' '|')" ); then
-			if ${SCRIPT_MODE}; then
-				echo "${category}/${package}${DL}${filename}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-			else
-				echo "${category}/${package}${DL}${filename}${DL}${maintainer}"
-			fi
+			output 0
 		fi
 	fi
 }
 
-# create a list of categories in ${PORTTREE}
+# create a list of categories in ${REPOTREE}
 repo_categories(){
-	all_cat=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-	[ -e ${PORTTREE}/virtual ] && all_cat+=( "virtual" )
+	all_cat=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 -type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+	[ -e ${REPOTREE}/virtual ] && all_cat+=( "virtual" )
 }
 
 find_func(){
@@ -118,7 +148,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2
 		gen_sort_main_v3
 		gen_sort_pak_v3
@@ -127,14 +158,15 @@ gen_results(){
 	fi
 }
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables and functions
-export WORKDIR SCRIPT_SHORT
-export -f main array_names repo_categories
+export WORKDIR
+export -f main array_names repo_categories output_format
 # create all folders
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
 # cleanup
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

@@ -23,10 +23,10 @@
 # Discription:
 # simple scirpt to find broken SRC_URI links
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/srctest/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/srctest/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,21 +44,62 @@ fi
 ${ENABLE_MD5} || exit 0					# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="srctest"
-SCRIPT_SHORT="SRT"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
-TMPCHECK="/tmp/${SCRIPT_NAME}-tmp-${RANDOM}.txt"
+WORKDIR="/tmp/srctest-${RANDOM}"
+TMPCHECK="/tmp/srctest-tmp-${RANDOM}.txt"
 JOBS="50"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_src_uri_check"									#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_src_uri_offline"								#Index 1
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_missing_zip_dependency"				#Index 2
+		"${WORKDIR}/ebuild_src_uri_check"									#Index 0
+		"${WORKDIR}/ebuild_src_uri_offline"								#Index 1
+		"${WORKDIR}/ebuild_missing_zip_dependency"				#Index 2
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+This check uses wget's spider functionality to check if a ebuild's SRC_URI link still works.
+The timeout to try to get a file is 15 seconds.
+
+||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
+D|O  |                   |                                                         |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
+T|M       |                                   |                                                          |
+A|A       +---> package category/name         +--> file which is not available                           |
+||T                                                             open bug ids related to this package <---+
+EOM
+read -r -d '' info_index1 <<- EOM
+Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
+
+||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
+D|O  |                   |                                                         |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
+T|M       |                                   |                                                          |
+A|A       +---> package category/name         +--> file which is not available and mirror restricted     |
+||T                                                             open bug ids related to this package <---+
+EOM
+read -r -d '' info_index2 <<- EOM
+Packages which downlaods ZIP files but misses app-arch/unzip in DEPEND.
+
+||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
+D|O  |                   |                                                         |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
+T|M       |                                   |                                                          |
+A|A       +---> package category/name         +--> zip file which is downloaded by the ebuild            |
+||T                                                             open bug ids related to this package <---+
+EOM
+
+	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -75,15 +116,14 @@ main() {
 	}
 
 	mode() {
-		local check=${1}
-		local msg=${2}
-		local status=${3}
+		local id=${1}
+		local status=${2} #	available/maybe_available/not_available
 
-		if ${SCRIPT_MODE}; then
-			echo "${msg}" >> "${check}/full_${status}.txt"
-			echo "${status}${DL}${msg}" >> "${check}/full-unfiltered.txt"
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full_${status}.txt
+			echo "${status}${DL}$(output_format ${id})" >> "${RUNNING_CHECKS[${id}]}/full-unfiltered.txt"
 		else
-			echo "${status}${DL}${msg}"
+			echo "${status}${DL}$(output_format ${id})"
 		fi
 	}
 
@@ -158,54 +198,46 @@ main() {
 	code_available='Remote file exists.'
 	maybe_available='HTTP/1.0 403 Forbidden|HTTP/1.1 403 Forbidden'
 
-	for eb in ${PORTTREE}/${full_package}/*.ebuild; do
+	for eb in ${REPOTREE}/${full_package}/*.ebuild; do
 		local ebuild_eapi="$(get_eapi ${eb})"
 		local ebuild=$(basename ${eb%.*})
 
-		local _src="$(grep ^SRC_URI= ${PORTTREE}/metadata/md5-cache/${category}/${ebuild})"
+		local _src="$(grep ^SRC_URI= ${REPOTREE}/metadata/md5-cache/${category}/${ebuild})"
 		local _src=${_src:8}
 
 		if [ -n "${_src}" ]; then
 			# the variable SRC_URI sometimes has more data than just download links like
 			# useflags or renamings, so just grep each text for http/https
+			local u
 			for u in ${_src}; do
 				# add ^mirror:// to the grep, somehow we should be able to test them too
-				for i in $(echo $u | grep -E "^http://|^https://"); do
+				local i
+				for i in $(echo ${u} | grep -E "^http://|^https://"); do
 					# check for zip dependecy first
-					local _fileformat="$(echo ${i: -4})"
-					if [ "${_fileformat}" = ".zip" ]; then
-						if ! $(grep "app-arch/unzip" ${PORTTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
-							mode ${RUNNING_CHECKS[2]} \
-									"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
-									missing_zip
+					local srclink=${i}
+
+					if [ "$(echo ${srclink: -4})" = ".zip" ]; then
+						if ! $(grep "app-arch/unzip" ${REPOTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
+							mode 2 missing_zip
 						fi
 					fi
-					local _checktmp="$(grep -P "(^|\s)\K${i}(?=\s|$)" ${TMPCHECK}|sort -u)"
+					local _checktmp="$(grep -P "(^|\s)\K${srclink}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
-						mode ${RUNNING_CHECKS[0]} \
-							"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}$(echo ${_checktmp} | cut -d' ' -f2-)${DL}${maintainer}${openbugs}" \
-							"$(echo ${_checktmp} | cut -d' ' -f1)"
+						srclink="$(echo ${_checktmp}| cut -d' ' -f2-)"
+						mode 0 "$(echo ${_checktmp} | cut -d' ' -f1)"
 					else
-						if $(get_status ${i} "${code_available}"); then
-							mode ${RUNNING_CHECKS[0]} \
-								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
-								available
-							echo "available ${i}" >> ${TMPCHECK}
-						elif $(get_status ${i} "${maybe_available}"); then
-							mode ${RUNNING_CHECKS[0]} \
-								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
-								maybe_available
-							echo "maybe_available ${i}" >> ${TMPCHECK}
+						if $(get_status ${srclink} "${code_available}"); then
+							mode 0 available
+							echo "available ${srclink}" >> ${TMPCHECK}
+						elif $(get_status ${srclink} "${maybe_available}"); then
+							mode 0 maybe_available
+							echo "maybe_available ${srclink}" >> ${TMPCHECK}
 						else
-							mode ${RUNNING_CHECKS[0]} \
-								"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
-								not_available
+							mode 0 not_available
 							if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
-								mode ${RUNNING_CHECKS[1]} \
-									"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${i}${DL}${maintainer}${openbugs}" \
-									offline
+								mode 1 offline
 							fi
-							echo "not_available ${i}" >> ${TMPCHECK}
+							echo "not_available ${srclink}" >> ${TMPCHECK}
 						fi
 					fi
 				done
@@ -220,7 +252,8 @@ find_func() {
 }
 
 gen_results() {
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt 2>/dev/null
 		cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt 2>/dev/null
 		cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt 2>/dev/null
@@ -233,15 +266,16 @@ gen_results() {
 	fi
 }
 
-cd ${PORTTREE}
-export -f main get_main_min array_names
-export WORKDIR TMPCHECK SCRIPT_SHORT
+array_names
+cd ${REPOTREE}
+export -f main array_names output_format
+export WORKDIR TMPCHECK
 touch ${TMPCHECK}
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 if [ "${1}" = "diff" ]; then
 	depth_set_v2 full
 else
 	depth_set_v2 ${1}
 fi
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}

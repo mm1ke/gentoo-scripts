@@ -23,10 +23,10 @@
 # Discription:
 #	simply runs repoman full on every package
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/repomancheck/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/repomancheck/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,18 +44,36 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="repomancheck"
-SCRIPT_SHORT="RMC"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/repomancheck-${RANDOM}"
 REPOCHECK=true
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/${SCRIPT_SHORT}-IMP-packages_full_repoman"									#Index 0
+		"${WORKDIR}/packages_full_repoman"									#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${category}/${package}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+A script which runs 'repoman full' on every package. The result is also filtered
+by repomans checks.
+
+||F                        +----> repoman problem(s)
+D|O                        |
+A|R  dev-libs/foo | inherit.deprecated:uri.https | developer@gentoo.org
+T|M       |                                                 |
+A|A       |                       ebuild maintainer(s) <----+
+||T       +----> package category/name
+EOM
+	description=( "${info_index0}" "${info_index1}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -65,7 +83,7 @@ main() {
 	local relative_path=${1}
 	local category="$(echo ${relative_path}|cut -d'/' -f1)"
 	local package="$(echo ${relative_path}|cut -d'/' -f2)"
-	local full_path="${PORTTREE}/${category}/${package}"
+	local full_path="${REPOTREE}/${category}/${package}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 	cd ${full_path}
@@ -75,13 +93,13 @@ main() {
 	local affected_checks=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d' ' -f3 ) )
 
 	if ! [ "$(cat ${TMPFILE})" = "No QA issues found" ]; then
-		if ${SCRIPT_MODE}; then
+		if ${FILERESULTS}; then
 			mkdir -p ${RUNNING_CHECKS[0]}/sort-by-package/${category}/
 			head -n-1 ${TMPFILE} > ${RUNNING_CHECKS[0]}/sort-by-package/${category}/${package}.txt
-			echo "${category}/${package}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+			output_format 0 >> ${RUNNING_CHECKS[0]}/full.txt
 		else
 			if [ "${1}" = "full" ]; then
-				echo "${category}/${package}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"
+				output_format 0
 			else
 				echo "${category}/${package}${DL}${maintainer}"
 				head -n-1 ${TMPFILE}
@@ -99,7 +117,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		gen_sort_main_v3
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
@@ -118,13 +137,13 @@ gen_results(){
 	fi
 }
 
-
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT REPOCHECK
-export -f main array_names
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export WORKDIR REPOCHECK
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

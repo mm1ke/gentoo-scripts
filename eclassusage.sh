@@ -23,10 +23,10 @@
 # Discription:
 #	checks correct usage of eclasses
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/eclassusage/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/eclassusage/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,19 +44,52 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="eclassusage"
-SCRIPT_SHORT="ECU"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/eclassusage-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_missing_eclasses"						#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-ebuild_unused_eclasses"							#Index 1
+		"${WORKDIR}/ebuild_missing_eclasses"						#Index 0
+		"${WORKDIR}/ebuild_unused_eclasses"							#Index 1
 	)
 }
+output_format(){
+	index=(
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Lists ebuilds which use functions of eclasses which are not directly inherited. (usually inherited implicit)
+Following eclasses are checked:
+	ltprune, eutils, estack, preserve-libs, vcs-clean, epatch,
+	desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
 
-array_names
+||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
+D|O  |                   |                                                     |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +---> list of eclasses the ebuild should inherit because it uses
+||T                                                 functions from it. eclasses are seperated by ':'
+EOM
+read -r -d '' info_index1 <<- EOM
+Lists ebuilds which inherit eclasses but doesn't use their features.
+Following eclasses are checked:
+	ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop,
+	versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
+
+||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
+D|O  |                   |                                                     |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +---> list of eclasses the ebuild inherits but not uses
+||T                                                 eclasses are seperated by ':'
+EOM
+	description=( "${info_index0}" "${info_index1}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -95,11 +128,19 @@ main() {
 	local package="$(echo ${relative_path}|cut -d'/' -f2)"
 	local filename="$(echo ${relative_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
-	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
+	local full_path="${REPOTREE}/${category}/${package}"
+	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 	local ebuild_eapi="$(get_eapi ${full_path_ebuild})"
 
+	output(){
+		local checkid=${1}
+		if ${FILERESULTS}; then
+			output_format ${checkid} >> ${RUNNING_CHECKS[${checkid}]}/full.txt
+		else
+			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}$(output_format ${checkid})"
+		fi
+	}
 
 	if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
@@ -132,25 +173,15 @@ main() {
 		[ -n "${obsol_ecl}" ] && local o_eclass="$(echo ${obsol_ecl[@]}|tr ' ' ':')"
 		[ -n "${missing_ecl}" ] && local m_eclass="$(echo ${missing_ecl[@]}|tr ' ' ':')"
 
-		if ${SCRIPT_MODE}; then
-			if [ -n "${o_eclass}" ]; then
-				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[1]}/full.txt
-			fi
-			if [ -n "${m_eclass}" ]; then
-				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-			fi
+		if [ -n "${o_eclass}" ]; then
+			output 1
 		fi
-
-		if [ -n "${o_eclass}" ] || [ -n "${m_eclass}" ]; then
-			if ! ${SCRIPT_MODE}; then
-				echo "${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}MISSING:${m_eclass}${DL}UNUSED:${o_eclass}${DL}${maintainer}"
-			fi
+		if [ -n "${m_eclass}" ]; then
+			output 0
 		fi
-
 
 	fi
 }
-
 
 find_func(){
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
@@ -158,7 +189,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2 2
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
@@ -192,13 +224,14 @@ gen_results(){
 	fi
 }
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names array_eclasses
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export WORKDIR
+export -f main array_names array_eclasses output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
 # cleanup tmp files
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

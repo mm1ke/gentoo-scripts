@@ -24,10 +24,10 @@
 # a spinoff of simplechecks, only for finding trailing and leading whitespaces
 # in variables
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/trailwhite/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/trailwhite/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -45,17 +45,35 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="trailwhite"
-SCRIPT_SHORT="TRW"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/trailwhite-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_leading_trailing_whitespaces_in_variables"	# Index 0
+		"${WORKDIR}/ebuild_leading_trailing_whitespaces_in_variables"	# Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${category}/${package}${DL}${filename}${DL}$(echo ${_tl_vars[@]}|tr ' ' ':')${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Simple check to find leading or trailing whitespaces in a set of variables.
+For example: SRC_URI=" www.foo.com/bar.tar.gz "
+
+||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
+D|O  |                   |                                                     |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | DEPEND:SRC_URI | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +---> list of variable which have whitespaces
+||T                                                 at front or end. seperated by ':'
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -72,6 +90,16 @@ main() {
 
 	local _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 	local _tl_vars=( )
+
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+		else
+			output_format ${id}
+		fi
+	}
+
 	for var in ${_varibales}; do
 		if $(egrep -q "^${var}=\" |^${var}=\".* \"$" ${full_package}); then
 			_tl_vars+=( ${var} )
@@ -79,11 +107,7 @@ main() {
 	done
 
 	if [ -n "${_tl_vars}" ]; then
-		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}${DL}${filename}${DL}$(echo ${_tl_vars[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-		else
-			echo "${category}/${package}${DL}${filename}${DL}$(echo ${_tl_vars[@]}|tr ' ' ':')${DL}${maintainer}"
-		fi
+		output 0
 	fi
 }
 
@@ -94,7 +118,8 @@ find_func(){
 }
 
 gen_results(){
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2
 		gen_sort_main_v3
 		gen_sort_pak_v3
@@ -115,9 +140,10 @@ gen_results(){
 	fi
 }
 
-cd ${PORTTREE}
-export -f main get_main_min array_names
-export WORKDIR SCRIPT_SHORT
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+array_names
+cd ${REPOTREE}
+export -f main array_names output_format
+export WORKDIR
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

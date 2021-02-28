@@ -23,10 +23,10 @@
 # Discription:
 # simple script for generating EAPI statistics
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/eapistats/"
-#export PORTTREE=/usr/portage/
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/eapistats/"
+#export REPOTREE=/usr/portage/
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,18 +44,45 @@ fi
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="eapistats"
-SCRIPT_SHORT="EAS"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/eapistats-${RANDOM}"
 SCRIPT_TYPE="stats"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_statistics"						#Index 0
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-ebuild_eapi_live_statistics"			#Index 1
+		"${WORKDIR}/ebuild_eapi_statistics"						#Index 0
+		"${WORKDIR}/ebuild_eapi_live_statistics"			#Index 1
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
+		"${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_default0 <<- EOM
+||F  +----> ebuild EAPI     +----> full ebuild filename
+D|O  |                      |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
+T|M       |                                                  |
+A|A       |                        ebuild maintainer(s) <----+
+||T       +----> package category/name
+EOM
+read -r -d '' info_index0 <<- EOM
+A simple list of all ebuilds with it's corresponding EAPI Version. Also includes all maintainers to the package
+<a href=ebuild_eapi_statistics-detailed.html>EAPI Statistics</a>
+
+${info_default0}
+EOM
+read -r -d '' info_index1 <<- EOM
+A simple list of all live ebuilds and it's corresponding EAPI Version and maintainers.
+
+${info_default0}
+EOM
+	description=( "${info_index0}" "${info_index1}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -75,19 +102,20 @@ main() {
 	fi
 	local eapi="$(get_eapi ${full_package})"
 
-	if $(echo ${fileversion}|grep -q 9999); then
-		if ${SCRIPT_MODE}; then
-			echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}" >> ${RUNNING_CHECKS[1]}/full.txt
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
 		else
-			echo "live_stats${DL}${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
+			echo "${RUNNING_CHECKS[${checkid}]##*/}${DL}$(output_format ${id})"
 		fi
+	}
+
+	if $(echo ${fileversion}|grep -q 9999); then
+		output 1
 	fi
 
-	if ${SCRIPT_MODE}; then
-		echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}" >> ${RUNNING_CHECKS[0]}/full.txt
-	else
-		echo "${eapi}${DL}${category}/${package}${DL}${filename}${DL}${maintainer}${openbugs}"
-	fi
+	output 0
 }
 
 
@@ -97,7 +125,8 @@ find_func(){
 }
 
 gen_results() {
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2 2
 		# filter after EAPI
 		for eapi in $(cut -c-1 ${RUNNING_CHECKS[0]}/full.txt|sort -u); do
@@ -125,9 +154,10 @@ gen_results() {
 	fi
 }
 
-cd ${PORTTREE}
-export -f main get_main_min array_names
-export WORKDIR SCRIPT_SHORT
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+array_names
+cd ${REPOTREE}
+export -f main array_names output_format
+export WORKDIR
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

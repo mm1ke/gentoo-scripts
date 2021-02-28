@@ -23,10 +23,10 @@
 # Discription:
 #	find duplicate use flag descriptions
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/dupuse/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/dupuse/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -44,17 +44,36 @@ ${TREE_IS_MASTER} || exit 0			# only works with gentoo main tree
 #${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="dupuse"
-SCRIPT_SHORT="DUU"
 SCRIPT_TYPE="checks"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/dupuse-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-BUG-metadata_duplicate_useflag_description"									#Index 0
+		"${WORKDIR}/metadata_duplicate_useflag_description"									#Index 0
 	)
 }
-array_names
+output_format(){
+	index=(
+		"${category}/${package}${DL}${dupuse::-1}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+Lists packages which define use flags locally in metadata.xml, which already exists as
+a global use flag.
+
+|||                  +------->  list of USE flags which already
+||F                  |          exists as a global flag.
+D|O                  |
+A|R  dev-libs/foo | gtk[:X:qt:zlib] | developer@gentoo.org
+T|M    |                                           |
+A|A    |               ebuild maintainer(s)  <-----+
+||T    +---> package category/name
+EOM
+	description=( "${info_index0}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -66,22 +85,27 @@ main() {
 	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+		else
+			output_format ${id}
+		fi
+	}
+
 	localuses="$(grep "flag name" ${absolute_path} | cut -d'"' -f2)"
 
 	if [ -n "${localuses}" ]; then
 		for use in ${localuses}; do
-			if $(tail -n+6 ${PORTTREE}/profiles/use.desc|cut -d'-' -f1|grep "\<${use}\>" > /dev/null); then
+			if $(tail -n+6 ${REPOTREE}/profiles/use.desc|cut -d'-' -f1|grep "\<${use}\>" > /dev/null); then
 				dupuse="${use}:${dupuse}"
 			fi
 		done
 	fi
 
 	if [ -n "${dupuse}" ]; then
-		if ${SCRIPT_MODE}; then
-			echo "${category}/${package}${DL}${dupuse::-1}${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
-		else
-			echo "${category}/${package}${DL}${dupuse::-1}${DL}${maintainer}"
-		fi
+		output 0
 	fi
 }
 
@@ -91,7 +115,8 @@ find_func(){
 }
 
 gen_results() {
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
@@ -108,13 +133,14 @@ gen_results() {
 	fi
 }
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+export WORKDIR
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
 # cleanup
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}

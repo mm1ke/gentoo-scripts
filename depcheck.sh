@@ -24,10 +24,10 @@
 # simply script to find packages in (R)DEPEND block which
 # doesn't exist anymore (mainly obsolete blocks via !category/package)
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/usr/portage/
-#export SCRIPT_MODE=true
-#export SITEDIR="${HOME}/depcheck/"
+#override REPOTREE,FILERESULTS,RESULTSDIR settings
+#export REPOTREE=/usr/portage/
+#export FILERESULTS=true
+#export RESULTSDIR="${HOME}/depcheck/"
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -43,21 +43,50 @@ fi
 #
 # don't run on overlays because dependencies are most likely only
 # available at the main tree
-${TREE_IS_MASTER} || exit 0 		# only works with gentoo main tree
+${TREE_IS_MASTER} || exit 0			# only works with gentoo main tree
 ${ENABLE_MD5} || exit 0					# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
-SCRIPT_NAME="depcheck"
-SCRIPT_SHORT="DEC"
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/depcheck-${RANDOM}"
 SCRIPT_TYPE="checks"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-IMP-ebuild_nonexist_dependency"									#Index 0
+	"${WORKDIR}/ebuild_nonexist_dependency"									#Index 0
+	"${WORKDIR}/ebuild_obsolete_virtual"										#Index 1
 	)
 }
-array_names
+output_format(){
+	index=(
+		"$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
+		"$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}${maintainer}"
+	)
+	echo "${index[$1]}"
+}
+data_descriptions(){
+read -r -d '' info_index0 <<- EOM
+This checks the ebuilds *DEPEND* Blocks for packages which doesn't exist anymore.
+
+||F  +---> ebuild EAPI   +---> full ebuild name                                 ebuild maintainer(s) <---+
+D|O  |                   |                                                                               |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | sys-apps/bar:dev-libs/libdir(2015-08-13) | developer@gentoo.org
+T|M       |                                   |
+A|A       +---> package category/name         +--->  package(s) which doesn't exist anymore. If it was removed
+||T                                                  after the git transition a removal date is shown
+EOM
+read -r -d '' info_index1 <<- EOM
+Lists virtuals were only one provider is still available.
+
+||F  +----> ebuild EAPI     +----> full ebuild filename
+D|O  |                      |
+A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
+T|M       |                                                  |
+A|O       |                        ebuild maintainer(s) <----+
+||T       +----> package category/name
+EOM
+	description=( "${info_index0}" "${info_index1}" )
+	echo "${description[$1]}"
+}
 #
 ### IMPORTANT SETTINGS END ###
 #
@@ -69,17 +98,19 @@ main() {
 	local package="$(echo ${absolute_path}|cut -d'/' -f2)"
 	local filename="$(echo ${absolute_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
-	local full_path="${PORTTREE}/${category}/${package}"
-	local full_path_ebuild="${PORTTREE}/${category}/${package}/${filename}"
+	local full_path="${REPOTREE}/${category}/${package}"
+	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 
 
 	local found=false
 	local obsolete_dep=()
-	local dependencies=( $(grep DEPEND /${PORTTREE}/metadata/md5-cache/${category}/${packagename}|grep -oE "[a-zA-Z0-9-]{2,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
+	local dependencies=( $(grep DEPEND /${REPOTREE}/metadata/md5-cache/${category}/${packagename}|grep -oE "[a-zA-Z0-9-]{2,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
+
 	for dep in ${dependencies[@]}; do
 		if $(grep ${dep} ${full_path_ebuild} >/dev/null 2>&1); then
-			if ! [ -e "${PORTTREE}/${dep}" ]; then
+			if ! [ -e "${REPOTREE}/${dep}" ]; then
+				# provide gitage if git is available
 				if ${ENABLE_GIT}; then
 					local deadage="$(get_age_date "${dep}")"
 					if [ -n "${deadage}" ]; then
@@ -92,12 +123,28 @@ main() {
 		fi
 	done
 
-	if ${found}; then
-		if ${SCRIPT_MODE}; then
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}" >> ${RUNNING_CHECKS[0]}/full.txt
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
 		else
-			echo "$(get_eapi ${full_path_ebuild})${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsolete_dep[@]}|tr ' ' ':')${DL}${maintainer}"
+			output_format ${id}
 		fi
+	}
+
+	if ${found} && [ "${category}" = "virtual" ]; then
+		if [ $(expr ${#dependencies[@]}) -eq 1 ] && [ $(grep ${dependencies[0]} ${full_path_ebuild} | wc -l) -gt 1 ]; then
+			continue
+		else
+			if [ $(expr ${#dependencies[@]} - ${#obsolete_dep[@]}) -le 1 ]; then
+				output 1
+			fi
+		fi
+	fi
+
+
+	if ${found}; then
+		output 0
 	fi
 }
 
@@ -107,7 +154,8 @@ find_func(){
 }
 
 gen_results() {
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
+		gen_descriptions
 		sort_result_v2 2
 
 		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
@@ -124,14 +172,12 @@ gen_results() {
 	fi
 }
 
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+array_names
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
-export -f main array_names
-
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
-
+export WORKDIR
+export -f main array_names output_format
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
-
-${SCRIPT_MODE} && rm -rf ${WORKDIR}
+${FILERESULTS} && rm -rf ${WORKDIR}
