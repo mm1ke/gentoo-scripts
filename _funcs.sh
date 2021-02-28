@@ -24,27 +24,6 @@
 # this file provides functions and default values for scripts
 
 #
-# repo configuration
-# this only applies if REPO_TO_CHECK is set to non-zero and the repo set in the
-# variable exists in the _repos.sh file. Otherwise the script simply exists.
-# if REPO_TO_CHECK is set to zero default values or overrides in every script
-# are used.
-# Values from _repos.sh are going to be exported as well and can be used in the
-# scripts.
-#
-realdir="$(dirname $(readlink -f $BASH_SOURCE))"
-if [ -n "${REPO_TO_CHECK}" ]; then
-	if [ -e ${realdir}/_repos.sh ]; then
-		source ${realdir}/_repos.sh ${REPO_TO_CHECK}
-		# exit script if the repo doesn't exist in _repos.sh
-		${REPO_ERROR} && exit 1
-	else
-		echo "Missing _repos.sh"
-		exit 1
-	fi
-fi
-
-#
 # globally vars - can be used everywhere (exported)
 #
 # enabling debuging (if available)
@@ -54,49 +33,50 @@ DL='|'
 # check and set DEBUG
 [ -z "${DEBUG}" ] && DEBUG=false
 [ -z "${DRYRUN}" ] && DRYRUN=false
-# check and set set the PORTTREE
-if [ -z "${PORTTREE}" ]; then
+# check and set set the REPOTREE
+if [ -z "${REPOTREE}" ]; then
 	if [ -d /usr/portage/metadata/ ]; then
-		PORTTREE="/usr/portage/"
-		export PORTTREE
+		REPOTREE="/usr/portage/"
+		export REPOTREE
 	else
 		exit "No portage tree set"
 		exit 1
 	fi
 else
-	if ! [ -d ${PORTTREE} ]; then
-		echo "${PORTTREE} doesn't exists"
+	if ! [ -d ${REPOTREE} ]; then
+		echo "${REPOTREE} doesn't exists"
 		exit 1
 	fi
 fi
-[ -z "${SCRIPT_MODE}" ] && SCRIPT_MODE=false
-[ -z "${SITEDIR}" ] && SITEDIR="${HOME}/checks-${RANDOM}/"
+[ -z "${FILERESULTS}" ] && FILERESULTS=false
+[ -z "${RESULTSDIR}" ] && RESULTSDIR="${HOME}/checks-${RANDOM}/"
 [ -z "${REPOCHECK}" ] && REPOCHECK=false
 
 # Feature settings
 ENABLE_GIT=false
 ENABLE_MD5=false
 TREE_IS_MASTER=false
-[ -e "${PORTTREE}/.git" ] && ENABLE_GIT=true
-[ -e "${PORTTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
-[ "$(cat ${PORTTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
+[ -e "${REPOTREE}/.git" ] && ENABLE_GIT=true
+[ -e "${REPOTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
+[ "$(cat ${REPOTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
 
 export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER \
-	SCRIPT_MODE SITEDIR REPOCHECK DRYRUN
+	FILERESULTS RESULTSDIR REPOCHECK DRYRUN
 #
 # globaly vars END
 #
 
 # DRYRUN - only print vars and exit
 if ${DRYRUN}; then
+	echo _funcs
 	echo "Repo: ${REPO}"
-	echo "Porttree: ${PORTTREE}"
+	echo "Porttree: ${REPOTREE}"
 	echo "Enable git: ${ENABLE_GIT}"
 	echo "Enable md5: ${ENABLE_MD5}"
 	echo "Tree is master: ${TREE_IS_MASTER}"
-	echo "Sitedir: ${SITEDIR}"
+	echo "Sitedir: ${RESULTSDIR}"
 	echo "Repocheck: ${REPOCHECK}"
-	echo "ScriptMode: ${SCRIPT_MODE}"
+	echo "ScriptMode: ${FILERESULTS}"
 	echo "Debug: ${DEBUG}"
 	echo "Whitelist: ${PT_WHITELIST}"
 	exit 1
@@ -143,7 +123,7 @@ _find_package_location(){
 		# check the first 10 entries
 		for x in $(head -n10 ${rc_id}); do
 			for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-				if [ -d "${PORTTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
+				if [ -d "${REPOTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
 					echo ${i}
 					return 0
 				fi
@@ -200,8 +180,8 @@ count_ebuilds(){
 
 check_mask(){
 	local ebuild="${1}"
-	if [ -e ${PORTTREE}/profiles/package.mask ]; then
-		if $(grep -q ${ebuild} ${PORTTREE}/profiles/package.mask); then
+	if [ -e ${REPOTREE}/profiles/package.mask ]; then
+		if $(grep -q ${ebuild} ${REPOTREE}/profiles/package.mask); then
 			return 0
 		else
 			return 1
@@ -313,16 +293,16 @@ count_keywords(){
 	local a b
 
 	if ${ENABLE_MD5}; then
-		a="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})"
-		b="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})"
+		a="$(grep ^KEYWORDS ${REPOTREE}/metadata/md5-cache/${category}/${ebuild1})"
+		b="$(grep ^KEYWORDS ${REPOTREE}/metadata/md5-cache/${category}/${ebuild2})"
 		if [ $(echo ${a}|wc -w) -eq $(echo ${b}|wc -w) ]; then
 			return 0
 		else
 			return 1
 		fi
 	else
-		a="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
-		b="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
+		a="$(grep ^KEYWORDS ${REPOTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
+		b="$(grep ^KEYWORDS ${REPOTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
 		if [ $(echo ${a}|wc -w) -eq $(echo ${b}|wc -w) ]; then
 			return 0
 		else
@@ -340,16 +320,16 @@ compare_keywords(){
 	local a b
 
 	if ${ENABLE_MD5}; then
-		a="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild1})"
-		b="$(grep ^KEYWORDS ${PORTTREE}/metadata/md5-cache/${category}/${ebuild2})"
+		a="$(grep ^KEYWORDS ${REPOTREE}/metadata/md5-cache/${category}/${ebuild1})"
+		b="$(grep ^KEYWORDS ${REPOTREE}/metadata/md5-cache/${category}/${ebuild2})"
 		if [ "${a}" = "${b}" ]; then
 			return 0
 		else
 			return 1
 		fi
 	else
-		a="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
-		b="$(grep ^KEYWORDS ${PORTTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
+		a="$(grep ^KEYWORDS ${REPOTREE}/${category}/${package}/${ebuild1}.ebuild | sed -e 's/^[ \t]*//')"
+		b="$(grep ^KEYWORDS ${REPOTREE}/${category}/${package}/${ebuild2}.ebuild | sed -e 's/^[ \t]*//')"
 		if [ "${a}" = "${b}" ]; then
 			return 0
 		else
@@ -443,6 +423,13 @@ gen_sort_pak_v3() {
 	done
 }
 
+gen_descriptions(){
+	for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+		data_descriptions ${i} >> "${RUNNING_CHECKS[${i}]}/description.txt"
+	done
+}
+
+
 usage() {
 	echo "You need at least one argument:"
 	echo
@@ -458,11 +445,11 @@ depth_set_v2() {
 	arg="${1}"
 
 	_default_full_search() {
-		searchp=( $(find ${PORTTREE} -mindepth 1 -maxdepth 1 \
+		searchp=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
 			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
 		# virtual wouldn't be included by the find command, adding it manually if
 		# it's present
-		[ -e ${PORTTREE}/virtual ] && searchp+=( "virtual" )
+		[ -e ${REPOTREE}/virtual ] && searchp+=( "virtual" )
 		# full provides only categories so we need maxd=2 and mind=2
 		# setting both vars to 1 because the find command adds 1 anyway
 		MAXD=1
@@ -477,7 +464,7 @@ depth_set_v2() {
 		exit 1
 	else
 		# test if user provided input exist
-		if [ -d "${PORTTREE}/${arg}" ]; then
+		if [ -d "${REPOTREE}/${arg}" ]; then
 			MAXD=0
 			MIND=0
 			# case if user provides only category
@@ -518,7 +505,7 @@ depth_set_v2() {
 					# copying old sort-by-packages files are only important for repomancheck
 					# because these files aren't generated via gen_sort_pak (like on other scripts)
 					if ${REPOCHECK}; then
-						cp -r ${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+						cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
 					fi
 
 					# we need to copy all existing results first and remove packages which
@@ -527,7 +514,7 @@ depth_set_v2() {
 					for oldfull in ${RUNNING_CHECKS[@]}; do
 						# SCRIPT_TYPE = checks or stats
 						# first set the full.txt path from the old log
-						OLDLOG="${SITEDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+						OLDLOG="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
 						# check if the oldlog exist (don't have to be)
 						if [ -e ${OLDLOG} ]; then
 							# copy old result file to workdir and filter the result
@@ -549,7 +536,7 @@ depth_set_v2() {
 					diff_rm_dropped_paks_v3
 					# second: run the script only on the changed packages
 					find_func
-					# third: generate results and copy to SITEDIR
+					# third: generate results and copy to RESULTSDIR
 					gen_results
 
 				else
@@ -563,7 +550,7 @@ depth_set_v2() {
 					local x=( )
 					local i
 					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-						x+=( "${SITEDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+						x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
 					done
 					local RUNNING_CHECKS=( ${x[@]} )
 					upd_results
@@ -573,7 +560,7 @@ depth_set_v2() {
 				_default_full_search
 			fi
 		else
-			echo "${PORTTREE}/${arg}: Path not found"
+			echo "${REPOTREE}/${arg}: Path not found"
 			exit 1
 		fi
 	fi
@@ -588,7 +575,7 @@ get_age() {
 
 	if ${ENABLE_GIT}; then
 		fileage="$(expr \( "${date_today}" - \
-			"$(date '+%s' -d $(git -C ${PORTTREE} log --format="format:%ci" --name-only --diff-filter=A ${PORTTREE}/${file} \
+			"$(date '+%s' -d $(git -C ${REPOTREE} log --format="format:%ci" --name-only --diff-filter=A ${REPOTREE}/${file} \
 			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
 		printf "%05d\n" "${fileage}"
 	else
@@ -647,7 +634,7 @@ get_age_date() {
 	local file=${1}
 
 	if ${ENABLE_GIT}; then
-		filedate="$(git -C ${PORTTREE} log --format="format:%cs" --diff-filter=A -- ${PORTTREE}/${file} | tail -1)"
+		filedate="$(git -C ${REPOTREE} log --format="format:%cs" --diff-filter=A -- ${REPOTREE}/${file} | tail -1)"
 		echo "${filedate}"
 	else
 		echo ""
@@ -663,13 +650,13 @@ get_git_age() {
 	if ${ENABLE_GIT}; then
 		case "${position}" in
 			first)
-				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file} | tail -1)"
+				filedate="$(git -C ${REPOTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${REPOTREE}/${file} | tail -1)"
 			;;
 			last)
-				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file} | head -1)"
+				filedate="$(git -C ${REPOTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${REPOTREE}/${file} | head -1)"
 			;;
 			all)
-				filedate="$(git -C ${PORTTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${PORTTREE}/${file})"
+				filedate="$(git -C ${REPOTREE} log --format="format:%${time_format}" --diff-filter=${diff_filter} -- ${REPOTREE}/${file})"
 			;;
 		esac
 		if [ "${diff_filter}" = "M" ] && [ -z "${filedate}" ]; then
@@ -800,18 +787,18 @@ get_eclasses_file() {
 }
 
 # this function simply copies all results from the WORKDIR to
-# the SITEDIR
+# the RESULTSDIR
 copy_checks() {
 	local type=${1}
 
-	if ! [ -e ${SITEDIR}/${type}/ ]; then
-		mkdir -p ${SITEDIR}/${type}
-		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
+	if ! [ -e ${RESULTSDIR}/${type}/ ]; then
+		mkdir -p ${RESULTSDIR}/${type}
+		cp -r ${RUNNING_CHECKS[@]} ${RESULTSDIR}/${type}/
 	else
 		for lcheck in ${RUNNING_CHECKS[@]}; do
-			rm -rf ${SITEDIR}/${type}/${lcheck##*/}
+			rm -rf ${RESULTSDIR}/${type}/${lcheck##*/}
 		done
-		cp -r ${RUNNING_CHECKS[@]} ${SITEDIR}/${type}/
+		cp -r ${RUNNING_CHECKS[@]} ${RESULTSDIR}/${type}/
 	fi
 }
 
@@ -828,7 +815,7 @@ diff_rm_dropped_paks_v3(){
 			# check the first 10 entries
 			for x in $(head -n10 ${c}/full.txt); do
 				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-					if [ -d "${PORTTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
+					if [ -d "${REPOTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
 						local l=${i}
 						break 2
 					fi
@@ -838,7 +825,7 @@ diff_rm_dropped_paks_v3(){
 			if [ -n "${l}" ]; then
 				p_list=( $(cut -d'|' -f${l} ${c}/full.txt) )
 				for p in ${p_list[@]}; do
-					if ! [ -d ${PORTTREE}/${p} ]; then
+					if ! [ -d ${REPOTREE}/${p} ]; then
 						sed -i "/${p//\//\\/}${DL}/d" ${c}/full.txt
 						if [ -d ${c}/sort-by-package ]; then
 							rm -rf ${c}/sort-by-package/${p}.txt
@@ -856,12 +843,12 @@ upd_results() {
 }
 
 get_main_min(){
-	if [ -e "${PORTTREE}/${1}/metadata.xml" ]; then
+	if [ -e "${REPOTREE}/${1}/metadata.xml" ]; then
 		local maint=`/usr/bin/python3 - "${1}" <<END
 import xml.etree.ElementTree
 import sys
 pack = str(sys.argv[1])
-projxml = "${PORTTREE}" + pack + "/metadata.xml"
+projxml = "${REPOTREE}" + pack + "/metadata.xml"
 e = xml.etree.ElementTree.parse(projxml).getroot()
 c = ""
 for x in e.iterfind("./maintainer/email"):
