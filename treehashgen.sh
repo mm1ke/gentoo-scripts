@@ -56,6 +56,9 @@ if ${DRYRUN}; then
 	exit 1
 fi
 
+# switch to the repotree first
+cd ${REPOTREE}
+
 hash_start(){
 	date_today="$(date -I)"
 	mkdir -p ${HASHTREE}
