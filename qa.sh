@@ -10,7 +10,7 @@ REPOSITORIES=(
 	#"guru|https://github.com/gentoo/guru"
 	"science|https://github.com/gentoo/sci"
 	"rust|https://github.com/gentoo/gentoo-rust"
-	#"pentoo|https://github.com/pentoo/pentoo-overlay"
+	"pentoo|https://github.com/pentoo/pentoo-overlay"
 	)
 
 # enable diffmode per default
@@ -26,6 +26,7 @@ SCRIPTDIR="/home/bob/qa/"
 # get todays date
 TODAY="$(date -I)"
 YESTERDAY="$(date -I -d -2days)"
+
 #
 ## important settings
 # global variables
