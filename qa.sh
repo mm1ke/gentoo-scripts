@@ -24,15 +24,15 @@ CLEANLOG=false
 # set directory were the scripts are
 SCRIPTDIR="/home/bob/qa/"
 # get todays date
-date_today="$(date -I)"
-
+TODAY="$(date -I)"
+YESTERDAY="$(date -I -d -2days)"
 #
 ## important settings
 # global variables
 export DRYRUN=false
 export DEBUG=false
 export FILERESULTS=true
-export TIMELOG="/tmp/qa-time-$(date -I).log"
+export TIMELOG="/tmp/qa-time-${TODAY}.log"
 export SITEDIR="/media/qa/gentooqa/www/"
 LOGFILE="/tmp/qa-scripts.log"
 # testvars
@@ -95,9 +95,9 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	# copy todays full result from treehashgen to the full-last.log
 	# only after all scripts were proceded.
-	cp ${HASHTREE}/full-${date_today}.log ${HASHTREE}/full-last.log >/dev/null 2>&1
-	gzip ${HASHTREE}/full-$(date -I -d -2days).log >/dev/null 2>&1
-	gzip ${HASHTREE}/results/results-$(date -I -d -2days).log >/dev/null 2>&1
+	cp ${HASHTREE}/full-${TODAY}.log ${HASHTREE}/full-last.log >/dev/null 2>&1
+	gzip ${HASHTREE}/full-${YESTERDAY}.log >/dev/null 2>&1
+	gzip ${HASHTREE}/results/results-${YESTERDAY}.log >/dev/null 2>&1
 
 	# create full package/maintainer lists
 	echo "Processing script: genlists" >> ${LOGFILE}
