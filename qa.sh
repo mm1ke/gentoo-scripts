@@ -43,7 +43,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPO="$(echo ${repodir%%|*})"
 	REPOLINK="https://github.com/gentoo-mirror/${REPO}"
 	export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	export REPOTREE="/media/qa/repos/${REPO}/"
+	export REPOTREE="/tmp/repos/${REPO}/"
 	export HASHTREE="/media/qa/repohashs/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
 	# testvars
