@@ -233,13 +233,16 @@ sort_result_v3(){
 			continue
 		fi
 
-		# find pakackge location in result
+		# find package location in result
 		if [ -z "${column}" ]; then
 			local pak_loc="$(_find_package_location "${rc_id}")"
 			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
 		fi
 
 		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+
+		# clear column variable after sorting
+		column=""
 	done
 }
 
