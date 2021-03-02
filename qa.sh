@@ -70,7 +70,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	# generate treehashes
 	printf "hashtree|" >> ${TIMELOG}
 	echo "Processing script: hashtree" >> ${LOGFILE}
-	/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/treehashgen.sh >${LOGFILE} 2>&1
+	/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/treehashgen.sh >>${LOGFILE} 2>&1
 
 	# script which shouldn't run in diff mode
 	scripts="wwwtest.sh srctest.sh"
