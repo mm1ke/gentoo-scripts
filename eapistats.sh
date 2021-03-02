@@ -137,6 +137,7 @@ gen_results() {
 			gen_sort_pak_v3 ${RUNNING_CHECKS[0]}/sort-by-eapi/EAPI${eapi}/full.txt
 		done
 		gen_sort_main_v3 ${RUNNING_CHECKS[0]}
+		gen_sort_pak_v3 ${RUNNING_CHECKS[0]}
 
 		for eapi in $(cut -c-1 ${RUNNING_CHECKS[1]}/full.txt|sort -u); do
 			mkdir -p ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}
@@ -145,7 +146,6 @@ gen_results() {
 			gen_sort_main_v3 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt
 			gen_sort_pak_v3 ${RUNNING_CHECKS[1]}/sort-by-eapi/EAPI${eapi}/full.txt
 		done
-
 		gen_sort_main_v3 ${RUNNING_CHECKS[1]}
 		gen_sort_pak_v3 ${RUNNING_CHECKS[1]}
 
