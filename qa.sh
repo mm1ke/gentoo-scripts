@@ -78,6 +78,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	for s in ${scripts}; do
 		printf "${s}|" >> ${TIMELOG}
 		echo "Processing script: ${s}" >> ${LOGFILE}
+		export SCRIPT_NAME=${s%%.*}
 		/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s} full >>${LOGFILE} 2>&1
 	done
 
@@ -87,6 +88,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	for s_v2 in ${scripts_diff}; do
 		printf "${s_v2}|" >> ${TIMELOG}
 		echo "Processing script: ${s_v2}" >> ${LOGFILE}
+		export SCRIPT_NAME=${s_v2%%.*}
 		if ${DIFFMODE}; then
 			/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >>${LOGFILE} 2>&1
 		else
