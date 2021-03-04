@@ -6,8 +6,8 @@
 # (not needed for and script related doings)
 REPOSITORIES=(
 	#"gentoo|https://github.com/gentoo/gentoo"
-	#"kde|https://github.com/gentoo/kde"
-	#"guru|https://github.com/gentoo/guru"
+	"kde|https://github.com/gentoo/kde"
+	"guru|https://github.com/gentoo/guru"
 	"science|https://github.com/gentoo/sci"
 	"rust|https://github.com/gentoo/gentoo-rust"
 	"pentoo|https://github.com/pentoo/pentoo-overlay"
