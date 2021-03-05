@@ -63,13 +63,10 @@ read -r -d '' info_index0 <<- EOM
 Lists packages which define use flags locally in metadata.xml, which already exists as
 a global use flag.
 
-|||                  +------->  list of USE flags which already
-||F                  |          exists as a global flag.
-D|O                  |
-A|R  dev-libs/foo | gtk[:X:qt:zlib] | developer@gentoo.org
-T|M    |                                           |
-A|A    |               ebuild maintainer(s)  <-----+
-||T    +---> package category/name
+Data Format ( dev-libs/foo|gtk[:X:qt:zlib]|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+gtk[:X:qt:zlib]                             list of USE flags which already exists as a global flag.
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" )
 	echo "${description[$1]}"

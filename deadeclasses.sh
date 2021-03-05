@@ -63,12 +63,12 @@ data_descriptions(){
 read -r -d '' info_index0 <<- EOM
 Lists ebuilds who use deprecated or obsolete eclasses.
 
-||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
-D|O  |                   |                                                     |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
-T|M       |                                   |
-A|A       +---> package category/name         +---> list obsolete eclasses, multiple
-||T                                                 eclasses are seperated by ':'
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+user:cmake-utils                            list obsolete eclasse(s), seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" )
 	echo "${description[$1]}"

@@ -62,12 +62,11 @@ output_format(){
 }
 data_descriptions(){
 read -r -d '' info_default0 <<- EOM
-||F  +----> ebuild EAPI     +----> full ebuild filename
-D|O  |                      |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
-T|M       |                                                  |
-A|A       |                        ebuild maintainer(s) <----+
-||T       +----> package category/name
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index0 <<- EOM
 A simple list of all ebuilds with it's corresponding EAPI Version. Also includes all maintainers to the package
@@ -76,7 +75,7 @@ A simple list of all ebuilds with it's corresponding EAPI Version. Also includes
 ${info_default0}
 EOM
 read -r -d '' info_index1 <<- EOM
-A simple list of all live ebuilds and it's corresponding EAPI Version and maintainers.
+A simple list of all live ebuilds and it's corresponding EAPI Version and maintainer(s).
 
 ${info_default0}
 EOM

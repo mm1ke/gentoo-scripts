@@ -67,22 +67,21 @@ data_descriptions(){
 read -r -d '' info_index0 <<- EOM
 This checks the ebuilds *DEPEND* Blocks for packages which doesn't exist anymore.
 
-||F  +---> ebuild EAPI   +---> full ebuild name                                 ebuild maintainer(s) <---+
-D|O  |                   |                                                                               |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | sys-apps/bar:dev-libs/libdir(2015-08-13) | developer@gentoo.org
-T|M       |                                   |
-A|A       +---> package category/name         +--->  package(s) which doesn't exist anymore. If it was removed
-||T                                                  after the git transition a removal date is shown
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|sys-apps/bar:dev-libs/libdir(2015-08-13)|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+sys-apps/bar:dev-libs/libdir(2015-08-13)    non-existing package(s). If removed after git migration a removal date is shown.
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index1 <<- EOM
 Lists virtuals were only one provider is still available.
 
-||F  +----> ebuild EAPI     +----> full ebuild filename
-D|O  |                      |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
-T|M       |                                                  |
-A|O       |                        ebuild maintainer(s) <----+
-||T       +----> package category/name
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" "${info_index1}" )
 	echo "${description[$1]}"

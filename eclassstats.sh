@@ -63,12 +63,12 @@ read -r -d '' info_index0 <<- EOM
 Lists the eclasses used by every ebuild.
 Not including packages which don't inherit anything. Also not included are eclasses inherited by other eclasses.
 
-||F  +---> ebuild EAPI   +---> full ebuild name     ebuild maintainer(s) <---+
-D|O  |                   |                                                   |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | eutils:elisp | developer@gentoo.org
-T|M       |                                   |
-A|A       +---> package category/name         +---> eclasses which the ebuilds inherit
-||T                                                 not included are implicit inherit
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|eutils:elisp|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+eutils:elisp                                eclasses which the ebuilds inherit (implicit inherit not included)
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" )
 	echo "${description[$1]}"

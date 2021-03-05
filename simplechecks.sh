@@ -71,20 +71,17 @@ output_format(){
 }
 data_descriptions(){
 read -r -d '' info_default0 <<- EOM
-||F  +----> ebuild EAPI     +----> full ebuild filename
-D|O  |                      |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | developer@gentoo.org
-T|M       |                                                  |
-A|A       |                        ebuild maintainer(s) <----+
-||T       +----> package category/name
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_default1 <<- EOM
-||F                   +----> metadata filename
-D|O                   |
-A|R  dev-libs/foo | metadata.xml | developer@gentoo.org
-T|M   |                                         |
-A|A   |               ebuild maintainer(s) <----+
-||T   +----> package category/name
+Data Format ( dev-libs/foo|metadata.xml|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+metadata.xml                                metadata filename
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 
 read -r -d '' info_index0 <<- EOM

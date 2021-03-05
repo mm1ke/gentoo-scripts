@@ -64,28 +64,28 @@ data_descriptions(){
 read -r -d '' info_index0 <<- EOM
 Lists ebuilds which use functions of eclasses which are not directly inherited. (usually inherited implicit)
 Following eclasses are checked:
-	ltprune, eutils, estack, preserve-libs, vcs-clean, epatch,
-	desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
+ ltprune, eutils, estack, preserve-libs, vcs-clean, epatch,
+ desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
 
-||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
-D|O  |                   |                                                     |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
-T|M       |                                   |
-A|A       +---> package category/name         +---> list of eclasses the ebuild should inherit because it uses
-||T                                                 functions from it. eclasses are seperated by ':'
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+user:cmake-utils                            eclasse(s) the ebuild should inherit because it uses functions from it, seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index1 <<- EOM
 Lists ebuilds which inherit eclasses but doesn't use their features.
 Following eclasses are checked:
-	ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop,
-	versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
+ ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop,
+ versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
 
-||F  +---> ebuild EAPI   +---> full ebuild name       ebuild maintainer(s) <---+
-D|O  |                   |                                                     |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | user:cmake-utils | developer@gentoo.org
-T|M       |                                   |
-A|A       +---> package category/name         +---> list of eclasses the ebuild inherits but not uses
-||T                                                 eclasses are seperated by ':'
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+user:cmake-utils                            eclasse(s) the ebuild inherits but not uses, seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" "${info_index1}" )
 	echo "${description[$1]}"

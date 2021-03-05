@@ -67,12 +67,10 @@ data_descriptions(){
 read -r -d '' info_index0 <<- EOM
 Extensive check to find unused pachtes. In order to reduce flase positives it uses a whilelist to exclude them.
 
-||F                  +------->  patch which is not used by any ebuild
-D|O                  |
-A|R  dev-libs/foo | foo-fix-1.2.patch | developer@gentoo.org
-T|M    |                                           |
-A|A    |               ebuild maintainer(s)  <-----+
-||T    +---> package category/name
+Data Format ( dev-libs/foo|foo-fix-1.12.patch|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+foo-fix-1.12.patch                          patch which is not used by any ebuild
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" )
 	echo "${description[$1]}"

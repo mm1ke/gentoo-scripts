@@ -64,12 +64,10 @@ read -r -d '' info_index0 <<- EOM
 A script which runs 'repoman full' on every package. The result is also filtered
 by repomans checks.
 
-||F                        +----> repoman problem(s)
-D|O                        |
-A|R  dev-libs/foo | inherit.deprecated:uri.https | developer@gentoo.org
-T|M       |                                                 |
-A|A       |                       ebuild maintainer(s) <----+
-||T       +----> package category/name
+Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+inherit.deprecated:uri.https                repoman problem(s), seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" "${info_index1}" )
 	echo "${description[$1]}"

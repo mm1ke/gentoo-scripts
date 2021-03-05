@@ -73,68 +73,73 @@ output_format(){
 }
 data_descriptions(){
 read -r -d '' info_index0 <<- EOM
-This checks tests every homepage and gets their http return code. The list contain packages with
-a bad returncode.
+This checks tests every homepage and gets their http return code. The list contain packages with a bad returncode.
 Following statuscodes are ignored: VAR, FTP, 200, 301, 302, 307, 400, 503.
 <a href="ebuild_homepage_http_statuscode-detailed.html">Status Code History</a>
 
-||F  +---> ebuild EAPI          +---> full ebuild name           ebuild maintainer(s) <---+
-D|O  |                          |                                                         |
-A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | developer@gentoo.org | 754124:612230
-T|M       |      |                                   |                                                   |
-A|A       |      +---> package category/name         +--> homepage corresponding with the statuscode     |
-||T       +--> http statuscode                                  open bug ids related to this package <---+
+Data Format ( 7|404|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de|754124:612230 ):
+7                                           EAPI Version
+404                                         http statuscode
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         homepage corresponding to the statuscode
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+754124:612230                               open bug ids related to this package
 EOM
 read -r -d '' info_index1 <<- EOM
 Lists ebuilds with a Homepage which actually redirects to another sites.
 
-||F  +---> ebuild EAPI          +---> full ebuild name                               +---> redirected homepage
-D|O  |                          |                                                    |
-A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | https://bar.foo.com | developer@gentoo.org
-T|M       |      |                                   |                                                         |
-A|A       |      +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
-||T       +--> http statuscode of redirected website
+Data Format ( 7|404|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|https://bar.foo.com|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+404                                         http statuscode of redirected website
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         original hommepage in ebuild
+https://bar.foo.com                         redirected homepage
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index2 <<- EOM
 Lists ebuild who's homepage redirects to the same site only including a "www" or a missing "/" at the end (or both)
 
-||F
-D|O  +---> ebuild EAPI          +---> full ebuild name              +---> eg: same homepage, only with a slash at the end
-A|R  |                          |                                   |
-T|M  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | https://foo.bar.com/ | developer@gentoo.org
-A|A        |                                   |                                                         |
-||T        +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|https://foo.bar.com/|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         original hommepage in ebuild
+https://foo.bar.com/                        same homepage, only with a slash at the end
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index3 <<- EOM
 Lists ebuids who's homepage redirects to the same site only via HTTPS.
 
-||F
-D|O  +---> ebuild EAPI          +---> full ebuild name                   +---> same homepage, only with https
-A|R  |                          |                                        |
-T|M  7 | dev-libs/foo | foo-1.12-r2.ebuild | http://foo.bar.com | https://foo.bar.com | developer@gentoo.org
-A|A        |                                   |                                                         |
-||T        +---> package category/name         +--> original hommepage          ebuild maintainer(s) <---+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|http://foo.bar.com|https://foo.bar.com|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+http://foo.bar.com                          original hommepage in ebuild
+https://foo.bar.com                         same homepage, only with https
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index4 <<- EOM
-This checks lists ebuilds which still use a homepage of a know dead site.
+This checks lists ebuilds which still use a homepage of a know dead upstrem site.
 Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
 
-||F  +---> ebuild EAPI          +---> full ebuild name           ebuild maintainer(s) <---+
-D|O  |                          |                                                         |
-A|R  7 | 404 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com | developer@gentoo.org | 754124:612230
-T|M       |      |                                   |                                                   |
-A|A       |      +---> package category/name         +--> homepage which are going to be removed         |
-||T       +--> http statuscode                                  open bug ids related to this package <---+
+Data Format ( 7|404|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de|754124:612230 ):
+7                                           EAPI Version
+404                                         http statuscode
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         homepage which are going to be removed
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+754124:612230                               open bug ids related to this package
 EOM
 read -r -d '' info_index5 <<- EOM
 Lists packages who have different homepages over it's ebuild versions.
 
-||F              +----> package category/name
-D|O              |
-A|R  3 | metadata.xml | developer@gentoo.org
-T|M  |                                    |
-A|A  |          ebuild maintainer(s) <----+
-||T  +----> number of differnt homepages found
+Data Format ( 2|dev-libs/foo|dev@gentoo.org:loper@foo.de ):
+2                                           number of different homepages found over all ebuilds
+dev-libs/foo                                package category/name
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 
 	description=( "${info_index0}" "${info_index1}" "${info_index2}" \

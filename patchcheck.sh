@@ -68,12 +68,9 @@ data_descriptions(){
 read -r -d '' info_index0 <<- EOM
 Very limited check to find unused patches, mostly without false positives
 
-||F
-D|O       ebuild maintainer(s)  <-----+
-A|R                                   |
-T|M  dev-libs/foo | developer@gentoo.org
-A|A    |
-||T    +---> package category/name
+Data Format ( dev-libs/foo|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" )
 	echo "${description[$1]}"

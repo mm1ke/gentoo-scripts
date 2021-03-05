@@ -77,45 +77,44 @@ ${DL}${category}/${package}${DL}${org_name}${DL}${maintainer}"
 }
 data_descriptions(){
 read -r -d '' info_default0 <<- EOM
-|||  +---> EAPI ebuild (old)                  ebuild name (old) <--------+
-|||  |    +--> days since created     candidate for stabilzation/cleanup |
-||F  |    |       +--> days since modified                               |    ebuild maintainer(s) <---+
-D|O  |    |       |                                                      |                             |
-A|R  6 | 01865 | 01311 | 6 | 00649 | ----- | + | dev-libs/foo | foo-1.12-r2 | foo-1.12-r2 | developer@gentoo.org
-T|M                      |      |      |     |    |                             |
-A|A  EAPI ebuild (new) <-+      |      |     |    +---> package category/name   +--> ebuild name (new)
-||T      days since created <---+      |     |
-|||           days since modified <----+     +-> indicates if bugs are open (+=yes, -=no)
+Data Format ( 6|01865|01311|6|00649|-----|+|dev-libs/foo|foo-1.12-r1|foo-1.12-r2|dev@gentoo.org:loper@foo.de ):
+6|01865|01311|                              EAPI Version (older) | days since created | days since last modified
+6|00649|-----|                              EAPI Version (newer) | days since created | days since last modified
++                                           indicates if bugs are open to this package (+=yes, -=no)
+dev-libs/foo                                package category/name
+foo-1.12-r1.ebuild                          full filename (older)
+foo-1.12-r2.ebuild                          full filename (newer)
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 
 read -r -d '' info_index0 <<- EOM
 This script searches if there is a newer revision (-rX) available. In case a newer revision is found KEYWORDS are
 gonna be checked as well. If both keywords are the same for both ebuilds the older one is considered as a removal
-candidate
+candidate.
 
 ${info_default0}
 EOM
 read -r -d '' info_index1 <<- EOM
 This script searches if there is a newer revision (-rX) available. In case a newer revision is found KEYWORDS are
 gonna be checked as well. In case keywords differ, the newer ebuild is considered as a candidate for
-stablization
+stablization.
 
 ${info_default0}
 EOM
 read -r -d '' info_index2 <<- EOM
-This scirpt lists every ebuild with a EAPI <6. The first column prints the ebuilds EAPI, the second column
-prints the EAPI Versions of the packages other version (if available). This should make easier to find packages which
+This scirpt lists every ebuild with a EAPI <6. The first column prints the ebuilds EAPI, the fourth column
+prints all EAPI Versions of the package (if available). This should make easier to find packages which
 can be removed and also package which need some attention.
 
-|||      +--> indicates if bugs are open (+=yes, -=no)
-|||      |    +--> number of bugs found         +--> package category/name
-||F      |    |   days since created <--+       |                +--> full ebuild name
-D|O      |    |                         |       |                |
-A|R  5 | - | 000 | 0:0:0:0:0:1:0:0 | 02016 | dev-libs/foo | foo-1.12-r2 | developer@gentoo.org
-T|M  |              |                                                                     |
-A|A  |              +--> list of available EAPIs each number represents a                 |
-||T  |                   EAPI version (first EAPI0, last EAPI7)                           |
-|||  +---> ebuild EAPI                                           ebuild maintainer(s) <---+
+Data Format ( 5|-|000|0:0:0:0:0:1:0:0|02016|dev-libs/foo|foo-1.12-r2|dev@gentoo.org:loper@foo.de ):
+5                                           EAPI Version
+-                                           indicates if bugs are open to this package (+=yes, -=no)
+000                                         number of bugs found on bugs.gentoo.org for this package
+0:0:0:0:0:1:0:0                             list of available EAPIs each number represents a EAPI version (first EAPI0, last EAPI7)
+02016                                       days since created
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
 	echo "${description[$1]}"

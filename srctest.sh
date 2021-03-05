@@ -69,32 +69,35 @@ read -r -d '' info_index0 <<- EOM
 This check uses wget's spider functionality to check if a ebuild's SRC_URI link still works.
 The timeout to try to get a file is 15 seconds.
 
-||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
-D|O  |                   |                                                         |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
-T|M       |                                   |                                                          |
-A|A       +---> package category/name         +--> file which is not available                           |
-||T                                                             open bug ids related to this package <---+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de|754124:612230 ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com/bar.zip                 file which is not available
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+754124:612230                               open bug ids related to this package, seperated by ':'
 EOM
 read -r -d '' info_index1 <<- EOM
 Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
 
-||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
-D|O  |                   |                                                         |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
-T|M       |                                   |                                                          |
-A|A       +---> package category/name         +--> file which is not available and mirror restricted     |
-||T                                                             open bug ids related to this package <---+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de|754124:612230 ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com/bar.zip                 file which is not available and mirror restricted
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+754124:612230                               open bug ids related to this package, seperated by ':'
 EOM
 read -r -d '' info_index2 <<- EOM
 Packages which downlaods ZIP files but misses app-arch/unzip in DEPEND.
 
-||F  +---> ebuild EAPI   +---> full ebuild name           ebuild maintainer(s) <---+
-D|O  |                   |                                                         |
-A|R  7 | dev-libs/foo | foo-1.12-r2.ebuild | https://foo.bar.com/bar.zip | developer@gentoo.org | 754124:612230
-T|M       |                                   |                                                          |
-A|A       +---> package category/name         +--> zip file which is downloaded by the ebuild            |
-||T                                                             open bug ids related to this package <---+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de|754124:612230 ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com/bar.zip                 zip file which is downloaded by the ebuild
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+754124:612230                               open bug ids related to this package, seperated by ':'
 EOM
 
 	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
