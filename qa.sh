@@ -5,7 +5,7 @@
 # the website correspond to the official/mirrored website and can be anything
 # (not needed for and script related doings)
 REPOSITORIES=(
-	#"gentoo|https://github.com/gentoo/gentoo"
+	"gentoo|https://github.com/gentoo/gentoo"
 	"kde|https://github.com/gentoo/kde"
 	"guru|https://github.com/gentoo/guru"
 	"science|https://github.com/gentoo/sci"
@@ -19,13 +19,18 @@ DIFFMODE=true
 DBWRITE=true
 # create website data
 SITEGEN=true
+# create git commit
+GITCOMMIT=true
+GITDIR="/media/qa/git/"
 # remove previous log file
-CLEANLOG=false
+CLEANLOG=true
 # set directory were the scripts are
 SCRIPTDIR="/home/bob/qa/"
 # get todays date
 TODAY="$(date -I)"
 YESTERDAY="$(date -I -d -2days)"
+# logfile
+LOGFILE="/tmp/qa-scripts.log"
 
 #
 ## important settings
@@ -35,7 +40,6 @@ export DEBUG=false
 export FILERESULTS=true
 export TIMELOG="/tmp/qa-time-${TODAY}.log"
 export SITEDIR="/media/qa/gentooqa/www/"
-LOGFILE="/tmp/qa-scripts.log"
 # testvars
 #export SITEDIR="/tmp/wwwsite/"
 
@@ -118,12 +122,27 @@ for repodir in ${REPOSITORIES[@]}; do
 	rm ${TIMELOG}
 done
 
-echo -e "\nFinish with checking REPOS\n" >>${LOGFILE}
+echo -e "\nFinish with checking all repos\n" >>${LOGFILE}
 if ${SITEGEN}; then
 	export REPOS="$(echo ${REPOSITORIES[@]})"
 	SITESCRIPTS=$(dirname ${SITEDIR})
 	echo -e "\nGenerating HTML output:\n" >>${LOGFILE}
 	${SITESCRIPTS}/sitegen.sh >>${LOGFILE} 2>&1
+fi
+
+echo -e "\nFinish generating HTML output\n" >>${LOGFILE}
+if ${GITCOMMIT}; then
+	echo -e "\nCreating git commit:\n" >>${LOGFILE}
+	# first remove old results
+	[ -n "${GITDIR}" ] && rm -rf /${GITDIR}/*
+	cd /${SITEDIR}/results/
+	## copy resutls to the git dir
+	find -mindepth 4 -maxdepth 4 -name full*.txt -exec cp --parent {} /${GITDIR}/ \;
+	## create git commit
+	cd /${GITDIR}/
+	git add -A . >/dev/null 2>&1
+	git commit -m "automated update @ $(date +%x%t%T)" >/dev/null 2>&1
+	git push
 fi
 
 # with /tmp/${scriptname} it's possible to override the default DIFFMODE to
@@ -133,16 +152,4 @@ for diff_s in ${scripts_diff}; do
 	rm -f /tmp/${diff_s%.*}
 done
 
-## copy resutls to the git dir
-#rm -rf /media/qa/git/*
-#cd /media/qa/gentooqa.levelnine.at/results/
-#find -mindepth 4 -maxdepth 4 -name full*.txt -exec cp --parent {} /media/qa/git/ \;
-#
-## create git commit
-#cd /media/qa/git/
-#git add -A . >/dev/null 2>&1
-#git commit -m "automated update @ $(date +%x%t%T)" >/dev/null 2>&1
-#git push
-#
-## copy results to vs4
-#rsync -aq --delete /media/qa/gentooqa.levelnine.at/* root@vs4:/var/www/gentooqa.levelnine.at/
+echo -e "\nDONE" >>${LOGFILE}
