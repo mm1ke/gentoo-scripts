@@ -43,6 +43,8 @@ export SITEDIR="/media/qa/gentooqa/www/"
 # testvars
 #export SITEDIR="/tmp/wwwsite/"
 
+${CLEANLOG} && rm ${LOGFILE}
+
 for repodir in ${REPOSITORIES[@]}; do
 	# set important variables
 	export REPO="$(echo ${repodir%%|*})"
@@ -55,8 +57,6 @@ for repodir in ${REPOSITORIES[@]}; do
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
 	#export REPOTREE="/tmp/repos/${REPO}/"
 	#export HASHTREE="/tmp/repohashs/${REPO}/"
-
-	${CLEANLOG} && rm ${LOGFILE}
 
 	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 
