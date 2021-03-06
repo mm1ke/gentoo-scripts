@@ -102,9 +102,8 @@ stablization.
 ${info_default0}
 EOM
 read -r -d '' info_index2 <<- EOM
-This scirpt lists every ebuild with a EAPI <6. The first column prints the ebuilds EAPI, the fourth column
-prints all EAPI Versions of the package (if available). This should make easier to find packages which
-can be removed and also package which need some attention.
+This scirpt lists every ebuild with a EAPI <6. It list all other available ebuild EAPIs too which should make it easier
+to find packages which can be removed or need some attention.
 
 Data Format ( 5|-|000|0:0:0:0:0:1:0:0|02016|dev-libs/foo|foo-1.12-r2|dev@gentoo.org:loper@foo.de ):
 5                                           EAPI Version
