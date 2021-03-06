@@ -136,10 +136,11 @@ gen_results(){
 	fi
 }
 
+array_names
+# create a list and create corresponding folders and files of all available
+# eclasses before running the check.
+# this way we also see eclasses without customers
 if ${FILERESULTS}; then
-	# create a list and create corresponding folders and files of all available
-	# eclasses before running the check.
-	# this way we also see eclasses without customers
 	if ${TREE_IS_MASTER}; then
 		eclass_list=( $(ls ${REPOTREE}/eclass/*.eclass) )
 		eclass_list=( ${eclass_list[@]##*/} )
@@ -149,8 +150,6 @@ if ${FILERESULTS}; then
 		done
 	fi
 fi
-
-array_names
 # switch to the REPOTREE dir
 cd ${REPOTREE}
 # export important variables
