@@ -41,7 +41,7 @@ fi
 ### IMPORTANT SETTINGS START ###
 #
 #${TREE_IS_MASTER} || exit 0		# only works with gentoo main tree
-#${ENABLE_MD5} || exit 0				# only works with md5 cache
+${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
 SCRIPT_TYPE="checks"
@@ -51,12 +51,14 @@ array_names(){
 	RUNNING_CHECKS=(
 		"${WORKDIR}/ebuild_missing_eclasses"						#Index 0
 		"${WORKDIR}/ebuild_unused_eclasses"							#Index 1
+		"${WORKDIR}/ebuild_missing_eclasses_fatal"			#Index 2
 	)
 }
 output_format(){
 	index=(
-		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${m_eclass}${DL}${maintainer}"
-		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}${o_eclass}${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}$(echo ${obsol_ecl[@]}|tr ' ' ':')${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${category}/${package}${DL}${filename}${DL}$(echo ${missing_ecl_fatal[@]}|tr ' ' ':')${DL}${maintainer}"
 	)
 	echo "${index[$1]}"
 }
@@ -67,11 +69,11 @@ Following eclasses are checked:
  ltprune, eutils, estack, preserve-libs, vcs-clean, epatch,
  desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
 
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user(enewuser):udev(edev_get)|dev@gentoo.org:loper@foo.de ):
 7                                           EAPI Version
 dev-libs/foo                                package category/name
 foo-1.12-r2.ebuild                          full filename
-user:cmake-utils                            eclasse(s) the ebuild should inherit because it uses functions from it, seperated by ':'
+user(enewuser):udev(edev_get)               eclasse(s) and function name the ebuild uses but not inherits, seperated by ':'
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index1 <<- EOM
@@ -80,14 +82,28 @@ Following eclasses are checked:
  ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop,
  versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
 
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:udev|dev@gentoo.org:loper@foo.de ):
 7                                           EAPI Version
 dev-libs/foo                                package category/name
 foo-1.12-r2.ebuild                          full filename
-user:cmake-utils                            eclasse(s) the ebuild inherits but not uses, seperated by ':'
+user:udev                                   eclasse(s) the ebuild inherits but not uses, seperated by ':'
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
-	description=( "${info_index0}" "${info_index1}" )
+read -r -d '' info_index2 <<- EOM
+Lists ebuilds which use functions of eclasses which are not directly or indirectly (implicit) inherited.
+This would be an fatal error since the ebuild would use a feature which it doesn't know.
+Following eclasses are checked:
+ ltprune, eutils, estack, preserve-libs, vcs-clean, epatch,
+ desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user(enewuser):udev(edev_get)|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+user(enewuser):udev(edev_get)               eclasse(s) and function name the ebuild uses but not inherits, seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
 	echo "${description[$1]}"
 }
 #
@@ -129,9 +145,9 @@ main() {
 	local filename="$(echo ${relative_path}|cut -d'/' -f3)"
 	local packagename="${filename%.*}"
 	local full_path="${REPOTREE}/${category}/${package}"
-	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
-	local ebuild_eapi="$(get_eapi ${full_path_ebuild})"
+	local ebuild_eapi="$(get_eapi ${relative_path})"
+	local full_md5path="${REPOTREE}/metadata/md5-cache/${category}/${packagename}"
 
 	output(){
 		local checkid=${1}
@@ -142,14 +158,18 @@ main() {
 		fi
 	}
 
+
 	if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
 		local obsol_ecl=( )
 		local missing_ecl=( )
+		local missing_ecl_fatal=( )
+		local func_in_use=( )
+		local func_in_use_fatal=( )
 
 		for echeck in ${ECLASSES[@]}; do
 			local eclass="$(echo ${echeck}|cut -d';' -f1)"
-			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' '|')"
+			local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' ' ')"
 
 			# don't check for eapi7-ver at EAPI=7 ebuilds
 			if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" = "7" ]; then
@@ -157,28 +177,49 @@ main() {
 			fi
 
 			# check if ebuild uses ${eclass}
-			if $(check_eclasses_usage ${full_path_ebuild} ${eclass}); then
-				if ! $(grep -qP "^(?!#).*(?<!-)(${eclass_funcs})" ${full_path_ebuild}); then
-					obsol_ecl+=( ${eclass} )
-				fi
-			# if ebuild doesn't use eclass check the ebuild if one of the functions
-			# are used over implicited inheriting
+			if $(check_eclasses_usage ${relative_path} ${eclass}); then
+				# check if ebuild uses one of the functions provided by the eclass
+				local catch=false
+				for i in ${eclass_funcs}; do
+					if $(grep -qP "^(?!#).*(?<!-)((^|\W)${i}(?=\W|$))" ${relative_path}); then
+						catch=true
+						break
+					fi
+				done
+				${catch} || obsol_ecl+=( ${eclass} )
+			# check the ebuild if one the eclass functions are used
 			else
-				if $(grep -qP "^(?!.*#).*(?<!-)(${eclass_funcs})" ${full_path_ebuild}); then
-					missing_ecl+=( ${eclass} )
-				fi
+				# get the fucntion(s) which are used by the ebuild, if any
+				for e in ${eclass_funcs}; do
+					if $(grep -qP "^(?!.*#).*(?<!-)((^|\W)${e}(?=\W|$))" ${relative_path}); then
+						# in_iuse (from eutils) is implemented in pms from EAPI6 onward
+						if [ "${e}" == "in_iuse" ] && [ ${ebuild_eapi} -ge 6 ]; then
+							continue
+						fi
+						# check if ebuild provides function by its own
+						if ! $(grep -qP "^(?!.*#).*(?<!-)(${e}\(\)(?=\s|$))" ${relative_path}); then
+							# if the ebuild uses one of the function, check if the eclass is
+							# inherited implicit (most likley), otherwise it's a clear error
+							local all_eclasses="$(get_eclasses_real ${full_md5path})"
+							if ! $(echo "${all_eclasses}" | grep -q ${eclass}); then
+								func_in_use_fatal+=( ${e} )
+							fi
+							func_in_use+=( ${e} )
+						fi
+					fi
+				done
+				[ -n "${func_in_use}" ] && \
+					missing_ecl+=( "${eclass}($(echo ${func_in_use[@]}|tr ' ' ','))" )
+				[ -n "${func_in_use_fatal}" ] && \
+					missing_ecl_fatal+=( "${eclass}($(echo ${func_in_use_fatal[@]}|tr ' ' ','))" )
 			fi
+			func_in_use=( )
+			func_in_use_fatal=( )
 		done
 
-		[ -n "${obsol_ecl}" ] && local o_eclass="$(echo ${obsol_ecl[@]}|tr ' ' ':')"
-		[ -n "${missing_ecl}" ] && local m_eclass="$(echo ${missing_ecl[@]}|tr ' ' ':')"
-
-		if [ -n "${o_eclass}" ]; then
-			output 1
-		fi
-		if [ -n "${m_eclass}" ]; then
-			output 0
-		fi
+		[ -n "${obsol_ecl}" ] && output 1
+		[ -n "${missing_ecl}" ] && output 0
+		[ -n "${missing_ecl_fatal}" ] && output 2
 
 	fi
 }
@@ -193,28 +234,20 @@ gen_results(){
 		gen_descriptions
 		sort_result_v2 2
 
-		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-			for ec in $(echo ${file}|cut -d'|' -f4|tr ':' ' '); do
-				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass
-				echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${ec}.eclass/full.txt
+		for rc in ${RUNNING_CHECKS[@]}; do
+			for file in $(cat ${rc}/full.txt); do
+				for ec in $(echo ${file}|cut -d'|' -f4|tr ':' '\n'|cut -d'(' -f1); do
+					mkdir -p ${rc}/sort-by-filter/${ec}.eclass
+					echo ${file} >> ${rc}/sort-by-filter/${ec}.eclass/full.txt
+				done
 			done
 		done
 
-		for file2 in $(cat ${RUNNING_CHECKS[1]}/full.txt); do
-			for ec2 in $(echo ${file2}|cut -d'|' -f4|tr ':' ' '); do
-				mkdir -p ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass
-				echo ${file2} >> ${RUNNING_CHECKS[1]}/sort-by-filter/${ec2}.eclass/full.txt
+		for rc2 in ${RUNNING_CHECKS[@]}; do
+			for ecf in $(ls ${rc2}/sort-by-filter/); do
+				gen_sort_main_v3 ${rc2}/sort-by-filter/${ecf}
+				gen_sort_pak_v3 ${rc2}/sort-by-filter/${ecf}
 			done
-		done
-
-		for ecd in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-			gen_sort_main_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
-			gen_sort_pak_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ecd}
-		done
-
-		for ecd2 in $(ls ${RUNNING_CHECKS[1]}/sort-by-filter/); do
-			gen_sort_main_v3 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2}
-			gen_sort_pak_v3 ${RUNNING_CHECKS[1]}/sort-by-filter/${ecd2}
 		done
 
 		gen_sort_main_v3
