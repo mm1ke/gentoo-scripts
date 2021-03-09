@@ -26,7 +26,6 @@
 #
 # globally vars - can be used everywhere (exported)
 #
-# enabling debuging (if available)
 BUGTMPDIR="/tmp/buglists/"
 DL='|'
 
@@ -116,8 +115,7 @@ _update_buglists
 
 _find_package_location(){
 	local rc_id=${1}
-	local x
-	local i
+	local x i
 	# find pakackge location in result first
 	if [ -s ${rc_id} ]; then
 		# check the first 10 entries
@@ -143,7 +141,7 @@ get_bugs_bool(){
 	fi
 }
 
-# returns the amout of bugs found
+# returns the amout of bugs found - 3 digits long
 get_bugs_count(){
 	local value="${1}"
 	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | wc -l)"
