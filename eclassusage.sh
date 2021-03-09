@@ -44,6 +44,18 @@ fi
 ${ENABLE_MD5} || exit 0				# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
+# in order to make this script available for overlays we need to know the were
+# the main gentoo tree is because the eclass informations (functions available)
+# are generated with each run.
+TREEGENTOO="/tmp/repos/gentoo/"
+if ! [ -d "${TREEGENTOO}/eclass" ]; then
+	if [ -d "/usr/portage/eclass" ]; then
+		TREEGENTOO=/usr/portage/
+	else
+		echo "ERR: gentoo tree not available"
+		exit 1
+	fi
+fi
 SCRIPT_TYPE="checks"
 WORKDIR="/tmp/eclassusage-${RANDOM}"
 
@@ -110,34 +122,52 @@ EOM
 ### IMPORTANT SETTINGS END ###
 #
 
-array_eclasses(){
-	ECLASSES=( \
-		"optfeature;optfeature" \
-		"wrapper;make_wrapper" \
-		"edos2unix;edos2unix" \
-		"ltprune;prune_libtool_files" \
-		"l10n;strip-linguas:l10n_get_locales:l10n_find_plocales_changes:l10n_for_each_disabled_locale_do:l10n_for_each_locale_do" \
-		"eutils;emktemp:path_exists:use_if_iuse:ebeep:in_iuse" \
-		"estack;estack_push:estack_pop:evar_push:evar_push_set:evar_pop:eshopts_push:eshopts_pop:eumask_push:eumask_pop:isdigit" \
-		"preserve-libs;preserve_old_lib:preserve_old_lib_notify" \
-		"vcs-clean;ecvs_clean:esvn_clean:egit_clean" \
-		"epatch;epatch:epatch_user" \
-		"desktop;make_desktop_entry:make_session_desktop:domenu:newmenu:newicon:doicon" \
-		"versionator;get_all_version_components:get_version_components:get_major_version:get_version_component_range:get_after_major_version:replace_version_separator:replace_all_version_separators:delete_version_separator:delete_all_version_separators:get_version_component_count:get_last_version_component_index:version_is_at_least:version_compare:version_sort:version_format_string"
-		"user;egetent:enewuser:enewgroup:egethome:egetshell:esethome" \
-		"flag-o-matic;filter-flags:filter-lfs-flags:filter-ldflags:append-cppflags:append-cflags:append-cxxflags:append-fflags:append-lfs-flags:append-ldflags:append-flags:replace-flags:replace-cpu-flags:is-flagq:is-flag:is-ldflagq:is-ldflag:filter-mfpmath:strip-flags:test-flag-CC:test-flag-CXX:test-flag-F77:test-flag-FC:test-flags-CC:test-flags-CXX:test-flags-F77:test-flags-FC:test-flags:test_version_info:strip-unsupported-flags:get-flag:replace-sparc64-flags:append-libs:raw-ldflags:no-as-needed" \
-		"xdg-utils;xdg_environment_reset:xdg_desktop_database_update:xdg_icon_cache_update:xdg_mimeinfo_database_update" \
-		"libtool;elibtoolize" \
-		"udev;udev_get_udevdir:get_udevdir:udev_dorules:udev_newrules:udev_reload" \
-		"eapi7-ver;ver_cut:ver_rs:ver_test" \
-		"pam;dopamd:newpamd:dopamsecurity:newpamsecurity:getpam_mod_dir:pammod_hide_symbols:dopammod:newpammod:pamd_mimic_system:pamd_mimic:cleanpamd:pam_epam_expand" \
-		"ssl-cert;gen_cnf:get_base:gen_key:gen_csr:gen_crt:gen_pem:install_cert"
-	)
+gen_eclass_funcs(){
+	# a list of eclass which we going to check
+	local etc=( optfeature wrapper edos2unix ltprune l10n eutils estack preserve-libs \
+		vcs-clean epatch desktop versionator user user-info flag-o-matic xdg-utils \
+		libtool udev eapi7-ver pam ssl-cert )
+
+	local eclasses_with_funcs=( )
+
+	local i x
+	for i in ${etc[@]}; do
+		# check if the eclass exports functions (these eclass cannot be checked)
+		if ! $(grep -q "EXPORT_FUNCTIONS" /${TREEGENTOO}/eclass/${i}.eclass); then
+			# get all functions of the eclass
+			local efuncs="$(sed -n 's/# @FUNCTION: //p' "/${TREEGENTOO}/eclass/${i}.eclass" | sed ':a;N;$!ba;s/\n/ /g')"
+			local f=( )
+			# only continue if we found functions
+			if [ -n "${efuncs}" ]; then
+				for x in ${efuncs}; do
+					# filter out some functions with got into pms
+					# in_iuse				eutils: available from EAPI6
+					# usex					eutils: available from EAPI6
+					# eqawarn				etuils: ignore for now
+					# einstalldocs	eutils: available from EAPI6
+					if [ "${x}" != "in_iuse" ] && \
+						[ "${x}" != "usex" ] && \
+						[ "${x}" != "eqawarn" ] && \
+						[ "${x}" != "einstalldocs" ]; then
+						# check if the particular function is a internal one
+						if ! $(grep "@FUNCTION: ${x}" -A2 -m1 /${TREEGENTOO}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
+							f+=( "${x}" )
+						fi
+					fi
+				done
+				eclasses_with_funcs+=( "$(echo ${i##*/}|cut -d '.' -f1);$(echo ${f[@]}|tr ' ' ':')" )
+			fi
+		else
+			echo "ERR: ${i} exports functions"
+		fi
+	done
+
+	ECLASSES="$(echo ${eclasses_with_funcs[@]})"
+	export ECLASSES
 }
 
 main() {
 	array_names
-	array_eclasses
 
 	local relative_path=${1}
 	local category="$(echo ${relative_path}|cut -d'/' -f1)"
@@ -192,10 +222,6 @@ main() {
 				# get the fucntion(s) which are used by the ebuild, if any
 				for e in ${eclass_funcs}; do
 					if $(grep -qP "^(?!.*#).*(?<!-)((^|\W)${e}(?=\W|$))" ${relative_path}); then
-						# in_iuse (from eutils) is implemented in pms from EAPI6 onward
-						if [ "${e}" == "in_iuse" ] && [ ${ebuild_eapi} -ge 6 ]; then
-							continue
-						fi
 						# check if ebuild provides function by its own
 						if ! $(grep -qP "^(?!.*#).*(?<!-)(${e}\(\)(?=\s|$))" ${relative_path}); then
 							# if the ebuild uses one of the function, check if the eclass is
@@ -258,11 +284,12 @@ gen_results(){
 }
 
 array_names
+gen_eclass_funcs
 # switch to the REPOTREE dir
 cd ${REPOTREE}
 # export important variables
 export WORKDIR
-export -f main array_names array_eclasses output_format
+export -f main array_names output_format
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
 depth_set_v2 ${1}
