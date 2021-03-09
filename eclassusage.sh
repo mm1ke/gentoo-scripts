@@ -150,7 +150,7 @@ gen_eclass_funcs(){
 						[ "${x}" != "eqawarn" ] && \
 						[ "${x}" != "einstalldocs" ]; then
 						# check if the particular function is a internal one
-						if ! $(grep "@FUNCTION: ${x}" -A2 -m1 /${TREEGENTOO}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
+						if ! $(grep "@FUNCTION: ${x}" -A3 -m1 /${TREEGENTOO}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
 							f+=( "${x}" )
 						fi
 					fi
