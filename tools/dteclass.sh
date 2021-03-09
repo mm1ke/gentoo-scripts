@@ -23,16 +23,10 @@
 # Discription:
 #	this script creates a deptree of all eclasses
 
-#override PORTTREE,SCRIPT_MODE,SITEDIR settings
-#export PORTTREE=/mnt/data/gentoo/
-#export SCRIPT_MODE=true
+#override REPOTREE,FILERESULTS,SITEDIR settings
+#export REPOTREE=/mnt/data/gentoo/
+#export FILERESULTS=true
 #export SITEDIR="${HOME}/tmpcheck/"
-
-# load repo specific settings
-startdir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-if [ -e ${startdir}/repo ]; then
-	source ${startdir}/repo
-fi
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -46,13 +40,11 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-SCRIPT_NAME="dteclass"
-SCRIPT_SHORT="DTC"			#Dep-Tree-eClass
-WORKDIR="/tmp/${SCRIPT_NAME}-${RANDOM}"
+WORKDIR="/tmp/dteclass-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-	"${WORKDIR}/${SCRIPT_SHORT}-STA-deptree_eclasses"									#Index 0
+	"${WORKDIR}/deptree_eclasses"									#Index 0
 	)
 }
 array_names
@@ -89,8 +81,8 @@ rec_dt_eclass(){
 	tabdeep+="\t"
 	dupcheck+=" ${ecl}"
 
-	if [ -e "${PORTTREE}/eclass/${ecl}.eclass" ]; then
-		local ec_in=( $(get_inherits "${PORTTREE}/eclass/${ecl}.eclass") )
+	if [ -e "${REPOTREE}/eclass/${ecl}.eclass" ]; then
+		local ec_in=( $(get_inherits "${REPOTREE}/eclass/${ecl}.eclass") )
 		if [ -n "${ec_in}" ]; then
 			for tec in ${dupcheck}; do
 				if $(echo ${ec_in[@]}|tr ' ' ':'|grep -q -P -o "${tec}(?=:|$)"); then
@@ -99,7 +91,7 @@ rec_dt_eclass(){
 				fi
 			done
 			for e in $(echo ${ec_in[@]}); do
-				if [ -e "${PORTTREE}/eclass/${e}.eclass" ]; then
+				if [ -e "${REPOTREE}/eclass/${e}.eclass" ]; then
 					echo -e "${tabdeep}| ${e}"
 					rec_dt_eclass ${tabdeep} "${e}" "${dupcheck}"
 				else
@@ -114,14 +106,14 @@ rec_dt_eclass(){
 
 main() {
 	array_names
-	local relative_path=${1}																								# path relative to ${PORTTREE}:	./app-admin/salt/salt-0.5.2.ebuild
+	local relative_path=${1}																								# path relative to ${REPOTREE}:	./app-admin/salt/salt-0.5.2.ebuild
 	local eclassfile="$(echo ${relative_path}|cut -d'/' -f3)"									# package filename:							salt-0.5.2.ebuild
 	local eclass="${eclassfile%.*}"																			# package name-version:					salt-0.5.2
 
 	# get a list of all inherits, looks like: "git-r3 eutils user"
-	local ec_inherit=( $(get_inherits ${PORTTREE}/${relative_path}) )
+	local ec_inherit=( $(get_inherits ${REPOTREE}/${relative_path}) )
 
-	if ${SCRIPT_MODE}; then
+	if ${FILERESULTS}; then
 		echo "${eclass}" >> ${RUNNING_CHECKS[0]}/full.txt
 	else
 		echo "${eclassfile}"
@@ -133,18 +125,18 @@ main() {
 
 if [ -n "${1}" ]; then
 	# check if eclass exists
-	if ! [ -e "${PORTTREE}/eclass/${1}.eclass" ]; then
+	if ! [ -e "${REPOTREE}/eclass/${1}.eclass" ]; then
 		echo "Error: ${1}.eclass not found"
 		exit 1
 	fi
 fi
-# switch to the PORTTREE dir
-cd ${PORTTREE}
+# switch to the REPOTREE dir
+cd ${REPOTREE}
 # export important variables
-export WORKDIR SCRIPT_SHORT
+export WORKDIR
 export -f main array_names get_inherits rec_dt_eclass
 
-${SCRIPT_MODE} && mkdir -p ${RUNNING_CHECKS[@]}
+${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 
 if [ -n "${1}" ]; then
 	main "/eclass/${1}.eclass"
@@ -153,9 +145,9 @@ else
 		-type f -name "*.eclass" -print | sort | while read -r line; do main ${line}; done
 fi
 
-if ${SCRIPT_MODE}; then
-	gen_sort_main_v2 ${RUNNING_CHECKS[0]} 5
-	gen_sort_pak_v2 ${RUNNING_CHECKS[0]} 3
+if ${FILERESULTS}; then
+	gen_sort_main_v3 ${RUNNING_CHECKS[0]} 5
+	gen_sort_pak_v3 ${RUNNING_CHECKS[0]} 3
 
 	copy_checks checks
 	rm -rf ${WORKDIR}
