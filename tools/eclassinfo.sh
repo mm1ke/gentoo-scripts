@@ -8,9 +8,9 @@ main() {
 
 	for i in ${ec}; do
 		if ! $(grep -q "EXPORT_FUNCTIONS" /${GENTOOTREE}/eclass/${i}.eclass); then
-			efuncs="$(sed -n 's/# @FUNCTION: //p' "/${GENTOOTREE}/eclass/${i}.eclass" | sed ':a;N;$!ba;s/\n/ /g')"
+			efuncs=( $(sed -n 's/# @FUNCTION: //p' "/${GENTOOTREE}/eclass/${i}.eclass" | sed ':a;N;$!ba;s/\n/ /g') )
 			if [ -n "${efuncs}" ]; then
-				for x in ${efuncs}; do
+				for x in ${efuncs[@]}; do
 					if ! $(grep "@FUNCTION: ${x}" -A3 -m1 /${GENTOOTREE}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
 						f+=( "${x}" )
 					fi
@@ -22,8 +22,8 @@ main() {
 		fi
 	done
 	echo "--<${ec}>--"
-	echo "ALL: $(echo ${efuncs[@]}|tr ' ' ':')"
-	echo "FIL: $(echo ${f[@]}|tr ' ' ':')"
+	echo "ALL(${#efuncs[@]}): $(echo ${efuncs[@]}|tr ' ' ':')"
+	echo "FIL(${#f[@]}): $(echo ${f[@]}|tr ' ' ':')"
 	echo
 }
 
