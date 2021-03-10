@@ -126,7 +126,7 @@ gen_eclass_funcs(){
 	# a list of eclass which we going to check
 	local etc=( optfeature wrapper edos2unix ltprune l10n eutils estack preserve-libs \
 		vcs-clean epatch desktop versionator user user-info flag-o-matic xdg-utils \
-		libtool udev eapi7-ver pam ssl-cert )
+		libtool udev eapi7-ver pam ssl-cert toolchain-funcs )
 
 	local eclasses_with_funcs=( )
 
