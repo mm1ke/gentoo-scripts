@@ -183,7 +183,7 @@ white_list=(
 	"media-video/snappy;snappy-1.0-configure2.patch;snappy-1.0-r1.ebuild"
 	"dev-util/indent;indent-2.2.11-ac_config_headers.patch;indent-2.2.11_p5.ebuild"
 	"dev-util/indent;indent-2.2.11-linguas.patch;indent-2.2.11_p5.ebuild"
-	"x11-misc/xkbset;xkbset-0.5-ldflags.patch;xkbset-0.5_p5_p1.ebuild:xkbset-0.5_p6.ebuild"
+	"x11-misc/xkbset;xkbset-0.5-ldflags.patch;xkbset-0.5_p7_p1.ebuild"
 	"dev-ml/xml-light;01_installopt.dpatch;xml-light-2.2-r3.ebuild"
 	"dev-ml/xml-light;02_cmi_depends.dpatch;xml-light-2.2-r3.ebuild"
 	"dev-ml/xml-light;03_cflags.dpatch;xml-light-2.2-r3.ebuild"
@@ -425,4 +425,5 @@ white_list=(
 	"media-sound/timidity++;timidity++-2.14.0-CVE-2017-11546.patch;timidity++-2.15.0.ebuild"
 	"media-sound/timidity++;timidity++-2.14.0-CVE-2017-11547.patch;timidity++-2.15.0.ebuild"
 	"app-misc/oneko;oneko-1.2-include.patch;oneko-1.2_p6_p14-r1.ebuild"
+	"x11-misc/xkeycaps;xkeycaps-2.47-Imakefile.patch;xkeycaps-2.47-Imakefile.patch"
 )
