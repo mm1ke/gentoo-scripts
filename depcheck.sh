@@ -111,7 +111,7 @@ main() {
 			if ! [ -e "${REPOTREE}/${dep}" ]; then
 				# provide gitage if git is available
 				if ${ENABLE_GIT}; then
-					local deadage="$(get_age_date "${dep}")"
+					local deadage="$(get_age_last "${dep}")"
 					if [ -n "${deadage}" ]; then
 						dep="${dep}(${deadage})"
 					fi

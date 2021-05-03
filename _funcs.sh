@@ -630,12 +630,12 @@ date_update(){
 	fi
 }
 
-# like get_age but returns the file creation date (or file removal date)
-get_age_date() {
+# like get_age but returns the date of the last commit regarding a package
+get_age_last() {
 	local file=${1}
 
 	if ${ENABLE_GIT}; then
-		filedate="$(git -C ${REPOTREE} log --format="format:%cs" --diff-filter=A -- ${REPOTREE}/${file} | tail -1)"
+		filedate="$(git -C ${REPOTREE} log --full-history -1 --format="format:%cs" -- ${REPOTREE}/${file})"
 		echo "${filedate}"
 	else
 		echo ""
@@ -881,5 +881,5 @@ END`
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
-	get_age_v2 get_age_date get_git_age get_age_v3 date_update sort_result_v3 \
+	get_age_v2 get_age_last get_git_age get_age_v3 date_update sort_result_v3 \
 	get_time_diff sort_result_v4 count_ebuilds check_mask
