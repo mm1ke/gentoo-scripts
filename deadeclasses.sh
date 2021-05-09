@@ -88,7 +88,7 @@ main() {
 	local full_path_ebuild="${REPOTREE}/${category}/${package}/${filename}"
 	local maintainer="$(get_main_min "${category}/${package}")"
 	# https://github.com/gentoo/portage/blob/master/repoman/lib/repoman/modules/linechecks/deprecated/inherit.py
-	local dead_eclasses=( readme.gentoo autotools-multilib autotools-utils base bash-completion boost-utils clutter cmake-utils confutils distutils epatch fdo-mime games gems git-2 gpe gst-plugins-bad gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins10 ltprune mono python ruby user versionator x-modular xfconf )
+	local dead_eclasses=( readme.gentoo base bash-completion boost-utils clutter cmake-utils confutils distutils epatch fdo-mime games gems git-2 gpe gst-plugins-bad gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins10 ltprune mono python ruby user versionator x-modular xfconf )
 	local found_usage=( )
 
 	output() {
