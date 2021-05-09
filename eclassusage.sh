@@ -140,19 +140,24 @@ gen_eclass_funcs(){
 			# only continue if we found functions
 			if [ -n "${efuncs}" ]; then
 				for x in ${efuncs}; do
-					# filter out some functions with got into pms
-					# in_iuse				eutils: available from EAPI6
-					# usex					eutils: available from EAPI6
-					# eqawarn				etuils: ignore for now
-					# einstalldocs	eutils: available from EAPI6
-					if [ "${x}" != "in_iuse" ] && \
-						[ "${x}" != "usex" ] && \
-						[ "${x}" != "eqawarn" ] && \
-						[ "${x}" != "einstalldocs" ]; then
-						# check if the particular function is a internal one
-						if ! $(grep "@FUNCTION: ${x}" -A3 -m1 /${TREEGENTOO}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
-							f+=( "${x}" )
-						fi
+					if ! $(grep "@FUNCTION: ${x}" -A3 -m1 /${TREEGENTOO}/eclass/${i}.eclass |grep -q "@INTERNAL"); then
+						case "${i}" in
+							eutils)
+								case "${x}" in
+									usex) continue ;;					#available from EAPI6
+									in_iuse) continue ;;			#available from EAPI6
+									eqawarn) continue ;;			#ignore for now
+									einstalldocs) continue ;;	#available from EAPI6
+									*) f+=( "${x}" )
+								esac ;;
+							toolchain-funcs)
+								case "${x}" in
+									gen_usr_ldscript) continue ;;		#deprecated, use it from usr-ldscriplt.eclass
+									*) f+=( "${x}" )
+								esac ;;
+							*)
+								f+=( "${x}" ) ;;
+						esac
 					fi
 				done
 				eclasses_with_funcs+=( "$(echo ${i##*/}|cut -d '.' -f1);$(echo ${f[@]}|tr ' ' ':')" )
