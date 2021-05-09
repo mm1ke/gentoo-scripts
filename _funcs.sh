@@ -754,7 +754,7 @@ check_eclasses_usage() {
 		search_pattern="${eclass_var}\=\|inherit"
 	fi
 
-	if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep "${search_pattern}" | grep -q "\"${eclass_var}\"\\| ${eclass_name} \\|${eclass_name} \\| ${eclass_name}\$"); then
+	if $(sed -e :a -e '/\\$/N; s/\\\n//; s/\t/ /; ta' ${real_file} | grep "${search_pattern}" | grep -q "\"${eclass_var}\"\\| ${eclass_name} \\|${eclass_name} \\| ${eclass_name}\$"); then
 		return 0
 	else
 		return 1
@@ -779,7 +779,7 @@ get_eclasses_file() {
 			fi
 		fi
 		for ecl in ${real_eclasses[@]}; do
-			if $(sed -e :a -e '/\\$/N; s/\\\n//; ta' ${real_file} | grep inherit | grep -q " ${ecl} \\| ${ecl}\$"); then
+			if $(sed -e :a -e '/\\$/N; s/\\\n//; s/\t/ /; ta' ${real_file} | grep inherit | grep -q " ${ecl} \\| ${ecl}\$"); then
 				file_eclasses+=( ${ecl} )
 			fi
 		done
