@@ -117,7 +117,7 @@ _find_package_location(){
 	local rc_id=${1}
 	local x i
 	# find pakackge location in result first
-	if [ -s ${rc_id} ]; then
+	if [ -s "${rc_id}" ]; then
 		# check the first 10 entries
 		for x in $(head -n10 ${rc_id}); do
 			for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
@@ -169,6 +169,69 @@ get_bugs_full(){
 	[ -n "${return}" ] && echo "${return}"
 }
 
+# returns a list of possible licenses used by a certain ebuild. (not
+# taking contional licenses into account
+# list looks like: GPL-2:BSD
+get_licenses(){
+	local rel_ebuild="${1}"
+	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
+	local eb_lics=( $(grep ^LICENSE ${eb_path} |cut -d'=' -f2 | tr ' ' '\n'| awk 'length!=1' | sed -e '/\?$/d' -e '/|$/d' | sort -u) )
+	local lics=(  )
+	for l in ${eb_lics[@]}; do
+		if [ -f ${REPOTREE}/licenses/${l} ]; then
+			lics+=( ${l} )
+		#else
+		#	echo "${1}: ${l} is missing" >> /tmp/get-lics-missing.log
+		fi
+	done
+
+	echo ${lics[@]}|tr ' ' ':'
+}
+
+# returns a list of keywords set for a certain ebuild
+# list looks like: amd64:~x86
+get_keywords(){
+	local rel_ebuild="${1}"
+	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
+	local eb_keywords=( $(grep ^KEYWORDS ${eb_path} |cut -d'=' -f2 | tr ' ' '\n') )
+	echo ${eb_keywords[@]}|tr ' ' ':'
+}
+
+# returns all packages set in [R,B]DEPEND, not taking contional dependencies or
+# versions into account
+# list looks like: dev-lang/go:app-admin/salt
+get_depend(){
+	local ebuild="${1}"
+
+	local cat="$(echo ${ebuild}|cut -d'/' -f1)"
+	local pak="$(echo ${ebuild}|cut -d'/' -f2)"
+	local eb="$(echo ${ebuild}|cut -d'/' -f3)"
+
+	local md5_file="${REPOTREE}/metadata/md5-cache/${cat}/${eb}"
+	local real_file="${REPOTREE}/${ebuild}.ebuild"
+
+	if $(grep -q ^.DEPEND ${md5_file}); then
+		local dependencies=( $(grep ^.DEPEND ${md5_file}|grep -oE "[a-zA-Z0-9-]{3,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
+		local d
+		local real_dep=( )
+		for d in ${dependencies[@]}; do
+			if $(grep -q "${d}" "${real_file}"); then
+				if [ -d "${REPOTREE}/${d}" ]; then
+					real_dep+=( "${d}" )
+				#else
+				#	echo "${ebuild}: ${d} - doesn't exist in portage" >> /tmp/nonexist-dep-in-ebuild.log
+				fi
+			#else
+			#	echo "${ebuild}: ${d} - doesn't exist in ebuild" >> /tmp/missing-dep-in-ebuild.log
+			fi
+		done
+	else
+		real_dep=""
+	fi
+
+	echo ${real_dep[@]}|tr ' ' ':'
+}
+
 count_ebuilds(){
 	local epath="${1}"
 	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
@@ -197,13 +260,13 @@ sort_result_v2(){
 
 	for rc_id in ${RUNNING_CHECKS[@]}; do
 		# check input
-		if [ -d ${rc_id} ]; then
+		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
 			else
 				continue
 			fi
-		elif ! [ -e ${rc_id} ]; then
+		elif ! [ -e "${rc_id}" ]; then
 			continue
 		fi
 
@@ -221,13 +284,13 @@ sort_result_v3(){
 
 	for rc_id in ${RUNNING_CHECKS[@]}; do
 		# check input
-		if [ -d ${rc_id} ]; then
+		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
 			else
 				continue
 			fi
-		elif ! [ -e ${rc_id} ]; then
+		elif ! [ -e "${rc_id}" ]; then
 			continue
 		fi
 
@@ -261,7 +324,7 @@ sort_result_v4(){
 
 	# check input
 	_file_check(){
-		if [ -d ${rc_id} ]; then
+		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
 				return 0
@@ -351,19 +414,19 @@ gen_sort_main_v3(){
 	local rc_id
 
 	for rc_id in ${check_files[@]}; do
-		if [ -d ${rc_id} ]; then
+		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
 			else
 				continue
 			fi
-		elif ! [ -e ${rc_id} ]; then
+		elif ! [ -e "${rc_id}" ]; then
 			continue
 		fi
 
 		# find pakackge location in result first
 		local pak_loc="$(_find_package_location "${rc_id}")"
-		if [ -s ${rc_id} ]; then
+		if [ -s "${rc_id}" ]; then
 			# check the first 10 entries
 			for x in $(head -n10 ${rc_id}); do
 				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
@@ -386,6 +449,66 @@ gen_sort_main_v3(){
 	done
 }
 
+# function which sorts a list by it's maintainer
+gen_sort_main_v4(){
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local id d v
+
+	_gen_sort(){
+		local rc_id="${1}"
+
+		if [ -d "${rc_id}" ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				return 0
+			fi
+		elif ! [ -e "${rc_id}" ]; then
+			return 0
+		fi
+
+		# find pakackge location in result first
+		local pak_loc="$(_find_package_location "${rc_id}")"
+		if [ -s "${rc_id}" ]; then
+			# check the first 10 entries
+			for x in $(head -n10 ${rc_id}); do
+				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
+				local pak_main="$(get_main_min ${pak})"
+				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
+					if [ "$(echo ${x}|cut -d'|' -f${i})" = "${pak_main}" ]; then
+						local main_loc=${i}
+						break 2
+					fi
+				done
+			done
+		fi
+		# generate maintainer sortings only if we find the location
+		if [ -n "${main_loc}" ]; then
+			mkdir -p ${rc_id%/*}/sort-by-maintainer
+			local main
+			for main in $(cat ${rc_id} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
+				grep "${main}" ${rc_id} > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+			done
+		fi
+	}
+
+	for id in ${check_files[@]}; do
+		for v in sort-by-filter sort-by-eapi; do
+			if [ -d "${id}/${v}" ]; then
+				for d in $(find ${id}/${v}/* -type d); do
+					_gen_sort ${d}
+				done
+			fi
+		done
+		_gen_sort ${id}
+	done
+}
+
 # function which sorts a list by it's package
 gen_sort_pak_v3() {
 	if [ -z "${1}" ]; then
@@ -399,13 +522,13 @@ gen_sort_pak_v3() {
 
 	for rc_id in ${check_files[@]}; do
 		# check input
-		if [ -d ${rc_id} ]; then
+		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
 			else
 				continue
 			fi
-		elif ! [ -e ${rc_id} ]; then
+		elif ! [ -e "${rc_id}" ]; then
 			continue
 		fi
 
@@ -421,6 +544,94 @@ gen_sort_pak_v3() {
 				grep "\<${pack}\>" ${rc_id} > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
 			done
 		fi
+	done
+}
+
+# function which sorts a list by it's package
+gen_sort_pak_v4() {
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local id d v
+
+	_gen_sort(){
+		local rc_id="${1}"
+
+		if [ -d "${rc_id}" ]; then
+			# check input
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				return 0
+			fi
+		elif ! [ -e "${rc_id}" ]; then
+			return 0
+		fi
+
+		# find pakackge location in result
+		pak_loc="$(_find_package_location "${rc_id}")"
+		# only create package sorting if we found package location
+		if [ -n "${pak_loc}" ]; then
+			local f_packages="$(cat ${rc_id}| cut -d "${DL}" -f${pak_loc} |sort -u)"
+			local pack
+			for pack in ${f_packages}; do
+				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
+				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
+				mkdir -p ${rc_id%/*}/sort-by-package/${f_cat}
+				grep "\<${pack}\>" ${rc_id} > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+			done
+		fi
+	}
+
+	for id in ${check_files[@]}; do
+		for v in sort-by-filter sort-by-eapi; do
+			if [ -d "${id}/${v}" ]; then
+				for d in $(find ${id}/${v}/* -type d); do
+					_gen_sort ${d}
+				done
+			fi
+		done
+		_gen_sort ${id}
+	done
+}
+
+gen_sort_eapi_v1(){
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local eapi rc_id
+
+	for rc_id in ${check_files[@]}; do
+		for eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
+			mkdir -p ${rc_id}/sort-by-eapi/EAPI${eapi}
+			grep ^${eapi}${DL} ${rc_id}/full.txt > ${rc_id}/sort-by-eapi/EAPI${eapi}/full.txt
+		done
+	done
+}
+
+gen_sort_filter_v1(){
+	local column="${1}"
+	if [ -z "${2}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${2}" )
+	fi
+
+	local rc_id file ec ecd
+
+	for rc_id in ${check_files[@]}; do
+		for file in $(cat ${rc_id}/full.txt); do
+			for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '); do
+				mkdir -p ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')
+				echo ${file} >> ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt
+			done
+		done
 	done
 }
 
@@ -764,6 +975,8 @@ check_eclasses_usage() {
 # list all eclasses used by a given ebuild file
 # returns the list as followed:
 #  eclass1:eclass2
+# NOTE: metadata files also include a INHERIT variable, but for some reason not
+# for every ebuild.
 get_eclasses_file() {
 	local md5_file=${1}
 	local real_file=${2}
@@ -785,6 +998,33 @@ get_eclasses_file() {
 		done
 		echo ${file_eclasses[@]}|tr ' ' ':'
 	fi
+}
+
+get_eclasses() {
+	local ebuild="${1}"
+
+	local cat="$(echo ${ebuild}|cut -d'/' -f1)"
+	local pak="$(echo ${ebuild}|cut -d'/' -f2)"
+	local eb="$(echo ${ebuild}|cut -d'/' -f3)"
+
+	local md5_file="${REPOTREE}/metadata/md5-cache/${cat}/${eb}"
+	local real_file="${REPOTREE}/${ebuild}.ebuild"
+
+	local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
+	local file_eclasses=( )
+	local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
+	if [ -n "${eclass_var}" ]; then
+		eclass_in_var="$(grep -o "${eclass_var}=.*" ${real_file} | tail -n1 | tr -d '"' | cut -d '=' -f2 | cut -d ' ' -f1 )"
+		if $(echo ${real_eclasses[@]}|grep -q ${eclass_in_var}); then
+			file_eclasses+=( "${eclass_in_var}" )
+		fi
+	fi
+	for ecl in ${real_eclasses[@]}; do
+		if $(sed -e :a -e '/\\$/N; s/\\\n//; s/\t/ /; ta' ${real_file} | grep inherit | grep -q " ${ecl} \\| ${ecl}\$"); then
+			file_eclasses+=( ${ecl} )
+		fi
+	done
+	echo ${file_eclasses[@]}|tr ' ' ':'
 }
 
 # this function simply copies all results from the WORKDIR to
@@ -882,4 +1122,6 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
 	get_age_v2 get_age_last get_git_age get_age_v3 date_update sort_result_v3 \
-	get_time_diff sort_result_v4 count_ebuilds check_mask
+	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
+	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
+	gen_sort_main_v4 gen_sort_pak_v4
