@@ -86,8 +86,8 @@ for repodir in ${REPOSITORIES[@]}; do
 		/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s} full >>${LOGFILE} 2>&1
 	done
 
-	scripts_diff="repomancheck.sh eclassusage.sh eclassstats.sh eapichecks.sh badstyle.sh \
-		deadeclasses.sh eapistats.sh depcheck.sh dupuse.sh patchcheck.sh patchtest.sh \
+	scripts_diff="repostats.sh repomancheck.sh eclassusage.sh badstyle.sh \
+		deadeclasses.sh depcheck.sh dupuse.sh patchcheck.sh patchtest.sh \
 		trailwhite.sh simplechecks.sh"
 	for s_v2 in ${scripts_diff}; do
 		printf "${s_v2}|" >> ${TIMELOG}
