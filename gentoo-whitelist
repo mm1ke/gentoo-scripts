@@ -277,7 +277,7 @@ white_list=(
 	"net-firewall/nftables;nftables.init;nftables-0.9.6.ebuild"
 	"dev-java/openjdk-bin;openjdk-bin-11.env.sh;openjdk-bin-11.0.11_p9-r1.ebuild"
 	"dev-java/openjdk-bin;openjdk-bin-8.env.sh;openjdk-bin-8.272_p10.ebuild:openjdk-bin-8.282_p08.ebuild:openjdk-bin-8.292_p10.ebuild"
-	"dev-java/openjdk;openjdk-11.env.sh;openjdk-11.0.9_p11.ebuild"
+	"dev-java/openjdk;openjdk-11.env.sh;openjdk-11.0.11_p9-r1.ebuild"
 	"dev-java/openjdk;openjdk-8.env.sh;openjdk-8.272_p10.ebuild"
 	"dev-java/openjdk-jre-bin;openjdk-jre-bin-11.env.sh;openjdk-jre-bin-11.0.9_p11.ebuild"
 	"dev-java/openjdk-jre-bin;openjdk-jre-bin-8.env.sh;openjdk-jre-bin-8.272_p10.ebuild"
@@ -352,4 +352,5 @@ white_list=(
 	"dev-util/clazy;clazy-1.9-llvm13.patch;clazy-1.9.ebuild"
 	"media-video/vlc;vlc-3.0.12.1-limits-p1.patch;vlc-3.0.12.1-r100.ebuild"
 	"media-video/vlc;vlc-3.0.12.1-limits-p2.patch;vlc-3.0.12.1-r100.ebuild"
+	"sci-libs/opencascade;opencascade-7.5.env.in;opencascade-7.5.1.ebuild"
 )
