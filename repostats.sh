@@ -45,7 +45,7 @@ ${ENABLE_MD5} || exit 0					# only works with md5 cache
 ${ENABLE_GIT} || exit 0					# only works with git tree
 
 SCRIPT_TYPE="stats"
-WORKDIR="/tmp/tmpcheck-${RANDOM}"
+WORKDIR="/tmp/repostats-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
