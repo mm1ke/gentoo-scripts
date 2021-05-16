@@ -372,6 +372,12 @@ if ${FILERESULTS}; then
 		mkdir -p ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}
 		touch ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}/full.txt
 	done
+	virtual_list=( $(find ${REPOTREE}/virtual/* -maxdepth 1 -type d) )
+	virtual_list=( ${virtual_list[@]##*/} )
+	for vir in ${virtual_list[@]}; do
+		mkdir -p ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}
+		touch ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}/full.txt
+	done
 fi
 cd ${REPOTREE}
 export WORKDIR
