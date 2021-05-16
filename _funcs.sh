@@ -627,7 +627,7 @@ gen_sort_filter_v1(){
 
 	for rc_id in ${check_files[@]}; do
 		for file in $(cat ${rc_id}/full.txt); do
-			for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '); do
+			for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '|cut -d'(' -f1); do
 				mkdir -p ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')
 				echo ${file} >> ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt
 			done
@@ -951,6 +951,20 @@ get_eclasses_real() {
 		echo ${real_eclasses[@]}|tr ' ' ':'
 	fi
 }
+get_eclasses_real_v2() {
+	local ebuild="${1}"
+
+	local cat="$(echo ${ebuild}|cut -d'/' -f1)"
+	local pak="$(echo ${ebuild}|cut -d'/' -f2)"
+	local eb="$(echo ${ebuild}|cut -d'/' -f3)"
+
+	local md5_file="${REPOTREE}/metadata/md5-cache/${cat}/${eb}"
+
+	if ${ENABLE_MD5}; then
+		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
+		echo ${real_eclasses[@]}|tr ' ' ':'
+	fi
+}
 
 # simply return 0 or 1 (true or false) if a given eclass is used by
 # a given ebuild file
@@ -1124,4 +1138,4 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_age_v2 get_age_last get_git_age get_age_v3 date_update sort_result_v3 \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
-	gen_sort_main_v4 gen_sort_pak_v4
+	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2
