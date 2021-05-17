@@ -475,7 +475,7 @@ gen_sort_main_v4(){
 		local pak_loc="$(_find_package_location "${rc_id}")"
 		if [ -s "${rc_id}" ]; then
 			# check the first 10 entries
-			for x in $(head -n10 ${rc_id}); do
+			for x in $(head -n10 "${rc_id}"); do
 				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
 				local pak_main="$(get_main_min ${pak})"
 				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
@@ -490,8 +490,8 @@ gen_sort_main_v4(){
 		if [ -n "${main_loc}" ]; then
 			mkdir -p ${rc_id%/*}/sort-by-maintainer
 			local main
-			for main in $(cat ${rc_id} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
-				grep "${main}" ${rc_id} > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+			for main in $(cat "${rc_id}" |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
+				grep "${main}" "${rc_id}" > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
 			done
 		fi
 	}
@@ -500,11 +500,11 @@ gen_sort_main_v4(){
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
 				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort ${d}
+					_gen_sort "${d}"
 				done
 			fi
 		done
-		_gen_sort ${id}
+		_gen_sort "${id}"
 	done
 }
 
@@ -574,13 +574,13 @@ gen_sort_pak_v4() {
 		pak_loc="$(_find_package_location "${rc_id}")"
 		# only create package sorting if we found package location
 		if [ -n "${pak_loc}" ]; then
-			local f_packages="$(cat ${rc_id}| cut -d "${DL}" -f${pak_loc} |sort -u)"
+			local f_packages="$(cat "${rc_id}"| cut -d "${DL}" -f${pak_loc} |sort -u)"
 			local pack
 			for pack in ${f_packages}; do
 				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
 				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
 				mkdir -p ${rc_id%/*}/sort-by-package/${f_cat}
-				grep "\<${pack}\>" ${rc_id} > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+				grep "\<${pack}\>" "${rc_id}" > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
 			done
 		fi
 	}
@@ -589,11 +589,11 @@ gen_sort_pak_v4() {
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
 				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort ${d}
+					_gen_sort "${d}"
 				done
 			fi
 		done
-		_gen_sort ${id}
+		_gen_sort "${id}"
 	done
 }
 
