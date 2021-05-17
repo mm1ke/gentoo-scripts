@@ -607,10 +607,12 @@ gen_sort_eapi_v1(){
 	local eapi rc_id
 
 	for rc_id in ${check_files[@]}; do
-		for eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
-			mkdir -p ${rc_id}/sort-by-eapi/EAPI${eapi}
-			grep ^${eapi}${DL} ${rc_id}/full.txt > ${rc_id}/sort-by-eapi/EAPI${eapi}/full.txt
-		done
+		if [ -e "${rc_id}/full.txt" ]; then
+			for eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
+				mkdir -p ${rc_id}/sort-by-eapi/EAPI${eapi}
+				grep ^${eapi}${DL} ${rc_id}/full.txt > ${rc_id}/sort-by-eapi/EAPI${eapi}/full.txt
+			done
+		fi
 	done
 }
 
@@ -625,18 +627,31 @@ gen_sort_filter_v1(){
 	local rc_id file ec ecd
 
 	for rc_id in ${check_files[@]}; do
-		for file in $(cat ${rc_id}/full.txt); do
-			for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '|cut -d'(' -f1); do
-				mkdir -p ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')
-				echo ${file} >> ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt
+		if [ -e "${rc_id}/full.txt" ]; then
+			for file in $(cat ${rc_id}/full.txt); do
+				for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '|cut -d'(' -f1); do
+					mkdir -p ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')
+					echo ${file} >> ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt
+				done
 			done
-		done
+		fi
 	done
 }
 
 gen_descriptions(){
 	for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
 		data_descriptions ${i} >> "${RUNNING_CHECKS[${i}]}/description.txt"
+	done
+}
+
+clean_results(){
+	local c
+	for c in ${RUNNING_CHECKS[@]}; do
+		if [ -e "${c}/full.txt" ]; then
+			if ! [ -s "${c}/full.txt" ]; then
+				rm ${c}/full.txt
+			fi
+		fi
 	done
 }
 
@@ -749,6 +764,127 @@ depth_set_v2() {
 					find_func
 					# third: generate results and copy to RESULTSDIR
 					gen_results
+
+				else
+					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
+					# this case, update old results (git_age or bugs information)
+					# this is a special case for scripts who provide gitage or bugs information:
+					# following function can be configured in each script in order to
+					# update git_age or bug information (or anything else)
+					# in contrast to gen_results, this function would be also called if
+					# nothing changed since last run (see below)
+					local x=( )
+					local i
+					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+						x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+					done
+					local RUNNING_CHECKS=( ${x[@]} )
+					upd_results
+				fi
+			else
+				# if override is enabled, do a normal full search.
+				_default_full_search
+			fi
+		else
+			echo "${REPOTREE}/${arg}: Path not found"
+			exit 1
+		fi
+	fi
+}
+
+depth_set_v3() {
+	arg="${1}"
+
+	_default_full_search() {
+		searchp=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${REPOTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+		find_func
+	}
+
+
+	if [ -z "${arg}" ]; then
+		usage
+		exit 1
+	else
+		# test if user provided input exist
+		if [ -d "${REPOTREE}/${arg}" ]; then
+			MAXD=0
+			MIND=0
+			# case if user provides only category
+			# if there is a '/', everything after need to be empty
+			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
+			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
+				MAXD=1
+				MIND=1
+			fi
+			searchp=( ${arg} )
+			find_func
+		elif [ "${arg}" = "full" ]; then
+			_default_full_search
+		elif [ "${arg}" = "diff" ]; then
+
+			TODAYCHECKS="${HASHTREE}/results/results-$(date -I).log"
+
+			if ! [ -f "${TODAYCHECKS}" ]; then
+				echo "No diff file found"
+				exit 1
+			fi
+			searchp=( $(sed -e 's/^.//' ${TODAYCHECKS} | sort -u) )
+
+			# diff provides categories/package so we need maxd=1 and mind=1
+			# setting both vars to 0 because the find command adds 1 anyway
+			MAXD=0
+			MIND=0
+
+			# if /tmp/${SCRIPT_NAME} exist run in normal mode
+			# this way it's possible to override the diff mode
+			# this is usefull when the script got updates which should run
+			# on the whole tree
+			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+				# only run diff mode if todaychecks exist and doesn't have zero bytes
+				if [ -s ${TODAYCHECKS} ]; then
+					# special case for repomancheck
+					# copying old sort-by-packages files are only important for repomancheck
+					# because these files aren't generated via gen_sort_pak (like on other scripts)
+					if ${REPOCHECK}; then
+						cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+					fi
+
+					# we need to copy all existing results first and remove packages which
+					# were changed (listed in TODAYCHECKS). If no results file exists, do
+					# nothing - the script would create a new one anyway
+					for oldfull in ${RUNNING_CHECKS[@]}; do
+						# SCRIPT_TYPE = checks or stats
+						# first set the full.txt path from the old log
+						OLDLOG="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+						# check if the oldlog exist (don't have to be)
+						if [ -e ${OLDLOG} ]; then
+							# copy old result file to workdir and filter the result
+							cp ${OLDLOG} ${oldfull}/
+							for cpak in $(cat ${TODAYCHECKS}); do
+								# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+								# will fail because '/' aren't escapted. also remove first slash
+								pakcat="${cpak:1}"
+								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+								# like before, only important for repomancheck
+								if ${REPOCHECK}; then
+									rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+								fi
+							done
+						fi
+					done
+
+					# first: remove packages which doesn't exist anymore
+					diff_rm_dropped_paks_v3
+					# second: run the script only on the changed packages
+					find_func
 
 				else
 					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
@@ -1137,4 +1273,5 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_age_v2 get_age_last get_git_age get_age_v3 date_update sort_result_v3 \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
-	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2
+	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 depth_set_v3 \
+	clean_results
