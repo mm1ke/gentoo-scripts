@@ -50,6 +50,13 @@ fi
 [ -z "${FILERESULTS}" ] && FILERESULTS=false
 [ -z "${RESULTSDIR}" ] && RESULTSDIR="${HOME}/checks-${RANDOM}/"
 [ -z "${REPOCHECK}" ] && REPOCHECK=false
+# in order to make check certain things for overlays we need to know the were
+# the main gentoo tree is because informations depend on them
+if [ -n "${GTREE}" ]; then
+	if ! [ "$(cat ${GTREE}/profiles/repo_name)" = "gentoo" ]; then
+		GTREE=""
+	fi
+fi
 
 # Feature settings
 ENABLE_GIT=false
@@ -60,7 +67,7 @@ TREE_IS_MASTER=false
 [ "$(cat ${REPOTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
 
 export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER \
-	FILERESULTS RESULTSDIR REPOCHECK DRYRUN
+	FILERESULTS RESULTSDIR REPOCHECK DRYRUN GTREE
 #
 # globaly vars END
 #
@@ -70,6 +77,7 @@ if ${DRYRUN}; then
 	echo _funcs
 	echo "Repo: ${REPO}"
 	echo "Porttree: ${REPOTREE}"
+	echo "Gentoo tree: ${GTREE} (optional)"
 	echo "Enable git: ${ENABLE_GIT}"
 	echo "Enable md5: ${ENABLE_MD5}"
 	echo "Tree is master: ${TREE_IS_MASTER}"
@@ -176,16 +184,7 @@ get_licenses(){
 	local rel_ebuild="${1}"
 	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
 	local eb_lics=( $(grep ^LICENSE ${eb_path} |cut -d'=' -f2 | tr ' ' '\n'| awk 'length!=1' | sed -e '/\?$/d' -e '/|$/d' | sort -u) )
-	local lics=(  )
-	for l in ${eb_lics[@]}; do
-		if [ -f ${REPOTREE}/licenses/${l} ]; then
-			lics+=( ${l} )
-		#else
-		#	echo "${1}: ${l} is missing" >> /tmp/get-lics-missing.log
-		fi
-	done
-
-	echo ${lics[@]}|tr ' ' ':'
+	echo ${eb_lics[@]}|tr ' ' ':'
 }
 
 # returns a list of keywords set for a certain ebuild

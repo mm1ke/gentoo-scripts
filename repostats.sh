@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Filename: tmpcheck.sh
+# Filename: repostats.sh
 # Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
-# Date: 09/05/2018
+# Date: 09/05/2021
 
 # Copyright (C) 2021  Michael Mair-Keimberger
 #
@@ -355,8 +355,7 @@ gen_results() {
 array_names
 # create a list and create corresponding folders and files of all available
 # eclasses and licenses before running the check - this way we also see
-# eclasses and licenses without customers. For eclasses Only required on
-# gentoo main tree
+# eclasses and licenses without customers.
 if ${FILERESULTS}; then
 	if ${TREE_IS_MASTER}; then
 		eclass_list=( $(find ${REPOTREE}/eclass/*.eclass -maxdepth 1 -type f) )
@@ -365,14 +364,14 @@ if ${FILERESULTS}; then
 			mkdir -p ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl}
 			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl}/full.txt
 		done
-	fi
-	if [ -d "${REPOTREE}/licenses/" ]; then
-		licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
-		licenses_list=( ${licenses_list[@]##*/} )
-		for lic in ${licenses_list[@]}; do
-			mkdir -p ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}
-			touch ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}/full.txt
-		done
+		if [ -d "${REPOTREE}/licenses/" ]; then
+			licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
+			licenses_list=( ${licenses_list[@]##*/} )
+			for lic in ${licenses_list[@]}; do
+				mkdir -p ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}
+				touch ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}/full.txt
+			done
+		fi
 	fi
 	if [ -d "${REPOTREE}/virtual/" ]; then
 		virtual_list=( $(find ${REPOTREE}/virtual/* -maxdepth 1 -type d) )
@@ -383,6 +382,7 @@ if ${FILERESULTS}; then
 		done
 	fi
 fi
+
 cd ${REPOTREE}
 export WORKDIR
 export -f main array_names output_format
