@@ -317,7 +317,7 @@ upd_results(){
 
 find_func(){
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" -exec egrep -l "DEPEND" {} \; | parallel main {}
+		-type f -name "*.ebuild" | parallel main {}
 }
 
 gen_results() {
@@ -366,18 +366,22 @@ if ${FILERESULTS}; then
 			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl}/full.txt
 		done
 	fi
-	licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
-	licenses_list=( ${licenses_list[@]##*/} )
-	for lic in ${licenses_list[@]}; do
-		mkdir -p ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}
-		touch ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}/full.txt
-	done
-	virtual_list=( $(find ${REPOTREE}/virtual/* -maxdepth 1 -type d) )
-	virtual_list=( ${virtual_list[@]##*/} )
-	for vir in ${virtual_list[@]}; do
-		mkdir -p ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}
-		touch ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}/full.txt
-	done
+	if [ -d "${REPOTREE}/licenses/" ]; then
+		licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
+		licenses_list=( ${licenses_list[@]##*/} )
+		for lic in ${licenses_list[@]}; do
+			mkdir -p ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}
+			touch ${RUNNING_CHECKS[3]}/sort-by-filter/${lic}/full.txt
+		done
+	fi
+	if [ -d "${REPOTREE}/virtual/" ]; then
+		virtual_list=( $(find ${REPOTREE}/virtual/* -maxdepth 1 -type d) )
+		virtual_list=( ${virtual_list[@]##*/} )
+		for vir in ${virtual_list[@]}; do
+			mkdir -p ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}
+			touch ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}/full.txt
+		done
+	fi
 fi
 cd ${REPOTREE}
 export WORKDIR
