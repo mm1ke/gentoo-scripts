@@ -236,9 +236,9 @@ get_file_status(){
 	local uri="${1}"
 
 	if $(timeout 15 wget -T 10 --no-check-certificate -q --method=HEAD ${uri}); then
-		return 0
-	else
 		return 1
+	else
+		return 0
 	fi
 }
 
