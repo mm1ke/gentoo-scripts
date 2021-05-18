@@ -231,6 +231,17 @@ get_depend(){
 	echo ${real_dep[@]}|tr ' ' ':'
 }
 
+# return true or false if file exits remotly (or not)
+get_file_status(){
+	local uri="${1}"
+
+	if $(timeout 15 wget -T 10 --no-check-certificate -q --method=HEAD ${uri}); then
+		return 0
+	else
+		return 1
+	fi
+}
+
 count_ebuilds(){
 	local epath="${1}"
 	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
@@ -628,10 +639,10 @@ gen_sort_filter_v1(){
 
 	for rc_id in ${check_files[@]}; do
 		if [ -e "${rc_id}/full.txt" ]; then
-			for file in $(cat ${rc_id}/full.txt); do
+			for file in $(cat "${rc_id}/full.txt"); do
 				for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '|cut -d'(' -f1); do
-					mkdir -p ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')
-					echo ${file} >> ${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt
+					mkdir -p "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')"
+					echo "${file}" >> "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt"
 				done
 			done
 		fi
@@ -1274,4 +1285,4 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
 	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 depth_set_v3 \
-	clean_results
+	clean_results get_file_status
