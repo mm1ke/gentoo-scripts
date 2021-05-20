@@ -106,6 +106,11 @@ for repodir in ${REPOSITORIES[@]}; do
 	cp ${HASHTREE}/full-${TODAY}.log ${HASHTREE}/full-last.log >/dev/null 2>&1
 	gzip ${HASHTREE}/full-${YESTERDAY}.log >/dev/null 2>&1
 	gzip ${HASHTREE}/results/results-${YESTERDAY}.log >/dev/null 2>&1
+	# clean logs older then one week
+	find ${HASHTREE} -name "full-*" -type f -printf '%T@ %p\n' \
+		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
+	find ${HASHTREE}/results/ -name "results-*" -type f -printf '%T@ %p\n' \
+		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
 
 	# create full package/maintainer lists
 	echo "Processing script: genlists" >> ${LOGFILE}
