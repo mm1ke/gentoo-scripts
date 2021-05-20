@@ -49,15 +49,17 @@ WORKDIR="/tmp/repostats-${RANDOM}"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/ebuild_eapi_statistics"						#Index 0
-		"${WORKDIR}/ebuild_live_statistics"						#Index 1
-		"${WORKDIR}/ebuild_eclass_statistics"					#Index 2
-		"${WORKDIR}/ebuild_licenses_statistics"				#Index 3
-		"${WORKDIR}/ebuild_keywords_statistics"				#Index 4
-		"${WORKDIR}/ebuild_virtual_use_statistics"		#Index 5
-		"${WORKDIR}/ebuild_obsolete_eapi"							#Index 6
-		"${WORKDIR}/ebuild_cleanup_candidates"				#Index 7
-		"${WORKDIR}/ebuild_stable_candidates"					#Index 8
+		"${WORKDIR}/ebuild_eapi_statistics"						# Index 0
+		"${WORKDIR}/ebuild_live_statistics"						# Index 1
+		"${WORKDIR}/ebuild_eclass_statistics"					# Index 2
+		"${WORKDIR}/ebuild_licenses_statistics"				# Index 3
+		"${WORKDIR}/ebuild_keywords_statistics"				# Index 4
+		"${WORKDIR}/ebuild_virtual_use_statistics"		# Index 5
+		"${WORKDIR}/ebuild_obsolete_eapi"							# Index 6
+		"${WORKDIR}/ebuild_cleanup_candidates"				# Index 7
+		"${WORKDIR}/ebuild_stable_candidates"					# Index 8
+		"${WORKDIR}/ebuild_glep81_group_statistics"		# Index 9
+		"${WORKDIR}/ebuild_glep81_user_statistics"		# Index 10
 	)
 }
 output_format(){
@@ -81,6 +83,8 @@ ${DL}${eapi_found_ebuild}\
 ${DL}${new_ebuild_created}${DL}${new_ebuild_last_modified}\
 ${DL}${package_bugs}${DL}${cat}/${pak}\
 ${DL}${org_name}${DL}${norm_name}-r${i}${DL}${maintainer}"
+"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}${ebuild_group_use}${DL}${maintainer}"
+"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}${ebuild_user_use}${DL}${maintainer}"
 	)
 	echo "${index[$1]}"
 }
@@ -174,9 +178,30 @@ stablization.
 
 ${info_default1}
 EOM
+read -r -d '' info_index9 <<- EOM
+Lists acct-group/* usage by ebuilds.
+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|acct-group/gdm|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+acct-group/gdm                              group(s) used by this ebuild, seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+read -r -d '' info_index10 <<- EOM
+Lists acct-user/* usage by ebuilds.
+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|acct-user/gdm|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+acct-user/gdm                               user(s) used by this ebuild, seperated by ':'
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+
 	description=( "${info_index0}" "${info_index1}" "${info_index2}" \
 		"${info_index3}" "${info_index4}" "${info_index5}" "${info_index6}" \
-		"${info_index7}" "${info_index8}" )
+		"${info_index7}" "${info_index8}" "${info_index9}" "${info_index10}" )
 	echo "${description[$1]}"
 }
 #
@@ -260,19 +285,22 @@ main() {
 		[ -z "${ebuild_keywords}" ] && ebuild_keywords="none"
 		output 1
 	fi
-	if [ -n "${ebuild_eclasses}" ]; then
-		output 2
-	fi
-	if [ -n "${ebuild_licenses}" ]; then
-		output 3
-	fi
+	[ -n "${ebuild_eclasses}" ] && output 2
+	[ -n "${ebuild_licenses}" ] && output 3
+
 	if [ -n "${ebuild_depend}" ]; then
-		local tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "virtual/"|tr '/' '_') )
-		local ebuild_virt_in_use="$(echo ${tmp[@]}|tr ' ' ':')"
-		if [ -n "${ebuild_virt_in_use}" ]; then
-			output 5
-		fi
+		local vir_tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "virtual/"|cut -d'/' -f2) )
+		local group_tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "acct-group/"|cut -d'/' -f2) )
+		local user_tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "acct-user/"|cut -d'/' -f2) )
+		local ebuild_virt_in_use="$(echo ${vir_tmp[@]}|tr ' ' ':')"
+		local ebuild_group_use="$(echo ${group_tmp[@]}|tr ' ' ':')"
+		local ebuild_user_use="$(echo ${user_tmp[@]}|tr ' ' ':')"
+
+		[ -n "${ebuild_virt_in_use}" ] && output 5
+		[ -n "${ebuild_group_use}" ] && output 9
+		[ -n "${ebuild_user_use}" ] && output 10
 	fi
+
 	if [ ${ebuild_eapi} -lt ${min_allow_eapi} ]; then
 		output 6
 	fi
@@ -335,6 +363,8 @@ gen_results() {
 		sort_result_v4 2 6
 		sort_result_v4 "1,1 -k8,8" 7
 		sort_result_v4 "1,1 -k8,8" 8
+		sort_result_v4 2 9
+		sort_result_v4 2 10
 
 		# filter after EAPI/filter
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[0]}
@@ -344,6 +374,8 @@ gen_results() {
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[4]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[5]}
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[6]}
+		gen_sort_filter_v1 4 ${RUNNING_CHECKS[9]}
+		gen_sort_filter_v1 4 ${RUNNING_CHECKS[10]}
 
 		gen_sort_main_v4
 		gen_sort_pak_v4
@@ -381,8 +413,24 @@ if ${FILERESULTS}; then
 		virtual_list=( $(find ${REPOTREE}/virtual/* -maxdepth 1 -type d) )
 		virtual_list=( ${virtual_list[@]##*/} )
 		for vir in ${virtual_list[@]}; do
-			mkdir -p ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}
-			touch ${RUNNING_CHECKS[5]}/sort-by-filter/virtual_${vir}/full.txt
+			mkdir -p ${RUNNING_CHECKS[5]}/sort-by-filter/${vir}
+			touch ${RUNNING_CHECKS[5]}/sort-by-filter/${vir}/full.txt
+		done
+	fi
+	if [ -d "${REPOTREE}/acct-group/" ]; then
+		group_list=( $(find ${REPOTREE}/acct-group/* -maxdepth 1 -type d) )
+		group_list=( ${group_list[@]##*/} )
+		for grp in ${group_list[@]}; do
+			mkdir -p ${RUNNING_CHECKS[9]}/sort-by-filter/${grp}
+			touch ${RUNNING_CHECKS[9]}/sort-by-filter/${grp}/full.txt
+		done
+	fi
+	if [ -d "${REPOTREE}/acct-user/" ]; then
+		user_list=( $(find ${REPOTREE}/acct-user/* -maxdepth 1 -type d) )
+		user_list=( ${user_list[@]##*/} )
+		for user in ${user_list[@]}; do
+			mkdir -p ${RUNNING_CHECKS[10]}/sort-by-filter/${user}
+			touch ${RUNNING_CHECKS[10]}/sort-by-filter/${user}/full.txt
 		done
 	fi
 fi
