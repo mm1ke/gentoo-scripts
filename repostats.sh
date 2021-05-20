@@ -267,7 +267,7 @@ main() {
 		output 3
 	fi
 	if [ -n "${ebuild_depend}" ]; then
-		local tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "virtual/") )
+		local tmp=( $(echo ${ebuild_depend}|tr ':' '\n'|grep "virtual/"|tr '/' '_') )
 		local ebuild_virt_in_use="$(echo ${tmp[@]}|tr ' ' ':')"
 		if [ -n "${ebuild_virt_in_use}" ]; then
 			output 5
@@ -352,11 +352,15 @@ gen_results() {
 	fi
 }
 
+cd ${REPOTREE}
 array_names
+export WORKDIR
+export -f main array_names output_format
 # create a list and create corresponding folders and files of all available
 # eclasses and licenses before running the check - this way we also see
 # eclasses and licenses without customers.
 if ${FILERESULTS}; then
+	mkdir -p ${RUNNING_CHECKS[@]}
 	if ${TREE_IS_MASTER}; then
 		eclass_list=( $(find ${REPOTREE}/eclass/*.eclass -maxdepth 1 -type f) )
 		eclass_list=( ${eclass_list[@]##*/} )
@@ -382,10 +386,5 @@ if ${FILERESULTS}; then
 		done
 	fi
 fi
-
-cd ${REPOTREE}
-export WORKDIR
-export -f main array_names output_format
-${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 depth_set_v2 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}
