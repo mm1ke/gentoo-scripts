@@ -52,8 +52,8 @@ JOBS="50"
 array_names(){
 	RUNNING_CHECKS=(
 		"${WORKDIR}/ebuild_src_uri_check"									#Index 0
-		"${WORKDIR}/ebuild_src_uri_offline"								#Index 1
-		"${WORKDIR}/ebuild_missing_zip_dependency"				#Index 2
+		#"${WORKDIR}/ebuild_src_uri_offline"								#Index 1
+		#"${WORKDIR}/ebuild_missing_zip_dependency"				#Index 2
 	)
 }
 output_format(){
@@ -219,11 +219,11 @@ main() {
 					# check for zip dependecy first
 					local srclink=${i}
 
-					if [ "$(echo ${srclink: -4})" = ".zip" ]; then
-						if ! $(grep "app-arch/unzip" ${REPOTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
-							mode 2 missing_zip
-						fi
-					fi
+					#if [ "$(echo ${srclink: -4})" = ".zip" ]; then
+					#	if ! $(grep "app-arch/unzip" ${REPOTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
+					#		mode 2 missing_zip
+					#	fi
+					#fi
 					local _checktmp="$(grep -P "(^|\s)\K${srclink}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
 						srclink="$(echo ${_checktmp}| cut -d' ' -f2-)"
@@ -237,9 +237,9 @@ main() {
 							echo "maybe_available ${srclink}" >> ${TMPCHECK}
 						else
 							mode 0 not_available
-							if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
-								mode 1 offline
-							fi
+							#if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
+							#	mode 1 offline
+							#fi
 							echo "not_available ${srclink}" >> ${TMPCHECK}
 						fi
 					fi
@@ -258,8 +258,8 @@ gen_results() {
 	if ${FILERESULTS}; then
 		gen_descriptions
 		cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt 2>/dev/null
-		cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt 2>/dev/null
-		cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt 2>/dev/null
+		#cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt 2>/dev/null
+		#cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt 2>/dev/null
 
 		sort_result_v3
 		gen_sort_main_v3
