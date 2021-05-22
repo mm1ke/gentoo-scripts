@@ -296,16 +296,6 @@ dev-libs/foo                                package category/name
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index17 <<- EOM
-Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
-
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
-7                                           EAPI Version
-dev-libs/foo                                package category/name
-foo-1.12-r2.ebuild                          full filename
-https://foo.bar.com/bar.zip                 file which is not available and mirror restricted
-dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-EOM
-read -r -d '' info_index18 <<- EOM
 Packages which downlaods ZIP files but misses app-arch/unzip in DEPEND.
 
 Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
@@ -313,6 +303,16 @@ Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@
 dev-libs/foo                                package category/name
 foo-1.12-r2.ebuild                          full filename
 https://foo.bar.com/bar.zip                 zip file which is downloaded by the ebuild
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+read -r -d '' info_index18 <<- EOM
+Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
+
+Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com/bar.zip                 file which is not available and mirror restricted
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
 read -r -d '' info_index19 <<- EOM
