@@ -69,28 +69,19 @@ array_names(){
 		"${WORKDIR}/ebuild_description_over_80"							# Index 4
 		"${WORKDIR}/ebuild_variables_in_homepages"					# Index 5
 		"${WORKDIR}/ebuild_insecure_git_uri_usage"					# Index 6
-		# deadeclasses
 		"${WORKDIR}/ebuild_deprecated_eclasses"							# Index 7
-		# trailwhite
 		"${WORKDIR}/ebuild_leading_trailing_whitespaces_in_variables"	# Index 8
-		# badstyle
 		"${WORKDIR}/ebuild_multiple_deps_per_line"					# Index 9
-		# depcheck
 		"${WORKDIR}/ebuild_nonexist_dependency"							# Index 10
 		"${WORKDIR}/ebuild_obsolete_virtual"								# Index 11
-		# eclassusage
 		"${WORKDIR}/ebuild_missing_eclasses"								# Index 12
 		"${WORKDIR}/ebuild_unused_eclasses"									# Index 13
 		"${WORKDIR}/ebuild_missing_eclasses_fatal"					# Index 14
-		# wwwtest
 		"${WORKDIR}/ebuild_homepage_upstream_shutdown"			# Index 15
 		"${WORKDIR}/ebuild_homepage_unsync"									# Index 16
-		# srctest
 		"${WORKDIR}/ebuild_missing_zip_dependency"					# Index 17
 		"${WORKDIR}/ebuild_src_uri_offline"									# Index 18
-		# patchtestsimple
 		"${WORKDIR}/ebuild_unused_patches_simple"						# Index 19
-
 		"${WORKDIR}/metadata_mixed_indentation"							# Index 20
 		"${WORKDIR}/metadata_missing_proxy_maintainer"			# Index 21
 		"${WORKDIR}/metadata_duplicate_useflag_description"	# Index 22
