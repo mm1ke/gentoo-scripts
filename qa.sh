@@ -42,6 +42,7 @@ export TIMELOG="/tmp/qa-time-${TODAY}.log"
 export SITEDIR="/media/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
 export GTREE="/tmp/repos/gentoo/"
+export GITINFO="${SCRIPTDIR}/gitinfo"
 # testvars
 #export SITEDIR="/tmp/wwwsite/"
 
@@ -55,13 +56,14 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPOTREE="/tmp/repos/${REPO}/"
 	export HASHTREE="/media/qa/repohashs/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
+	mkdir -p ${GITINFO}
 	# testvars
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
 	#export REPOTREE="/tmp/repos/${REPO}/"
 	#export HASHTREE="/tmp/repohashs/${REPO}/"
 
-	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 
+	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 	# the repositories need to exists in order to be updated
 	if ! [ -d ${REPOTREE} ]; then
 		mkdir -p ${REPOTREE}
@@ -69,8 +71,20 @@ for repodir in ${REPOSITORIES[@]}; do
 	elif [ -z "$(ls -A ${REPOTREE})" ]; then
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
 	else
+		git -C ${REPOTREE} rev-parse HEAD >> ${GITINFO}/${REPO}-head
 		git -C ${REPOTREE} pull >/dev/null 2>&1
 	fi
+
+	echo -e "\nFind changed packages for ${REPO}" >> ${LOGFILE}
+	if [ -s "${GITINFO}/${REPO}-head" ]; then
+		git -C ${REPOTREE} --name-only $(<${GITINFO}/${REPO}-head) HEAD \
+			| cut -d'/' -f1,2|sort -u|grep  -e '\([a-z0-9].*-[a-z0-9].*/\|virtual/\)' \
+			>> ${GITINFO}/${REPO}-catpak.log
+	#else
+	#	DIFFMODE=false
+	fi
+
+
 
 	# disable diffmode if repohashs doesn't exists (eg: new repo)
 	! [ -d ${HASHTREE} ] && DIFFMODE=false
@@ -99,6 +113,13 @@ for repodir in ${REPOSITORIES[@]}; do
 		fi
 	done
 
+
+	echo -e "\nFinishing checks for ${REPO}\n" >> ${LOGFILE}
+	mv ${GITINFO}/${REPO}-catpak.log ${GITINFO}/${REPO}-changes-$(date -I).log
+	find ${GITINFO} -name "${REPO}-changes-*" -type f -printf '%T@ %p\n' \
+		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
+
+
 	# copy todays full result from treehashgen to the full-last.log
 	# only after all scripts were proceded.
 	cp ${HASHTREE}/full-${TODAY}.log ${HASHTREE}/full-last.log >/dev/null 2>&1
@@ -109,6 +130,8 @@ for repodir in ${REPOSITORIES[@]}; do
 		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
 	find ${HASHTREE}/results/ -name "results-*" -type f -printf '%T@ %p\n' \
 		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
+
+
 
 	# create full package/maintainer lists
 	echo "Processing script: genlists" >> ${LOGFILE}
