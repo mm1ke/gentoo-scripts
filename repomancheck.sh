@@ -112,9 +112,7 @@ main() {
 find_func(){
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 		-type d -print | parallel main {}
-}
 
-gen_results(){
 	if ${FILERESULTS}; then
 		gen_descriptions
 		gen_sort_main_v3
@@ -143,5 +141,5 @@ export WORKDIR REPOCHECK
 export -f main array_names output_format
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 # set the search depth
-depth_set_v2 ${1}
+depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}
