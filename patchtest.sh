@@ -538,9 +538,7 @@ find_func(){
 		find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 			-type d -print | parallel main {}
 	fi
-}
 
-gen_results() {
 	if ${FILERESULTS}; then
 		gen_descriptions
 		sort_result_v2
@@ -556,5 +554,5 @@ cd ${REPOTREE}
 export -f main array_names output_format
 export WORKDIR WFILE
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
-depth_set_v2 ${1}
+depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}

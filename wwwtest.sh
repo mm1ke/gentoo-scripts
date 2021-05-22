@@ -266,9 +266,7 @@ main() {
 find_func() {
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 		-type d -print | parallel -j ${JOBS} main {}
-}
 
-gen_results(){
 	if ${FILERESULTS}; then
 		gen_descriptions
 		# sort after http codes (including all codes)
@@ -311,9 +309,9 @@ ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f main get_code 301check array_names output_format
 export TMPCHECK TMPFILE WORKDIR TIMEOUT
 if [ "${1}" = "diff" ]; then
-	depth_set_v2 full
+	depth_set_v3 full
 else
-	depth_set_v2 ${1}
+	depth_set_v3 ${1}
 fi
 ${FILERESULTS} && rm ${TMPFILE}
 ${FILERESULTS} && rm -rf ${WORKDIR}

@@ -220,9 +220,7 @@ main() {
 find_func() {
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 		-type d -print | parallel -j ${JOBS} main {}
-}
 
-gen_results() {
 	if ${FILERESULTS}; then
 		gen_descriptions
 		cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt 2>/dev/null
@@ -242,9 +240,9 @@ export WORKDIR TMPCHECK
 touch ${TMPCHECK}
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 if [ "${1}" = "diff" ]; then
-	depth_set_v2 full
+	depth_set_v3 full
 else
-	depth_set_v2 ${1}
+	depth_set_v3 ${1}
 fi
 ${FILERESULTS} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}
