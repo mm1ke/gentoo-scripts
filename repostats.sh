@@ -346,9 +346,7 @@ upd_results(){
 find_func(){
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 		-type f -name "*.ebuild" | parallel main {}
-}
 
-gen_results() {
 	if ${FILERESULTS}; then
 		gen_descriptions
 		upd_results
@@ -434,5 +432,5 @@ if ${FILERESULTS}; then
 		done
 	fi
 fi
-depth_set_v2 ${1}
+depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}

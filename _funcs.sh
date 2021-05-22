@@ -819,7 +819,6 @@ depth_set_v3() {
 		find_func
 	}
 
-
 	if [ -z "${arg}" ]; then
 		usage
 		exit 1
@@ -898,7 +897,7 @@ depth_set_v3() {
 					find_func
 
 				else
-					# if ${TODAYCHECKS} doesn't exist or has zero bytes, do nothing, except in
+					# if ${TODAYCHECKS} has zero bytes, do nothing, except in
 					# this case, update old results (git_age or bugs information)
 					# this is a special case for scripts who provide gitage or bugs information:
 					# following function can be configured in each script in order to
