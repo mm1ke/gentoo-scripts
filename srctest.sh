@@ -52,14 +52,10 @@ JOBS="50"
 array_names(){
 	RUNNING_CHECKS=(
 		"${WORKDIR}/ebuild_src_uri_check"									#Index 0
-		#"${WORKDIR}/ebuild_src_uri_offline"								#Index 1
-		#"${WORKDIR}/ebuild_missing_zip_dependency"				#Index 2
 	)
 }
 output_format(){
 	index=(
-		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
-		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
 		"${ebuild_eapi}${DL}${category}/${package}${DL}${ebuild}${DL}${srclink}${DL}${maintainer}${openbugs}"
 	)
 	echo "${index[$1]}"
@@ -77,30 +73,7 @@ https://foo.bar.com/bar.zip                 file which is not available
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 754124:612230                               open bug ids related to this package, seperated by ':'
 EOM
-read -r -d '' info_index1 <<- EOM
-Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
-
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de|754124:612230 ):
-7                                           EAPI Version
-dev-libs/foo                                package category/name
-foo-1.12-r2.ebuild                          full filename
-https://foo.bar.com/bar.zip                 file which is not available and mirror restricted
-dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-754124:612230                               open bug ids related to this package, seperated by ':'
-EOM
-read -r -d '' info_index2 <<- EOM
-Packages which downlaods ZIP files but misses app-arch/unzip in DEPEND.
-
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de|754124:612230 ):
-7                                           EAPI Version
-dev-libs/foo                                package category/name
-foo-1.12-r2.ebuild                          full filename
-https://foo.bar.com/bar.zip                 zip file which is downloaded by the ebuild
-dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-754124:612230                               open bug ids related to this package, seperated by ':'
-EOM
-
-	description=( "${info_index0}" "${info_index1}" "${info_index2}" )
+	description=( "${info_index0}" )
 	echo "${description[$1]}"
 }
 #
@@ -219,11 +192,6 @@ main() {
 					# check for zip dependecy first
 					local srclink=${i}
 
-					#if [ "$(echo ${srclink: -4})" = ".zip" ]; then
-					#	if ! $(grep "app-arch/unzip" ${REPOTREE}/metadata/md5-cache/${category}/${ebuild} >/dev/null ); then
-					#		mode 2 missing_zip
-					#	fi
-					#fi
 					local _checktmp="$(grep -P "(^|\s)\K${srclink}(?=\s|$)" ${TMPCHECK}|sort -u)"
 					if [ -n "${_checktmp}" ]; then
 						srclink="$(echo ${_checktmp}| cut -d' ' -f2-)"
@@ -258,8 +226,6 @@ gen_results() {
 	if ${FILERESULTS}; then
 		gen_descriptions
 		cp ${RUNNING_CHECKS[0]}/full_not_available.txt ${RUNNING_CHECKS[0]}/full.txt 2>/dev/null
-		#cp ${RUNNING_CHECKS[1]}/full_offline.txt ${RUNNING_CHECKS[1]}/full.txt 2>/dev/null
-		#cp ${RUNNING_CHECKS[2]}/full_missing_zip.txt ${RUNNING_CHECKS[2]}/full.txt 2>/dev/null
 
 		sort_result_v3
 		gen_sort_main_v3

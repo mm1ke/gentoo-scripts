@@ -56,8 +56,6 @@ array_names(){
 		"${WORKDIR}/ebuild_homepage_301_redirections"									#Index 1
 		"${WORKDIR}/ebuild_homepage_redirection_missing_slash_www"		#Index 2
 		"${WORKDIR}/ebuild_homepage_redirection_http_to_https"				#Index 3
-		#"${WORKDIR}/ebuild_homepage_upstream_shutdown"								#Index 4
-		#"${WORKDIR}/ebuild_homepage_unsync"														#Index 5
 	)
 }
 output_format(){
@@ -66,8 +64,6 @@ output_format(){
 		"${ebuild_eapi}${DL}${new_code}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${correct_site}${DL}${main}"
 		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
 		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${ebuild}${DL}${hp}${DL}${sitemut}${DL}${main}"
-		not_used4
-		not_used5
 	)
 	echo "${index[$1]}"
 }
@@ -120,30 +116,9 @@ http://foo.bar.com                          original hommepage in ebuild
 https://foo.bar.com                         same homepage, only with https
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
-read -r -d '' info_index4 <<- EOM
-This checks lists ebuilds which still use a homepage of a know dead upstrem site.
-Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
-
-Data Format ( 7|404|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de|754124:612230 ):
-7                                           EAPI Version
-404                                         http statuscode
-dev-libs/foo                                package category/name
-foo-1.12-r2.ebuild                          full filename
-https://foo.bar.com                         homepage which are going to be removed
-dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-754124:612230                               open bug ids related to this package
-EOM
-read -r -d '' info_index5 <<- EOM
-Lists packages who have different homepages over it's ebuild versions.
-
-Data Format ( 2|dev-libs/foo|dev@gentoo.org:loper@foo.de ):
-2                                           number of different homepages found over all ebuilds
-dev-libs/foo                                package category/name
-dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-EOM
 
 	description=( "${info_index0}" "${info_index1}" "${info_index2}" \
-		"${info_index3}" "${info_index4}" "${info_index5}" )
+		"${info_index3}" )
 	echo "${description[$1]}"
 }
 #
@@ -317,40 +292,6 @@ gen_results(){
 			/${DL}429${DL}/d; \
 			" ${TMPFILE}
 		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
-
-		## special filters - ebuild_homepage_upstream_shutdown
-		#_filters=('berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com' 'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net')
-		#for site in ${_filters[@]}; do
-		#	mkdir -p "${RUNNING_CHECKS[4]}/sort-by-filter/${site}"
-		#	if $(grep -q ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt); then
-		#		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/full.txt
-		#		grep ${site} ${RUNNING_CHECKS[0]}/full-unfiltered.txt >> ${RUNNING_CHECKS[4]}/sort-by-filter/${site}/full.txt
-		#		gen_sort_main_v3 ${RUNNING_CHECKS[4]}/sort-by-filter/${site}
-		#		gen_sort_pak_v3 ${RUNNING_CHECKS[4]}/sort-by-filter/${site}
-		#	fi
-		#done
-
-		## ebuild_homepage_unsync
-		## find different homepages in same packages
-		#for i in $(cat ${RUNNING_CHECKS[0]}/full-unfiltered.txt | cut -d'|' -f3|sort -u); do
-		#	# get all HOMEPAGEs from every package,
-		#	# lists them and count the lines.
-		#	# if homepages are sync, the line count should be 1
-		#	# --- works best with the md5-cache ---
-		#	if ${ENABLE_MD5}; then
-		#		hp_lines="$(grep "HOMEPAGE=" ${REPOTREE}/metadata/md5-cache/${i}-[0-9]* | cut -d'=' -f2|sort -u|wc -l)"
-		#	else
-		#		hp_lines="$(grep "HOMEPAGE=" ${REPOTREE}/${i}/*.ebuild | cut -d'=' -f2|sort -u|wc -l)"
-		#	fi
-		#	if [ "${hp_lines}" -gt 1 ]; then
-		#		mkdir -p "${RUNNING_CHECKS[5]}/sort-by-package/${i%%/*}"
-		#		# only category/package and maintainer went into the full.txt
-		#		# via cut ... -f3,6 (cat/pak + maintainer) (needs update if data format changes)
-		#		# also important to list every package atom once, otherwise we would
-		#		# have a wrong count
-		#		grep "${DL}${i}${DL}" ${RUNNING_CHECKS[0]}/full-unfiltered.txt | head -n1 | cut -d'|' -f3,6 | sed "s/^/${hp_lines}${DL}/"  >> ${RUNNING_CHECKS[5]}/full.txt
-		#	fi
-		#done
 
 		sort_result_v3
 		gen_sort_pak_v3
