@@ -85,6 +85,8 @@ array_names(){
 		"${WORKDIR}/metadata_mixed_indentation"							# Index 20
 		"${WORKDIR}/metadata_missing_proxy_maintainer"			# Index 21
 		"${WORKDIR}/metadata_duplicate_useflag_description"	# Index 22
+		"${WORKDIR}/ebuild_insecure_pkg_post_config"				# Index 23
+		"${WORKDIR}/ebuild_insecure_init_scripts"						# Index 24
 	)
 }
 output_format(){
@@ -112,6 +114,8 @@ output_format(){
 		"${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 		"${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 		"${cat}/${pak}${DL}$(echo ${dup_use[@]}|tr ' ' ':')${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}${maintainer}"
+		"${cat}/${pak}${DL}${maintainer}"
 	)
 	echo "${index[$1]}"
 }
@@ -313,6 +317,21 @@ Data Format ( dev-libs/foo|dev@gentoo.org:loper@foo.de ):
 dev-libs/foo                                package category/name
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
+read -r -d '' info_index23 <<- EOM
+Ebuilds shouldn't use chown -R or chmod -R in pkg_postinst and pkg_config. This is a security threat
+Also see: <a href="http://michael.orlitzky.com/articles/end_root_chowning_now_%28make_pkg_postinst_great_again%29.xhtml">Link</a>
+CVE-2017-15945 Bug: <a href="https://bugs.gentoo.org/630822">Link</a>
+
+${info_default0}
+EOM
+read -r -d '' info_index24 <<- EOM
+Ebuilds shouldn't use chown -R or chmod -R in init scripts. This is a security threat.
+Also see: <a href="http://michael.orlitzky.com/articles/end_root_chowning_now_%28make_etc-init.d_great_again%29.xhtml">Link</a>
+
+Data Format ( dev-libs/foo|dev@gentoo.org:loper@foo.de ):
+dev-libs/foo                                package category/name
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
 
 
 # metadata checks
@@ -342,7 +361,8 @@ EOM
 		"${info_index7}" "${info_index8}" "${info_index9}" "${info_index10}" \
 		"${info_index11}" "${info_index12}" "${info_index13}" "${info_index14}" \
 		"${info_index15}" "${info_index16}" "${info_index17}" "${info_index18}" \
-		"${info_index19}" "${info_index20}" "${info_index21}" "${info_index22}"
+		"${info_index19}" "${info_index20}" "${info_index21}" "${info_index22}" \
+		"${info_index23}" "${info_index24}"
 	)
 	echo "${description[$1]}"
 }
@@ -603,6 +623,12 @@ ebuild-check() {
 		[ -n "${file_offline}" ] && output 18
 	fi
 
+	# inscure pkg_config or pkg_postinst
+	if $(grep -q -E "^pkg_config|^pkg_postinst" ${rel_path}); then
+		if $(awk '/^pkg_config|^pkg_postinst/,/^}/' ${rel_path} | grep -q -P "^\tchmod -R|^\tchown -R"); then
+			output 23
+		fi
+	fi
 }
 
 package-check(){
@@ -635,6 +661,17 @@ package-check(){
 		fi
 	fi
 
+	# insecure chown/chown in init scripts
+	if [ -d "${REPOTREE}/${rel_path}/files" ]; then
+		local init_count=( $(find ${REPOTREE}/${rel_path}/files/ -maxdepth 1 -name "*init*" ) )
+		if [ ${#init_count[@]} -gt 0 ]; then
+			if $(awk '/^start/,/^}/' ${REPOTREE}/${rel_path}/files/*init* | grep -q -P "chmod -R|chown -R|chmod --recursive|chown --recursive"); then
+				if ! $(awk '/^start/,/^}/' ${REPOTREE}/${rel_path}/files/*init* | grep -q "checkpath"); then
+					output 24
+				fi
+			fi
+		fi
+	fi
 }
 
 metadata-check(){
