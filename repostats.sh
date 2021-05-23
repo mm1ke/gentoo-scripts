@@ -23,10 +23,14 @@
 # Discription:
 #	script for generating statistics regarding gentoo repositories
 
-#override REPOTREE,FILERESULTS,RESULTSDIR settings
+# override REPOTREE,FILERESULTS,RESULTSDIR settings
 #export REPOTREE=/usr/portage/
 #export FILERESULTS=true
 #export RESULTSDIR="${HOME}/repostats/"
+# enabling debug output
+#export DEBUG=true
+#export DEBUGLEVEL=1
+#export DEBUGFILE=/tmp/repostats.log
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -210,6 +214,8 @@ EOM
 
 main() {
 	array_names
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating standard information for ${1}" | (debug_output)
+
 	# everything below $min_allow_eapi is considered deprecated
 	local min_allow_eapi=6
 
@@ -222,6 +228,7 @@ main() {
 	local abs_path="${REPOTREE}/${cat}/${pak}"												# full path:										/usr/portage/app-admin/salt
 	local abs_path_ebuild="${REPOTREE}/${cat}/${pak}/${filename}"			# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating detailed information for ${1}" | (debug_output)
 	local maintainer="$(get_main_min "${cat}/${pak}")"								# maintainer of package:				foo@gentoo.org:bar@gmail.com
 	#local fileage="$(get_age "${cat}/${pak}/${filename}")"						# age of ebuild in days:				145
 	local ebuild_eapi="$(get_eapi ${rel_path})"												# eapi of ebuild:								6
@@ -249,6 +256,7 @@ main() {
 		fi
 	}
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for stable and cleanup candidates" | (debug_output)
 	local i
 	# check for maximal 9 reversion
 	for i in $(seq $start 9); do
@@ -281,11 +289,15 @@ main() {
 		fi
 	done
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for live ebuilds" | (debug_output)
 	if $(echo ${pakver}|grep -q 9999); then
 		[ -z "${ebuild_keywords}" ] && ebuild_keywords="none"
 		output 1
 	fi
+
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "looking for inherited eclasses" | (debug_output)
 	[ -n "${ebuild_eclasses}" ] && output 2
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for used licenses" | (debug_output)
 	[ -n "${ebuild_licenses}" ] && output 3
 
 	if [ -n "${ebuild_depend}" ]; then
@@ -296,18 +308,27 @@ main() {
 		local ebuild_group_use="$(echo ${group_tmp[@]}|tr ' ' ':')"
 		local ebuild_user_use="$(echo ${user_tmp[@]}|tr ' ' ':')"
 
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for used virtuals" | (debug_output)
 		[ -n "${ebuild_virt_in_use}" ] && output 5
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for used acct-group packages" | (debug_output)
 		[ -n "${ebuild_group_use}" ] && output 9
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for used acct-user packages" | (debug_output)
 		[ -n "${ebuild_user_use}" ] && output 10
 	fi
 
+
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for obsolete ebuilds (min EAPI is: ${min_allow_eapi})" | (debug_output)
 	if [ ${ebuild_eapi} -lt ${min_allow_eapi} ]; then
 		output 6
 	fi
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "keywords statistics" | (debug_output)
 	output 4
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "eapi statistics" | (debug_output)
 	output 0
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "finished with ${1}" | (debug_output)
+	[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
 }
 
 upd_results(){
@@ -344,13 +365,28 @@ upd_results(){
 }
 
 find_func(){
-	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" | parallel main {}
+	[ ${DEBUGLEVEL} -ge 1 ] && echo "starting find with MIND:${MIND} and MAXD:${MAXD}" | (debug_output)
 
+	if [ ${DEBUGLEVEL} -ge 2 ]; then
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "NORMAL run: searchpattern is ${searchp[@]}" | (debug_output)
+		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.ebuild" | while read -r line; do main ${line}; done
+	else
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEl run: searchpattern is ${searchp[@]}" | (debug_output)
+		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.ebuild" | parallel main {}
+	fi
+
+
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "fileresults is: ${FILERESULTS}" | (debug_output)
 	if ${FILERESULTS}; then
+
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling gen_descriptions" | (debug_output)
 		gen_descriptions
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling upd_results" | (debug_output)
 		upd_results
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_result_v4" | (debug_output)
 		# sort the results
 		sort_result_v4 2 0
 		sort_result_v4 2 1
@@ -364,6 +400,7 @@ find_func(){
 		sort_result_v4 2 9
 		sort_result_v4 2 10
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_eapi & sort_filter" | (debug_output)
 		# filter after EAPI/filter
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[0]}
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[1]}
@@ -375,13 +412,17 @@ find_func(){
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[9]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[10]}
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_main_v4" | (debug_output)
 		gen_sort_main_v4
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_pak_v4" | (debug_output)
 		gen_sort_pak_v4
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling copy_checks" | (debug_output)
 		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
+[ ${DEBUGLEVEL} -ge 1 ] && echo "*** starting repostats" | (debug_output)
 cd ${REPOTREE}
 array_names
 export WORKDIR
@@ -434,3 +475,5 @@ if ${FILERESULTS}; then
 fi
 depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}
+
+[ ${DEBUGLEVEL} -ge 1 ] && echo "*** finished repostats" | (debug_output)
