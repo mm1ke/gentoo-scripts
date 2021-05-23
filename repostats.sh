@@ -436,8 +436,8 @@ if ${FILERESULTS}; then
 		eclass_list=( $(find ${REPOTREE}/eclass/*.eclass -maxdepth 1 -type f) )
 		eclass_list=( ${eclass_list[@]##*/} )
 		for ecl in ${eclass_list[@]}; do
-			mkdir -p ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl}
-			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl}/full.txt
+			mkdir -p ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%%.*}
+			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%%.*}/full.txt
 		done
 		if [ -d "${REPOTREE}/licenses/" ]; then
 			licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
