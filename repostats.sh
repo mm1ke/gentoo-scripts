@@ -372,7 +372,7 @@ find_func(){
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.ebuild" | while read -r line; do main ${line}; done
 	else
-		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEl run: searchpattern is ${searchp[@]}" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.ebuild" | parallel main {}
 	fi
