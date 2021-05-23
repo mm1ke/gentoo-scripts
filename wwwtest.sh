@@ -26,6 +26,10 @@
 #export FILERESULTS=true
 #export REPOTREE="/usr/portage/"
 #export RESULTSDIR="${HOME}/wwwtest/"
+# enabling debug output
+#export DEBUG=true
+#export DEBUGLEVEL=1
+#export DEBUGFILE=/tmp/repostats.log
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
