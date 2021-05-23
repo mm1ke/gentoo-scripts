@@ -77,7 +77,7 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	echo -e "\nFind changed packages for ${REPO}" >> ${LOGFILE}
 	if [ -s "${GITINFO}/${REPO}-head" ]; then
-		git -C ${REPOTREE} --name-only $(<${GITINFO}/${REPO}-head) HEAD \
+		git -C ${REPOTREE} diff --name-only $(<${GITINFO}/${REPO}-head) HEAD \
 			| cut -d'/' -f1,2|sort -u|grep  -e '\([a-z0-9].*-[a-z0-9].*/\|virtual/\)' \
 			>> ${GITINFO}/${REPO}-catpak.log
 	#else
