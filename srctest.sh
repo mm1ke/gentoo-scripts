@@ -205,9 +205,6 @@ main() {
 							echo "maybe_available ${srclink}" >> ${TMPCHECK}
 						else
 							mode 0 not_available
-							#if $(grep -e "^RESTRICT=.*mirror" ${eb} >/dev/null); then
-							#	mode 1 offline
-							#fi
 							echo "not_available ${srclink}" >> ${TMPCHECK}
 						fi
 					fi
