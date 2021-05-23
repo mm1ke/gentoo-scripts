@@ -320,7 +320,6 @@ EOM
 read -r -d '' info_index23 <<- EOM
 Ebuilds shouldn't use chown -R or chmod -R in pkg_postinst and pkg_config. This is a security threat
 Also see: <a href="http://michael.orlitzky.com/articles/end_root_chowning_now_%28make_pkg_postinst_great_again%29.xhtml">Link</a>
-CVE-2017-15945 Bug: <a href="https://bugs.gentoo.org/630822">Link</a>
 
 ${info_default0}
 EOM
