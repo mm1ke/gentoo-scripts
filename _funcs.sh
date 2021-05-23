@@ -30,7 +30,15 @@ BUGTMPDIR="/tmp/buglists/"
 DL='|'
 
 # check and set DEBUG
-[ -z "${DEBUG}" ] && DEBUG=false
+if [ -z "${DEBUG}" ]; then
+	DEBUG=false
+	export DEBUGLEVEL=0
+else
+	if [ -z "${DEBUGLEVEL}" ]; then
+		# set debuglevel to 1 if nothing is set
+		export DEBUGLEVEL=1
+	fi
+fi
 [ -z "${DRYRUN}" ] && DRYRUN=false
 # check and set set the REPOTREE
 if [ -z "${REPOTREE}" ]; then
@@ -88,6 +96,16 @@ if ${DRYRUN}; then
 	echo "Whitelist: ${PT_WHITELIST}"
 	exit 1
 fi
+
+debug_output() {
+	while IFS='' read -r line; do
+		if [ -n "${DEBUGLOG}" ]; then
+			echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}" >> ${DEBUGLOG}
+		else
+			>&2 echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}"
+		fi
+	done
+}
 
 _update_buglists(){
 	local bug_files="UNCONFIRMED CONFIRMED IN_PROGRESS"
@@ -200,6 +218,7 @@ get_keywords(){
 # versions into account
 # list looks like: dev-lang/go:app-admin/salt
 get_depend(){
+	[ ${DEBUGLEVEL} -ge 3 ] && echo ">>> get_depend: got ${1}" | (debug_output)
 	local ebuild="${1}"
 
 	local cat="$(echo ${ebuild}|cut -d'/' -f1)"
@@ -217,17 +236,18 @@ get_depend(){
 			if $(grep -q "${d}" "${real_file}"); then
 				if [ -d "${REPOTREE}/${d}" ]; then
 					real_dep+=( "${d}" )
-				#else
-				#	echo "${ebuild}: ${d} - doesn't exist in portage" >> /tmp/nonexist-dep-in-ebuild.log
+				else
+					[ ${DEBUGLEVEL} -ge 3 ] && echo "  W ${ebuild}: ${d} - doesn't exist in portage" | (debug_output)
 				fi
-			#else
-			#	echo "${ebuild}: ${d} - doesn't exist in ebuild" >> /tmp/missing-dep-in-ebuild.log
+			else
+				[ ${DEBUGLEVEL} -ge 3 ] && echo "  W ${ebuild}: ${d} - doesn't exist in ebuild" | (debug_output)
 			fi
 		done
 	else
 		real_dep=""
 	fi
 
+	[ ${DEBUGLEVEL} -ge 3 ] && echo "<<< get_depend: return $(echo ${real_dep[@]}|tr ' ' ':')" | (debug_output)
 	echo ${real_dep[@]}|tr ' ' ':'
 }
 
@@ -1286,4 +1306,4 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
 	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 depth_set_v3 \
-	clean_results get_file_status
+	clean_results get_file_status debug_output
