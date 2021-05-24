@@ -370,11 +370,11 @@ find_func(){
 	if [ ${DEBUGLEVEL} -ge 2 ]; then
 		[ ${DEBUGLEVEL} -ge 2 ] && echo "NORMAL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-			-type f -name "*.ebuild" | while read -r line; do main ${line}; done
+			-type f -name "*.ebuild" 2>/dev/null | while read -r line; do main ${line}; done
 	else
 		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-			-type f -name "*.ebuild" | parallel main {}
+			-type f -name "*.ebuild" 2>/dev/null | parallel main {}
 	fi
 
 
@@ -436,8 +436,8 @@ if ${FILERESULTS}; then
 		eclass_list=( $(find ${REPOTREE}/eclass/*.eclass -maxdepth 1 -type f) )
 		eclass_list=( ${eclass_list[@]##*/} )
 		for ecl in ${eclass_list[@]}; do
-			mkdir -p ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%%.*}
-			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%%.*}/full.txt
+			mkdir -p ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%.*}
+			touch ${RUNNING_CHECKS[2]}/sort-by-filter/${ecl%.*}/full.txt
 		done
 		if [ -d "${REPOTREE}/licenses/" ]; then
 			licenses_list=( $(find ${REPOTREE}/licenses/* -maxdepth 1 -type f) )
