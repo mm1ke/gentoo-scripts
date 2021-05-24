@@ -71,7 +71,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	elif [ -z "$(ls -A ${REPOTREE})" ]; then
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
 	else
-		git -C ${REPOTREE} rev-parse HEAD >> ${GITINFO}/${REPO}-head
+		git -C ${REPOTREE} rev-parse HEAD > ${GITINFO}/${REPO}-head
 		git -C ${REPOTREE} pull >/dev/null 2>&1
 	fi
 

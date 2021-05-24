@@ -94,11 +94,10 @@ main(){
 		local pvr='${PVR}'
 		local slot='${SLOT}'
 
-		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "*DEBUG: pachfile to check: $patchfile" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: checking: ${patchfile}" | (debug_output)
 
 		for ebuild in ${fullpath}/*.ebuild; do
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Check ebuild: $ebuild" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: looking into: ${ebuild}" | (debug_output)
 
 			# get ebuild detail
 			local ebuild_full=$(basename ${ebuild%.*})
@@ -106,7 +105,7 @@ main(){
 			local ebuild_revision=$(echo ${ebuild_full/${package}}|cut -d'-' -f3)
 			local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
 
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Ebuildvars: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: ebuild details: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot" | (debug_output)
 
 			local cn=()
 			# create custom names to check
@@ -157,7 +156,7 @@ main(){
 				[ -n "${my_hpn_ver}" ] && \
 					eval my_hpn_ver="$(echo ${my_hpn_ver:8})" >/dev/null 2>&1
 
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "***DEBUG: Found MY_P* vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: Found special vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
 
 				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
 				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
@@ -203,26 +202,26 @@ main(){
 				cn+=("${name_slot}")
 			fi
 			# find vmware-modules patches
-			if [ "${package}" = "vmware-modules" ]; then
-				local pv_major='${PV_MAJOR}'
-				cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
-			fi
+			#if [ "${package}" = "vmware-modules" ]; then
+			#	local pv_major='${PV_MAJOR}'
+			#	cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
+			#fi
 
 			# remove duplicates
 			mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
 			# replace list with newpackages
 			local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
 
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Custom names: ${cn[@]}" | (debug_output)
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Custom names normalized: ${searchpattern}" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: Custom names: $(echo ${cn[@]}|tr ' ' ':')" | (debug_output)
+			#[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Custom names normalized: ${searchpattern}" | (debug_output)
 
 			# check ebuild for the custom names
 			if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
 				found=true
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: CHECK: found $patchfile" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: FOUND: ${patchfile}" | (debug_output)
 			else
 				found=false
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "***DEBUG: CHECK: doesn't found $patchfile" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: NOT FOUND: ${patchfile}" | (debug_output)
 			fi
 
 			$found && break
@@ -310,98 +309,135 @@ main(){
 		fi
 	}
 
-	# do eclass prechecking
-	local prechecks=true
+	# white list checking
+	white_check() {
+		local pfile=${1}
+		[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: checking ${pfile} in ${WFILE}" | (debug_output)
+
+		if [ -e ${WFILE} ]; then
+			source ${WFILE}
+		else
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: ${WFILE} - file not found" | (debug_output)
+			return 1
+		fi
+
+		if $(echo ${white_list[@]} | grep -q "${category}/${package};${pfile}"); then
+			for white in ${white_list[@]}; do
+				local cat_pak="$(echo ${white}|cut -d';' -f1)"
+				local white_file="$(echo ${white}|cut -d';' -f2)"
+				local white_ebuild="$(echo ${white}|cut -d';' -f3)"
+				if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
+					if [ "${white_ebuild}" = "*" ]; then
+						[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in all ebuilds" | (debug_output)
+						return 0
+					else
+						for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
+							if [ -e "${REPOTREE}/${full_package}/${wbuild}" ]; then
+								[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in ${wbuild}" | (debug_output)
+								return 0
+							fi
+						done
+					fi
+					return 1
+				fi
+			done
+		else
+			return 1
+		fi
+	}
+
+	eclass_prechecks() {
+		local pfile="${1}"
+
+		if [ "${file}" = "rc-addon.sh" ]; then
+			if $(grep -q vdr-plugin-2 ${fullpath}/*.ebuild); then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is rc-addon.sh and used in vdr-plugin-2.eclass" | (debug_output)
+				return 0
+			else
+				return 1
+			fi
+		# check for vdr-plugin-2 eclass which installs confd files if exists
+		elif [ "${file}" = "confd" ]; then
+			if $(grep -q vdr-plugin-2 ${fullpath}/*.ebuild); then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is confd and used in vdr-plugin-2.eclass" | (debug_output)
+				return 0
+			else
+				return 1
+			fi
+		# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
+		elif [ "${file##*.}" = "conf" ]; then
+			if $(grep -q apache-module ${fullpath}/*.ebuild) && \
+				$(grep -q APACHE2_MOD_CONF ${fullpath}/*.ebuild); then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is conf and used in apache-module.eclass" | (debug_output)
+				return 0
+			else
+				return 1
+			fi
+		# check for elisp eclass which install el files if a SITEFILE is set
+		elif [ "${file##*.}" = "el" ]; then
+			if $(grep -q elisp ${fullpath}/*.ebuild) && \
+				$(grep -q SITEFILE ${fullpath}/*.ebuild); then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is el and used in elisp.eclass" | (debug_output)
+				return 0
+			else
+				return 1
+			fi
+		# ignoring README.gentoo files
+		elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
+			if $(grep -q readme.gentoo ${fullpath}/*.ebuild); then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is readme.gentoo and used in readme.gentoo-r1.eclass" | (debug_output)
+				return 0
+			else
+				return 1
+			fi
+		else
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: ${pfile} is not used in inherited eclasses!" | (debug_output)
+			return 1
+		fi
+	}
+
+	# output function
+	output() {
+		local id=${1}
+		if ${FILERESULTS}; then
+			for upatch in "${unused_patches[@]}"; do
+				output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
+			done
+		else
+			for upatch in "${unused_patches[@]}"; do
+				output_format ${id}
+			done
+		fi
+	}
 
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f1)"
 	package="$(echo ${full_package}|cut -d'/' -f2)"
-
+	main="$(get_main_min "${category}/${package}")"
 	fullpath="/${REPOTREE}/${full_package}"
 
-	[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: checking: ${category}/${package}" | (debug_output)
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking: ${category}/${package}" | (debug_output)
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: found files dir in ${category}/${package}" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "found files dir in: ${category}/${package}/files" | (debug_output)
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
 
-		# white list checking
-		white_check(){
-			local pfile=${1}
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "*DEBUG: whitelist: checking ${pfile} in ${WFILE}" | (debug_output)
-
-			if [ -e ${WFILE} ]; then
-				source ${WFILE}
-			else
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "*DEBUG: whitelist: ${WFILE} - file not found" | (debug_output)
-				echo false
-			fi
-
-			if $(echo ${white_list[@]} | grep "${category}/${package};${pfile}" >/dev/null); then
-				for white in ${white_list[@]}; do
-					local cat_pak="$(echo ${white}|cut -d';' -f1)"
-					local white_file="$(echo ${white}|cut -d';' -f2)"
-					local white_ebuild="$(echo ${white}|cut -d';' -f3)"
-					if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
-						if [ "${white_ebuild}" = "*" ]; then
-							[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: whitelist: found patch ${pfile} in all ebuilds" | (debug_output)
-							echo true
-							break
-						else
-							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
-								if [ -e ${REPOTREE}/${full_package}/${wbuild} ]; then
-									[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: whitelist: found patch ${pfile} in ${wbuild}" | (debug_output)
-									echo true
-									break 2
-								fi
-							done
-						fi
-						echo false
-						break
-					fi
-				done
-			else
-				echo false
-			fi
-		}
-
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: prechecks: whitelist and special eclasses" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "prechecks: whitelist and special eclasses" | (debug_output)
 		for file in ${fullpath}/files/*; do
+			# ignore directories
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
-				wlr="$(white_check ${file})"
-
-				if ! ${wlr}; then
-					if ${prechecks}; then
-						if [ "${file}" = "rc-addon.sh" ]; then
-							$(grep -q vdr-plugin-2 ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
-						# check for vdr-plugin-2 eclass which installs confd files if exists
-						elif [ "${file}" = "confd" ]; then
-							$(grep -q vdr-plugin-2 ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-						# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
-						elif [ "${file##*.}" = "conf" ]; then
-							$(grep -q apache-module ${fullpath}/*.ebuild > /dev/null) && \
-								$(grep -q APACHE2_MOD_CONF ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-						# check for elisp eclass which install el files if a SITEFILE is set
-						elif [ "${file##*.}" = "el" ]; then
-							$(grep -q elisp ${fullpath}/*.ebuild > /dev/null) && \
-								$(grep -q SITEFILE ${fullpath}/*.ebuild > /dev/null) || patch_list+=("${file}")
-						# ignoring README.gentoo files
-						elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
-							$(grep -q readme.gentoo ${fullpath}/*.ebuild >/dev/null) || patch_list+=("${file}")
-						else
-							patch_list+=("${file}")
-						fi
-					else
+				if ! $(white_check ${file}); then
+					if ! $(eclass_prechecks ${file}); then
 						patch_list+=("${file}")
 					fi
 				fi
 			fi
 		done
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "prechecks done: patchlist: $(echo ${patch_list[@]}|tr ' ' ':')" | (debug_output)
 
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: patchlist: ${patch_list[@]}" | (debug_output)
 		# first check
 		#  every patchfile gets passed to check_ebuild, which replaces
 		#  names and version with their corresponding ebuild name ($PN, PV, ..)
@@ -506,21 +542,6 @@ main(){
 		[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: unused patches: ${unused_patches[@]}" | (debug_output)
 		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
 
-		main="$(get_main_min "${category}/${package}")"
-
-		output() {
-			local id=${1}
-			if ${FILERESULTS}; then
-				for upatch in "${unused_patches[@]}"; do
-					output_format ${id} >> ${RUNNING_CHECKS[${id}]}/full.txt
-				done
-			else
-				for upatch in "${unused_patches[@]}"; do
-					output_format ${id}
-				done
-			fi
-		}
-
 		array_names
 		if [ ${#unused_patches[@]} -gt 0 ]; then
 			output 0
@@ -528,7 +549,8 @@ main(){
 
 		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
 		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-
+	else
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "skipping: ${category}/${package} has no files directory" | (debug_output)
 	fi
 }
 
