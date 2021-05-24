@@ -99,8 +99,8 @@ fi
 
 debug_output() {
 	while IFS='' read -r line; do
-		if [ -n "${DEBUGLOG}" ]; then
-			echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}" >> ${DEBUGLOG}
+		if [ -n "${DEBUGFILE}" ]; then
+			echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}" >> ${DEBUGFILE}
 		else
 			>&2 echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}"
 		fi
@@ -519,10 +519,10 @@ gen_sort_main_v4(){
 		fi
 		# generate maintainer sortings only if we find the location
 		if [ -n "${main_loc}" ]; then
-			mkdir -p ${rc_id%/*}/sort-by-maintainer
+			mkdir -p "${rc_id%/*}/sort-by-maintainer"
 			local main
 			for main in $(cat "${rc_id}" |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
-				grep "${main}" "${rc_id}" > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
+				grep "${main}" "${rc_id}" > "${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt"
 			done
 		fi
 	}
@@ -531,12 +531,13 @@ gen_sort_main_v4(){
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
 				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort "${d}"
+					_gen_sort "${d}" &
 				done
 			fi
 		done
-		_gen_sort "${id}"
+		_gen_sort "${id}" &
 	done
+	wait
 }
 
 # function which sorts a list by it's package
@@ -610,8 +611,8 @@ gen_sort_pak_v4() {
 			for pack in ${f_packages}; do
 				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
 				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
-				mkdir -p ${rc_id%/*}/sort-by-package/${f_cat}
-				grep "\<${pack}\>" "${rc_id}" > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
+				mkdir -p "${rc_id%/*}/sort-by-package/${f_cat}"
+				grep "\<${pack}\>" "${rc_id}" > "${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt"
 			done
 		fi
 	}
@@ -620,12 +621,13 @@ gen_sort_pak_v4() {
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
 				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort "${d}"
+					_gen_sort "${d}" &
 				done
 			fi
 		done
-		_gen_sort "${id}"
+		_gen_sort "${id}" &
 	done
+	wait
 }
 
 gen_sort_eapi_v1(){
@@ -637,14 +639,21 @@ gen_sort_eapi_v1(){
 
 	local eapi rc_id
 
+	_gen_sort_eapi(){
+		local eapi="${1}"
+		mkdir -p "${rc_id}/sort-by-eapi/EAPI${eapi}"
+		grep "^${eapi}${DL}" "${rc_id}/full.txt" > "${rc_id}/sort-by-eapi/EAPI${eapi}/full.txt"
+	}
+
+	local _eapi
 	for rc_id in ${check_files[@]}; do
 		if [ -e "${rc_id}/full.txt" ]; then
-			for eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
-				mkdir -p ${rc_id}/sort-by-eapi/EAPI${eapi}
-				grep ^${eapi}${DL} ${rc_id}/full.txt > ${rc_id}/sort-by-eapi/EAPI${eapi}/full.txt
+			for _eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
+				_gen_sort_eapi "${_eapi}" &
 			done
 		fi
 	done
+	wait
 }
 
 gen_sort_filter_v1(){
@@ -657,16 +666,25 @@ gen_sort_filter_v1(){
 
 	local rc_id file ec ecd
 
+	_gen_sort_filter() {
+		local file="${1}"
+		local col="${2}"
+		local ec
+		for ec in $(echo "${file}"|cut -d'|' -f${col}|tr ':' ' '|cut -d'(' -f1); do
+			mkdir -p "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')"
+			echo "${file}" >> "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt"
+		done
+	}
+
+	local _file
 	for rc_id in ${check_files[@]}; do
 		if [ -e "${rc_id}/full.txt" ]; then
-			for file in $(cat "${rc_id}/full.txt"); do
-				for ec in $(echo ${file}|cut -d'|' -f${column}|tr ':' ' '|cut -d'(' -f1); do
-					mkdir -p "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')"
-					echo "${file}" >> "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt"
-				done
+			for _file in $(cat "${rc_id}/full.txt"); do
+				_gen_sort_filter "${_file}" "${column}" &
 			done
 		fi
 	done
+	wait
 }
 
 gen_descriptions(){
