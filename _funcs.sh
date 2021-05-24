@@ -28,6 +28,7 @@
 #
 BUGTMPDIR="/tmp/buglists/"
 DL='|'
+FDL=4
 
 # check and set DEBUG
 if [ -z "${DEBUG}" ]; then
@@ -218,7 +219,7 @@ get_keywords(){
 # versions into account
 # list looks like: dev-lang/go:app-admin/salt
 get_depend(){
-	[ ${DEBUGLEVEL} -ge 3 ] && echo ">>> get_depend: got ${1}" | (debug_output)
+	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo ">>> get_depend: got ${1}" | (debug_output)
 	local ebuild="${1}"
 
 	local cat="$(echo ${ebuild}|cut -d'/' -f1)"
@@ -237,17 +238,17 @@ get_depend(){
 				if [ -d "${REPOTREE}/${d}" ]; then
 					real_dep+=( "${d}" )
 				else
-					[ ${DEBUGLEVEL} -ge 3 ] && echo "  W ${ebuild}: ${d} - doesn't exist in portage" | (debug_output)
+					[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "  W ${ebuild}: ${d} - doesn't exist in portage" | (debug_output)
 				fi
 			else
-				[ ${DEBUGLEVEL} -ge 3 ] && echo "  W ${ebuild}: ${d} - doesn't exist in ebuild" | (debug_output)
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "  W ${ebuild}: ${d} - doesn't exist in ebuild" | (debug_output)
 			fi
 		done
 	else
 		real_dep=""
 	fi
 
-	[ ${DEBUGLEVEL} -ge 3 ] && echo "<<< get_depend: return $(echo ${real_dep[@]}|tr ' ' ':')" | (debug_output)
+	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< get_depend: return $(echo ${real_dep[@]}|tr ' ' ':')" | (debug_output)
 	echo ${real_dep[@]}|tr ' ' ':'
 }
 
