@@ -269,7 +269,7 @@ main() {
 
 find_func() {
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
-		-type d -print | parallel -j ${JOBS} main {}
+		-type d -print 2>/dev/null | parallel -j ${JOBS} main {}
 
 	if ${FILERESULTS}; then
 		gen_descriptions
