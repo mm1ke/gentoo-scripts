@@ -375,6 +375,8 @@ EOM
 
 ebuild-check() {
 	array_names
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating standard information for ${1}" | (debug_output)
+
 	local rel_path=${1}																									# path relative to ${REPOTREE}:	./app-admin/salt/salt-0.5.2.ebuild
 	local cat="$(echo ${rel_path}|cut -d'/' -f1)"												# package category:							app-admin
 	local pak="$(echo ${rel_path}|cut -d'/' -f2)"												# package name:									salt
@@ -385,6 +387,7 @@ ebuild-check() {
 	local abs_path_ebuild="${REPOTREE}/${cat}/${pak}/${filename}"				# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
 	local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${pakname}" # full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating detailed information for ${1}" | (debug_output)
 	local maintainer="$(get_main_min "${cat}/${pak}")"									# maintainer of package:				foo@gentoo.org:bar@gmail.com
 	#local fileage="$(get_age "${cat}/${pak}/${filename}")"							# age of ebuild in days:				145
 	local ebuild_eapi="$(get_eapi ${rel_path})"													# eapi of ebuild:								6
@@ -403,25 +406,31 @@ ebuild-check() {
 	}
 
 	# trailing whitespace
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for trailing whitespaces" | (debug_output)
 	$(egrep -q " +$" ${rel_path}) && output 0
 
 	# mirror usage
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for mirror:// usage" | (debug_output)
 	$(grep -q 'mirror://gentoo' ${rel_path}) && output 1
 
 	if [ "${ebuild_eapi}" = "6" ]; then
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for epatch/dohtml usage" | (debug_output)
 		# epatch usage
 		$(grep -q "\<epatch\>" ${rel_path}) && output 2
 		# dohtml usage
 		$(grep -q "\<dohtml\>" ${rel_path}) && output 3
 	fi
 	# DESCRIPTION over 80
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for description over 80" | (debug_output)
 	[ $(grep DESCRIPTION ${abs_md5_path} | wc -m) -gt 95 ] && output 4
 
 	# HOMEPAGE with variables
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for variables in homepages" | (debug_output)
 	if $(grep -q "HOMEPAGE=.*\${" ${rel_path}); then
 		$(grep -q 'HOMEPAGE=.*${HOMEPAGE}' ${rel_path}) && output 5
 	fi
 	# insecure git usage
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for git:// usage" | (debug_output)
 	$(grep -q "EGIT_REPO_URI=\"git://" ${rel_path}) && output 6
 
 	# dead eclasses
@@ -430,7 +439,7 @@ ebuild-check() {
 		gst-plugins-bad gst-plugins-base gst-plugins-good gst-plugins-ugly \
 		gst-plugins10 ltprune mono python ruby user versionator x-modular xfconf )
 	local dead_ec_used=( )
-
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for DEAD eclasses usage" | (debug_output)
 	for dead_eclass in ${_dead_eclasses[@]}; do
 		if $(check_eclasses_usage ${rel_path} ${dead_eclass}); then
 			dead_ec_used+=( ${dead_eclass} )
@@ -439,6 +448,7 @@ ebuild-check() {
 	[ -n "${dead_ec_used}" ] && output 7
 
 	# trailing/leading whitespaces in variables
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for trailing leading whitespaces in certain variables" | (debug_output)
 	local _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 	local lt_vars_used=( )
 	for var in ${_varibales}; do
@@ -449,6 +459,7 @@ ebuild-check() {
 	[ -n "${lt_vars_used}" ] && output 8
 
 	# badstyle in ebuilds
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for badstyle in ebuilds" | (debug_output)
 	if $(grep -q "DEPEND" ${rel_path}); then
 		local used_cats=( )
 		local repo_cat
@@ -487,6 +498,7 @@ ebuild-check() {
 
 	# dependency checks
 	if ${TREE_IS_MASTER}; then
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for noexist dependencies" | (debug_output)
 		if $(grep -q "DEPEND" ${rel_path}); then
 			local non_exist_dep=()
 			local _dependencies=( $(grep DEPEND ${abs_md5_path}|grep -oE "[a-zA-Z0-9-]{3,30}/[+a-zA-Z_0-9-]{2,80}"|sed 's/-[0-9].*//g'|sort -u) )
@@ -523,6 +535,7 @@ ebuild-check() {
 
 	# eclass checks, only check if ECLASSES is not empty
 	if [ -n "${ECLASSES}" ]; then
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for eclass misusage" | (debug_output)
 		if $(grep -q "inherit" ${rel_path}); then
 			if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
 
@@ -586,6 +599,7 @@ ebuild-check() {
 	fi
 
 	# check for upstream shutdowns
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for dead upstreams" | (debug_output)
 	_filters=(
 		'berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com'
 		'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net'
@@ -601,7 +615,9 @@ ebuild-check() {
 	done
 	[ -n "${hp_shutdown}" ] && output 15
 
-	# src checks
+	# check if upstream source is available (only if mirror restricted) + missing
+	# unzip dependency
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unavailable upstreams + missing unzip dependency" | (debug_output)
 	local _src_links=( $(grep ^SRC_URI= ${abs_md5_path}|cut -d'=' -f2) )
 	local missing_zip=( )
 	local file_offline=( )
@@ -627,6 +643,7 @@ ebuild-check() {
 	fi
 
 	# inscure pkg_config or pkg_postinst
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for insecure chown/chmod usage" | (debug_output)
 	if $(grep -q -E "^pkg_config|^pkg_postinst" ${rel_path}); then
 		if $(awk '/^pkg_config|^pkg_postinst/,/^}/' ${rel_path} | grep -q -P "^\tchmod -R|^\tchown -R"); then
 			output 23
@@ -651,10 +668,12 @@ package-check(){
 	}
 
 	# check for unsync homepages
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unsync homepages" | (debug_output)
 	local hp_count="$(grep "^HOMEPAGE=" ${REPOTREE}/metadata/md5-cache/${cat}/${pak}-[0-9]* | cut -d'=' -f2|sort -u |wc -l)"
 	[ "${hp_count}" -gt 1 ] && output 16
 
 	# simple patchtest
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unused patches (simple)" | (debug_output)
 	local eclasses="apache-module|elisp|vdr-plugin-2|ruby-ng|readme.gentoo|readme.gentoo-r1|java-vm-2|php-ext-source-r3|selinux-policy-2|toolchain-glibc"
 	if [ -d "${REPOTREE}/${rel_path}/files" ]; then
 		if ! $(echo ${WHITELIST}|grep -q "${cat}/${pak}"); then
@@ -665,6 +684,7 @@ package-check(){
 	fi
 
 	# insecure chown/chown in init scripts
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for insecure chown/chmod usage in init scripts" | (debug_output)
 	if [ -d "${REPOTREE}/${rel_path}/files" ]; then
 		local init_count=( $(find ${REPOTREE}/${rel_path}/files/ -maxdepth 1 -name "*init*" ) )
 		if [ ${#init_count[@]} -gt 0 ]; then
@@ -694,11 +714,13 @@ metadata-check(){
 	}
 
 	# mixed indentation
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for mixed indentation" | (debug_output)
 	if $(grep -q "^ " ${rel_path}); then
 		$(grep -q $'\t' ${rel_path}) && output 20
 	fi
 
 	# missing proxy maintainer
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for missing proxy maintainer mails" | (debug_output)
 	local _found_go_mail=false
 	if $(grep -q "proxy-maint@gentoo.org" ${rel_path}); then
 		local i
@@ -711,6 +733,7 @@ metadata-check(){
 	fi
 
 	# duplicate use flag description
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for dupclicate use flag description" | (debug_output)
 	if ${TREE_IS_MASTER}; then
 		local _localuses="$(grep "flag name" ${rel_path} | cut -d'"' -f2)"
 		local dup_use=( )
@@ -806,23 +829,42 @@ gen_whitelist(){
 }
 
 find_func(){
-	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" -print 2>/dev/null | parallel ebuild-check {}
+	[ ${DEBUGLEVEL} -ge 1 ] && echo "starting find with MIND:${MIND} and MAXD:${MAXD}" | (debug_output)
 
-	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
-		-type d -print 2>/dev/null | parallel package-check {}
+	if [ ${DEBUGLEVEL} -ge 2 ]; then
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "NORMAL run: searchpattern is ${searchp[@]}" | (debug_output)
+		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.ebuild" -print 2>/dev/null | while read -r line; do ebuild-check ${line}; done
 
-	find ${searchp[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.xml" -print 2>/dev/null | parallel metadata-check {}
+		find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
+			-type d -print 2>/dev/null | while read -r line; do package-check ${line}; done
+
+		find ${searchp[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.xml" -print 2>/dev/null | while read -r line; do metadata-check ${line}; done
+	else
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEL run: searchpattern is ${searchp[@]}" | (debug_output)
+		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.ebuild" -print 2>/dev/null | parallel ebuild-check {}
+
+		find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
+			-type d -print 2>/dev/null | parallel package-check {}
+
+		find ${searchp[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
+			-type f -name "*.xml" -print 2>/dev/null | parallel metadata-check {}
+	fi
 
 	# check for empty results and remove them
 	clean_results
 
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "fileresults is: ${FILERESULTS}" | (debug_output)
 	if ${FILERESULTS}; then
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling gen_descriptions" | (debug_output)
 		gen_descriptions
-		sort_result_v3
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_result_v4" | (debug_output)
+		sort_result_v4
 
 		#gen_sort_eapi_v1 ${RUNNING_CHECKS[1]}
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_filter" | (debug_output)
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[7]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[8]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[10]}
@@ -832,21 +874,27 @@ find_func(){
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[15]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[22]}
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_main_v4" | (debug_output)
 		gen_sort_main_v4
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_pak_v4" | (debug_output)
 		gen_sort_pak_v4
 
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling copy_checks" | (debug_output)
 		copy_checks ${SCRIPT_TYPE}
 	fi
 }
 
+[ ${DEBUGLEVEL} -ge 1 ] && echo "*** starting repochecks" | (debug_output)
+
+cd ${REPOTREE}
 array_names
 gen_eclass_funcs
 gen_repo_categories
 gen_whitelist
-
-cd ${REPOTREE}
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f metadata-check ebuild-check package-check array_names output_format
 export WORKDIR
 depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}
+
+[ ${DEBUGLEVEL} -ge 1 ] && echo "*** finished repostats" | (debug_output)

@@ -378,6 +378,9 @@ find_func(){
 	fi
 
 
+	# check for empty results and remove them
+	clean_results
+
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "fileresults is: ${FILERESULTS}" | (debug_output)
 	if ${FILERESULTS}; then
 
@@ -400,15 +403,16 @@ find_func(){
 		sort_result_v4 2 9
 		sort_result_v4 2 10
 
-		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_eapi & sort_filter" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_eapi" | (debug_output)
 		# filter after EAPI/filter
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[0]}
 		gen_sort_eapi_v1 ${RUNNING_CHECKS[1]}
+		gen_sort_eapi_v1 ${RUNNING_CHECKS[6]}
+		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_filter" | (debug_output)
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[2]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[3]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[4]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[5]}
-		gen_sort_eapi_v1 ${RUNNING_CHECKS[6]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[9]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[10]}
 
@@ -431,6 +435,7 @@ export -f main array_names output_format
 # eclasses and licenses before running the check - this way we also see
 # eclasses and licenses without customers.
 if ${FILERESULTS}; then
+	[ ${DEBUGLEVEL} -ge 1 ] && echo "generating various directories" | (debug_output)
 	mkdir -p ${RUNNING_CHECKS[@]}
 	if ${TREE_IS_MASTER}; then
 		eclass_list=( $(find ${REPOTREE}/eclass/*.eclass -maxdepth 1 -type f) )
