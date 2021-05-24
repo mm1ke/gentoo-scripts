@@ -807,13 +807,13 @@ gen_whitelist(){
 
 find_func(){
 	find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.ebuild" -print | parallel ebuild-check {}
+		-type f -name "*.ebuild" -print 2>/dev/null | parallel ebuild-check {}
 
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
-		-type d -print | parallel package-check {}
+		-type d -print 2>/dev/null | parallel package-check {}
 
 	find ${searchp[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
-		-type f -name "*.xml" -print | parallel metadata-check {}
+		-type f -name "*.xml" -print 2>/dev/null | parallel metadata-check {}
 
 	# check for empty results and remove them
 	clean_results

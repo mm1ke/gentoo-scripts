@@ -559,13 +559,13 @@ find_func(){
 	if [ ${DEBUGLEVEL} -ge 2 ]; then
 		[ ${DEBUGLEVEL} -ge 2 ] && echo "NORMAL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
-			-type d -print | while read -r line; do
+			-type d -print 2>/dev/null | while read -r line; do
 			main ${line}
 		done
 	else
 		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
-			-type d -print | parallel main {}
+			-type d -print 2>/dev/null | parallel main {}
 	fi
 
 	if ${FILERESULTS}; then
