@@ -32,6 +32,8 @@ YESTERDAY="$(date -I -d -2days)"
 # logfile
 LOGFILE="/tmp/qa-scripts.log"
 
+mkdir -p ${GITINFO}
+
 #
 ## important settings
 # global variables
@@ -56,7 +58,6 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPOTREE="/tmp/repos/${REPO}/"
 	export HASHTREE="/media/qa/repohashs/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
-	mkdir -p ${GITINFO}
 	# testvars
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
 	#export REPOTREE="/tmp/repos/${REPO}/"
@@ -80,14 +81,14 @@ for repodir in ${REPOSITORIES[@]}; do
 		git -C ${REPOTREE} diff --name-only $(<${GITINFO}/${REPO}-head) HEAD \
 			| cut -d'/' -f1,2|sort -u|grep  -e '\([a-z0-9].*-[a-z0-9].*/\|virtual/\)' \
 			>> ${GITINFO}/${REPO}-catpak.log
-	#else
-	#	DIFFMODE=false
+	else
+		DIFFMODE=false
 	fi
 
 
 
 	# disable diffmode if repohashs doesn't exists (eg: new repo)
-	! [ -d ${HASHTREE} ] && DIFFMODE=false
+	#! [ -d ${HASHTREE} ] && DIFFMODE=false
 	# generate treehashes
 	echo "Processing script: hashtree" >> ${LOGFILE}
 	${SCRIPTDIR}/treehashgen.sh >>/dev/null 2>&1
