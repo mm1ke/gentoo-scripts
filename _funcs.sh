@@ -32,7 +32,7 @@ export FDL=4
 
 # check and set DEBUG
 if [ -z "${DEBUG}" ]; then
-	DEBUG=false
+	export DEBUG=false
 	export DEBUGLEVEL=0
 else
 	if [ -z "${DEBUGLEVEL}" ]; then
