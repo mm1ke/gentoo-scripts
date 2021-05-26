@@ -30,7 +30,7 @@
 # enabling debug output
 #export DEBUG=true
 #export DEBUGLEVEL=1
-#export DEBUGFILE=/tmp/repostats.log
+#export DEBUGFILE=/tmp/patchtest.log
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -97,7 +97,7 @@ main(){
 		[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: checking: ${patchfile}" | (debug_output)
 
 		for ebuild in ${fullpath}/*.ebuild; do
-			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: looking into: ${ebuild}" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild:  looking into: ${ebuild}" | (debug_output)
 
 			# get ebuild detail
 			local ebuild_full=$(basename ${ebuild%.*})
@@ -105,7 +105,7 @@ main(){
 			local ebuild_revision=$(echo ${ebuild_full/${package}}|cut -d'-' -f3)
 			local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
 
-			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: ebuild details: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  ebuild details: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot" | (debug_output)
 
 			local cn=()
 			# create custom names to check
@@ -156,7 +156,7 @@ main(){
 				[ -n "${my_hpn_ver}" ] && \
 					eval my_hpn_ver="$(echo ${my_hpn_ver:8})" >/dev/null 2>&1
 
-				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: Found special vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  Found special vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
 
 				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
 				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
@@ -212,8 +212,7 @@ main(){
 			# replace list with newpackages
 			local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
 
-			[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: Custom names: $(echo ${cn[@]}|tr ' ' ':')" | (debug_output)
-			#[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: Custom names normalized: ${searchpattern}" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  Custom names: $(echo ${cn[@]}|tr ' ' ':')" | (debug_output)
 
 			# check ebuild for the custom names
 			if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
@@ -221,7 +220,7 @@ main(){
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: FOUND: ${patchfile}" | (debug_output)
 			else
 				found=false
-				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: NOT FOUND: ${patchfile}" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild: NOT FOUND: ${patchfile}" | (debug_output)
 			fi
 
 			$found && break
@@ -234,85 +233,10 @@ main(){
 		fi
 	}
 
-	find_braces_candidates(){
-		local work_list=("${unused_patches[@]}")
-		local patch
-		local pat_found=()
-		local count
-
-		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "*DEBUG: find_braces_candidates" | (debug_output)
-
-		# expect patches in braces to look like
-		# 	packagename-{patch1,patch2}
-		# 	$PN-{patch1,patch2}
-		#   or
-		# 	packagename-version-{patch1,patch2}
-		# 	${P}-${PV}-{patch1,patch2}
-		#   or
-		# 	packagename-versoin-genname-{patch1,patch2}
-		#
-		# This means 1-3 parts of a filename before '-' should be
-		# found at least 2 times
-
-		# first generate a list of files which fits the rule
-		for patch in "${work_list[@]}"; do
-			local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
-			for n in 3 2 1; do
-				if [ ${deli} -ge ${n} ]; then
-					pat_found+=("$(echo $patch|cut -d '-' -f1-${deli})")
-					[ ${DEBUGLEVEL} -ge 2 ] && echo "***DEBUG: ${patch} with ${deli} \"-\" in filename: saving as $(echo $patch|cut -d '-' -f1-${deli})" | (debug_output)
-				fi
-			done
-		done
-		# create a list of duplicates
-		dup_list=()
-		for patch in "${pat_found[@]}"; do
-			# search for every element in the array
-			# if there are duplicate elements
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "**DEBUG: check for pattern ${patch}" | (debug_output)
-
-			count=$(echo ${pat_found[@]}|grep -P -o "${patch}(?=\s|$)"|wc -w)
-			if [ $count -gt 1 ]; then
-				dup_list+=($patch)
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "***DEBUG: ${patch} has duplicates" | (debug_output)
-			fi
-		done
-		# remove duplicates from list
-		mapfile -t dup_list < <(printf '%s\n' "${dup_list[@]}"|sort -u)
-	}
-
-	braces_patches() {
-		local patch=$1
-		# add matches to the patch_list
-		local matches=()
-		filess=()
-		braces_patch_list=()
-
-		for ffile in $(ls ${fullpath}/files/ |grep $patch); do
-			filess+=($ffile)
-			ffile="${ffile%.patch}"
-			matches+=("${ffile##*-}")
-		done
-
-		# set the maximum permutations number (5-6 works)
-		if [ ${#matches[@]} -eq 1 ]; then
-			braces_patch_list+=("$(echo $patch-${matches[0]}.patch)")
-		else
-			if [ ${#matches[@]} -le 5 ]; then
-				matches="${matches[@]}"
-				local perm_list=$(get_perm "$matches")
-				for search_patch in $perm_list; do
-					braces_patch_list+=("$(echo $patch-{$search_patch}.patch)")
-				done
-			fi
-		fi
-	}
-
 	# white list checking
 	white_check() {
 		local pfile=${1}
-		[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: checking ${pfile} in ${WFILE}" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 3 ] && echo " 0-whitelist: checking ${pfile} in ${WFILE}" | (debug_output)
 
 		if [ -e ${WFILE} ]; then
 			source ${WFILE}
@@ -322,25 +246,30 @@ main(){
 		fi
 
 		if $(echo ${white_list[@]} | grep -q "${category}/${package};${pfile}"); then
-			for white in ${white_list[@]}; do
-				local cat_pak="$(echo ${white}|cut -d';' -f1)"
-				local white_file="$(echo ${white}|cut -d';' -f2)"
-				local white_ebuild="$(echo ${white}|cut -d';' -f3)"
-				if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
-					if [ "${white_ebuild}" = "*" ]; then
-						[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in all ebuilds" | (debug_output)
-						return 0
-					else
-						for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
-							if [ -e "${REPOTREE}/${full_package}/${wbuild}" ]; then
-								[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in ${wbuild}" | (debug_output)
-								return 0
-							fi
-						done
+			# detailed output only if debugging is enabled
+			if [ ${DEBUGLEVEL} -ge 2 ]; then
+				for white in ${white_list[@]}; do
+					local cat_pak="$(echo ${white}|cut -d';' -f1)"
+					local white_file="$(echo ${white}|cut -d';' -f2)"
+					local white_ebuild="$(echo ${white}|cut -d';' -f3)"
+					if [ "${category}/${package};${pfile}" = "${cat_pak};${white_file}" ]; then
+						if [ "${white_ebuild}" = "*" ]; then
+							[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in all ebuilds" | (debug_output)
+							return 0
+						else
+							for wbuild in $(echo ${white_ebuild} | tr ':' ' '); do
+								if [ -e "${REPOTREE}/${full_package}/${wbuild}" ]; then
+									[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in ${wbuild}" | (debug_output)
+									return 0
+								fi
+							done
+						fi
+						[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: error in whitecheck with ${pfile}" | (debug_output)
+						return 1
 					fi
-					return 1
-				fi
-			done
+				done
+			fi
+			return 0
 		else
 			return 1
 		fi
@@ -349,7 +278,7 @@ main(){
 	eclass_prechecks() {
 		local pfile="${1}"
 
-		if [ "${file}" = "rc-addon.sh" ]; then
+		if [ "${pfile}" = "rc-addon.sh" ]; then
 			if $(grep -q vdr-plugin-2 ${fullpath}/*.ebuild); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is rc-addon.sh and used in vdr-plugin-2.eclass" | (debug_output)
 				return 0
@@ -357,7 +286,7 @@ main(){
 				return 1
 			fi
 		# check for vdr-plugin-2 eclass which installs confd files if exists
-		elif [ "${file}" = "confd" ]; then
+		elif [ "${pfile}" = "confd" ]; then
 			if $(grep -q vdr-plugin-2 ${fullpath}/*.ebuild); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is confd and used in vdr-plugin-2.eclass" | (debug_output)
 				return 0
@@ -365,7 +294,7 @@ main(){
 				return 1
 			fi
 		# check for apache-module eclass which installs conf files if a APACHE2_MOD_CONF is set
-		elif [ "${file##*.}" = "conf" ]; then
+		elif [ "${pfile##*.}" = "conf" ]; then
 			if $(grep -q apache-module ${fullpath}/*.ebuild) && \
 				$(grep -q APACHE2_MOD_CONF ${fullpath}/*.ebuild); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is conf and used in apache-module.eclass" | (debug_output)
@@ -374,7 +303,7 @@ main(){
 				return 1
 			fi
 		# check for elisp eclass which install el files if a SITEFILE is set
-		elif [ "${file##*.}" = "el" ]; then
+		elif [ "${pfile##*.}" = "el" ]; then
 			if $(grep -q elisp ${fullpath}/*.ebuild) && \
 				$(grep -q SITEFILE ${fullpath}/*.ebuild); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is el and used in elisp.eclass" | (debug_output)
@@ -383,7 +312,7 @@ main(){
 				return 1
 			fi
 		# ignoring README.gentoo files
-		elif $(echo ${file}|grep -i README.gentoo >/dev/null); then
+		elif $(echo ${pfile}|grep -i README.gentoo >/dev/null); then
 			if $(grep -q readme.gentoo ${fullpath}/*.ebuild); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: file is readme.gentoo and used in readme.gentoo-r1.eclass" | (debug_output)
 				return 0
@@ -391,7 +320,7 @@ main(){
 				return 1
 			fi
 		else
-			[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-prechecks: ${pfile} is not used in inherited eclasses!" | (debug_output)
+			[ ${DEBUGLEVEL} -ge 3 ] && echo " 0-prechecks: ${pfile} is not used in inherited eclasses!" | (debug_output)
 			return 1
 		fi
 	}
@@ -410,6 +339,78 @@ main(){
 		fi
 	}
 
+	# expect patches in braces to look like
+	# 	packagename-{patch1,patch2}
+	# 	$PN-{patch1,patch2}
+	#   or
+	# 	packagename-version-{patch1,patch2}
+	# 	${P}-${PV}-{patch1,patch2}
+	#   or
+	# 	packagename-versoin-genname-{patch1,patch2}
+	#
+	# This means 1-3 parts of a filename before '-' should be
+	# found at least 2 times
+	find_patches_in_braces() {
+		local work_list=( $(echo ${1}|tr ':' ' ') )
+
+		[ ${DEBUGLEVEL} -ge 2 ] && echo " 2-brace_patches: checking ${work_list[@]}" | (debug_output)
+
+		local common_pattern=( )
+		local patches_to_remove=( )
+		local patch
+		for patch in "${work_list[@]}"; do
+			# how often contains the name the seperator '-'
+			local deli=$(echo ${patch%.patch}|grep -o '-'|wc -w)
+			# try find duplicates, starting with the highest count of $deli
+			for n in $(echo $(seq 1 ${deli})|rev); do
+				if [ $(echo ${work_list[@]}|tr ' ' '\n'|grep $(echo ${patch}|cut -d'-' -f1-${n})|wc -l) -gt 1 ]; then
+					[ ${DEBUGLEVEL} -ge 3 ] && echo " 2-brace_patches: pattern candidate: $(echo ${patch}|cut -d'-' -f1-${n})" | (debug_output)
+					common_pattern+=("$(echo ${patch}|cut -d'-' -f1-${n})")
+					break
+				fi
+			done
+		done
+		# remove duplicates from array
+		mapfile -t common_pattern < <(printf '%s\n' ${common_pattern[@]}|sort -u)
+
+		if [ -n "${common_pattern}" ]; then
+			[ ${DEBUGLEVEL} -ge 3 ] && echo " 2-brace_patches: found patterns ${common_pattern[@]}" | (debug_output)
+			local x p
+			for x in ${common_pattern[@]}; do
+				local braces_patches=( )
+				[ ${DEBUGLEVEL} -ge 2 ] && echo " 2-brace_patches: checking pattern ${x}" | (debug_output)
+
+				# find duplicates files by pattern $x and strip everything away
+				local matching=( $(find ${fullpath}/files/ -type f -name "${x}*" -printf '%f\n'|sed -e 's/.patch//' -e "s/${x}-//") )
+
+				# do not make permutations with greater then 5 matchings
+				if [ ${#matching[@]} -le 5 ]; then
+					local permutations=$(get_perm "$(echo ${matching[@]})")
+					[ ${DEBUGLEVEL} -ge 3 ] && echo " 2-brace_patches: create permutations with $(echo ${matching[@]})" | (debug_output)
+					for p in ${permutations}; do
+						braces_patches+=("$(echo ${x}-{${p}}.patch)")
+					done
+
+					[ ${DEBUGLEVEL} -ge 2 ] && echo " 2-brace_patches: found ${braces_patches[@]}" | (debug_output)
+					local t u
+					for t in ${braces_patches[@]}; do
+						if $(check_ebuild ${t}); then
+							for u in ${matching[@]}; do
+								patches_to_remove+=( "${x}-${u}.patch" )
+							done
+							break
+						fi
+					done
+				else
+					[ ${DEBUGLEVEL} -ge 3 ] && echo " 2-brace_patches: to much candidates, skipping" | (debug_output)
+				fi
+			done
+			echo "${patches_to_remove[@]}"
+		else
+			echo ""
+		fi
+	}
+
 	local full_package=${1}
 	local category="$(echo ${full_package}|cut -d'/' -f1)"
 	package="$(echo ${full_package}|cut -d'/' -f2)"
@@ -419,138 +420,147 @@ main(){
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking: ${category}/${package}" | (debug_output)
 	# check if the patches folder exist
 	if [ -e ${fullpath}/files ]; then
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "found files dir in: ${category}/${package}/files" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 3 ] && echo "found files dir in: ${category}/${package}/files" | (debug_output)
 
 		# before checking, we have to generate a list of patches which we have to check
 		patch_list=()
 
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "prechecks: whitelist and special eclasses" | (debug_output)
+		# prechecks and patchlist generation
+		#  every file found will be checked against the whitelist (white_check) and
+		#  checked for the usage of certain eclasses (which are know to use certain
+		#  files from the FILESDIR directory directly.
+		[ ${DEBUGLEVEL} -ge 3 ] && echo "prechecks: whitelist and special eclasses" | (debug_output)
 		for file in ${fullpath}/files/*; do
 			# ignore directories
 			if ! [ -d ${file} ]; then
 				file="${file##*/}"
 				if ! $(white_check ${file}); then
-					if ! $(eclass_prechecks ${file}); then
+					# elcass-prechecks
+					if $(echo ${file##*/}|grep -q -E "\.el|conf|rc-addon.sh|README*"); then
+						if ! $(eclass_prechecks ${file}); then
+							patch_list+=("${file}")
+						fi
+					else
 						patch_list+=("${file}")
 					fi
 				fi
 			fi
 		done
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "prechecks done: patchlist: $(echo ${patch_list[@]}|tr ' ' ':')" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "prechecks done: patchlist: ${patch_list[@]}" | (debug_output)
 
-		# first check
-		#  every patchfile gets passed to check_ebuild, which replaces
-		#  names and version with their corresponding ebuild name ($PN, PV, ..)
-		#  and grep's the ebuild with them.
-		unused_patches=()
+
+		# only continue if we found actually files to check
 		if [ -n "${patch_list}" ]; then
+
+			# first check
+			#  every patchfile from $patch_list gets passed to check_ebuild, which
+			#  replaces names and version with their corresponding ebuild name
+			#  ($PN, PV, ..) and grep's the ebuild with them.
+			[ ${DEBUGLEVEL} -ge 3 ] && echo "starting basic check for: ${patch_list[@]}" | (debug_output)
+			unused_patches=()
 			for patchfile in "${patch_list[@]}"; do
 				found=$(check_ebuild "${patchfile}")
 				if ! $found; then
 					unused_patches+=("${patchfile}")
 				fi
 			done
-		fi
+			[ ${DEBUGLEVEL} -ge 2 ] && echo "basic check done, unused patches are: ${unused_patches[@]}" | (debug_output)
 
-		# second check
-		# find patches in braces (works only with *.patch files)
-		# short description:
-		#  find_braces_candidates:
-		#   this function takes a list of patch file, and looks if the names
-		#   look similar (except for the last part: patch-1, patch-2, ...)
-		#   If yes it returns back that part of the filename which is the same.
+			# second check
+			# find patches in braces (works only with *.patch files)
+			# short description:
+			#  find_braces_candidates:
+			#   this function takes a list of patch file, and looks if the names
+			#   look similar (except for the last part: patch-1, patch-2, ...)
+			#   If yes it returns back that part of the filename which is the same.
 
-		#  braces_patches:
-		#   this function takes the filename which is the same and add the different
-		#   ending in braces (like patch-{1,2,3}). In order to get other combinations
-		#   it uses a python script to generate permutations.
-		#   Also generates a list of filenames with the correct names, in order to remove the
-		#   patches from the list if found.
+			#  braces_patches:
+			#   this function takes the filename which is the same and add the different
+			#   ending in braces (like patch-{1,2,3}). In order to get other combinations
+			#   it uses a python script to generate permutations.
+			#   Also generates a list of filenames with the correct names, in order to remove the
+			#   patches from the list if found.
 
-		#  The filename list which was generated by the braces_patches function gets
-		#  checked against the ebuilds via check_ebuild
-		if [ -n ${unused_patches} ]; then
-			find_braces_candidates
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: duplist: ${dup_list[@]}" | (debug_output)
-			if [ -n "${dup_list}" ]; then
-				for patch in "${dup_list[@]}"; do
-					braces_patches ${patch}
-					[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: brace patches list: ${braces_patch_list[@]}" | (debug_output)
-					for patchfile in "${braces_patch_list[@]}"; do
-						found=$(check_ebuild "${patchfile}")
-						if $found; then
-							[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: found braces: ${patchfile}" | (debug_output)
-							[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: remove from list: ${filess[@]}" | (debug_output)
-							for toremove in "${filess[@]}"; do
-								for target in "${!unused_patches[@]}"; do
-									if [ "${unused_patches[target]}" = "${toremove}" ]; then
-										unset 'unused_patches[target]'
-									fi
-								done
-							done
-							break
+			#  The filename list which was generated by the braces_patches function gets
+			#  checked against the ebuilds via check_ebuild
+			#
+			# examples: app-editors/zile, app-office/scribus, app-office/libreoffice,
+			# dev-cpp/antlr-cpp, dev-qt/qtcore, games-arcade/supertux
+			[ ${DEBUGLEVEL} -ge 3 ] && echo "starting second check for: ${unused_patches[@]}" | (debug_output)
+			if [ ${#unused_patches[@]} -ge 1 ]; then
+				for patchfile in $(find_patches_in_braces "$(echo ${unused_patches[@]}|tr ' ' ':')"); do
+					[ ${DEBUGLEVEL} -ge 2 ] && echo "patch to remove: ${patchfile}" | (debug_output)
+					for target in "${!unused_patches[@]}"; do
+						if [ "${unused_patches[target]}" = "${patchfile}" ]; then
+							unset 'unused_patches[target]'
 						fi
 					done
 				done
 			fi
-		fi
+			[ ${DEBUGLEVEL} -ge 2 ] && echo "NEW finish second check, remaining patches: ${unused_patches[@]}" | (debug_output)
 
-		# third check
-		# find pachtes which are called with an asterix (*)
-		if [ -n ${unused_patches} ]; then
-			[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-			[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: Nonzero unused patches, checking for asterixes" | (debug_output)
-			for aster_ebuild in ${fullpath}/*.ebuild; do
-				for a in $(grep -E 'FILESDIR.*\*' ${aster_ebuild} ); do
-					[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: found asterixes in ebuild" | (debug_output)
-					if $(echo ${a}|grep FILESDIR >/dev/null); then
-						if ! [ $(echo ${a}|grep -o '[/]'|wc -l) -gt 1 ]; then
-							snip="$(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')"
+			# third check
+			# find pachtes which are called with an asterix (*)
+			# net-misc/icaclient, app-admin/consul
+			if [ -n "${unused_patches}" ]; then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
+				[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: Nonzero unused patches, checking for asterixes" | (debug_output)
+				for aster_ebuild in ${fullpath}/*.ebuild; do
+					for a in $(grep -E 'FILESDIR.*\*' ${aster_ebuild} ); do
+						[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: found asterixes in ebuild" | (debug_output)
+						if $(echo ${a}|grep FILESDIR >/dev/null); then
+							if ! [ $(echo ${a}|grep -o '[/]'|wc -l) -gt 1 ]; then
+								snip="$(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')"
 
-							local pn='${PN}'
-							local p='${P}'
-							local pv='${PV}'
-							local ebuild_full=$(basename ${aster_ebuild%.*})
-							local ebuild_version=$(echo ${ebuild_full/${package}}|cut -d'-' -f2)
+								local pn='${PN}'
+								local p='${P}'
+								local pv='${PV}'
+								local ebuild_full=$(basename ${aster_ebuild%.*})
+								local ebuild_version=$(echo ${ebuild_full/${package}}|cut -d'-' -f2)
 
-							snip="${snip/${p}/${package}-${ebuild_version}}"
-							snip="${snip/${pv}/${ebuild_version}}"
-							snip="${snip/${pn}/${package}}"
+								snip="${snip/${p}/${package}-${ebuild_version}}"
+								snip="${snip/${pv}/${ebuild_version}}"
+								snip="${snip/${pn}/${package}}"
 
-							b="ls ${fullpath}/files/${snip}"
-							asterix_patches=$(eval ${b} 2> /dev/null)
-							[ ${DEBUGLEVEL} -ge 2 ] && echo "found following snipped: $(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')" | (debug_output)
-							[ ${DEBUGLEVEL} -ge 2 ] && echo "matching following files: ${asterix_patches}" | (debug_output)
-							for x in ${asterix_patches}; do
-								if $(echo ${unused_patches[@]} | grep $(basename ${x}) >/dev/null); then
-									asterix_remove=$(basename ${x})
-									[ ${DEBUGLEVEL} -ge 2 ] && echo "removing from list: ${asterix_remove}" | (debug_output)
-									for target in "${!unused_patches[@]}"; do
-										if [ "${unused_patches[target]}" = "${asterix_remove}" ]; then
-											unset 'unused_patches[target]'
-										fi
-									done
-								fi
-							done
-							[ "${#unused_patches[@]}" -eq 0 ] && break 2
+								b="ls ${fullpath}/files/${snip}"
+								asterix_patches=$(eval ${b} 2> /dev/null)
+								[ ${DEBUGLEVEL} -ge 2 ] && echo "found following snipped: $(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')" | (debug_output)
+								[ ${DEBUGLEVEL} -ge 2 ] && echo "matching following files: ${asterix_patches}" | (debug_output)
+								for x in ${asterix_patches}; do
+									if $(echo ${unused_patches[@]} | grep $(basename ${x}) >/dev/null); then
+										asterix_remove=$(basename ${x})
+										[ ${DEBUGLEVEL} -ge 2 ] && echo "removing from list: ${asterix_remove}" | (debug_output)
+										for target in "${!unused_patches[@]}"; do
+											if [ "${unused_patches[target]}" = "${asterix_remove}" ]; then
+												unset 'unused_patches[target]'
+											fi
+										done
+									fi
+								done
+								[ "${#unused_patches[@]}" -eq 0 ] && break 2
+							fi
 						fi
-					fi
+					done
 				done
-			done
+			fi
+
+			[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
+
+			array_names
+			if [ ${#unused_patches[@]} -gt 0 ]; then
+				[ ${DEBUGLEVEL} -ge 2 ] && echo "found unused patches: ${unused_patches[@]}" | (debug_output)
+				output 0
+			else
+				[ ${DEBUGLEVEL} -ge 3 ] && echo "found zero unused patches" | (debug_output)
+			fi
+
+			[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
+			[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
+		else
+			[ ${DEBUGLEVEL} -ge 3 ] && echo "skipping: ${category}/${package} has files directory, but no there are no files to check" | (debug_output)
 		fi
-
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: unused patches: ${unused_patches[@]}" | (debug_output)
-		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-
-		array_names
-		if [ ${#unused_patches[@]} -gt 0 ]; then
-			output 0
-		fi
-
-		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-		[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
 	else
-		[ ${DEBUGLEVEL} -ge 2 ] && echo "skipping: ${category}/${package} has no files directory" | (debug_output)
+		[ ${DEBUGLEVEL} -ge 3 ] && echo "skipping: ${category}/${package} has no files directory" | (debug_output)
 	fi
 }
 
@@ -579,8 +589,9 @@ find_func(){
 }
 
 [ ${DEBUGLEVEL} -ge 1 ] && echo "*** starting patchtest" | (debug_output)
-array_names
+
 cd ${REPOTREE}
+array_names
 export -f main array_names output_format
 export WORKDIR WFILE
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
