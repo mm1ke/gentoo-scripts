@@ -85,14 +85,24 @@ EOM
 
 main(){
 	check_ebuild(){
+
 		local patchfile=$1
+
 		local found=false
+
 		local pn='${PN}'
 		local p='${P}'
 		local pf='${PF}'
 		local pv='${PV}'
 		local pvr='${PVR}'
 		local slot='${SLOT}'
+		local var_my_pn='${MY_PN}'
+		local var_my_p='${MY_P}'
+		local var_my_pv='${MY_PV}'
+		local var_mod_ver='${MODULE_VERSION}'
+		local var_dist_ver='${DIST_VERSION}'
+		local var_x509_ver='${X509_VER}'
+		local var_hpn_ver='${HPN_VER}'
 
 		[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: checking: ${patchfile}" | (debug_output)
 
@@ -104,91 +114,20 @@ main(){
 			local ebuild_version=$(echo ${ebuild_full/${package}}|cut -d'-' -f2)
 			local ebuild_revision=$(echo ${ebuild_full/${package}}|cut -d'-' -f3)
 			local ebuild_slot="$(grep ^SLOT $ebuild|cut -d'"' -f2)"
+			local package_name_ver="${package}-${ebuild_version}"
 
 			[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  ebuild details: ver: $ebuild_version rever: $ebuild_revision slot: $ebuild_slot" | (debug_output)
 
-			local cn=()
+			local cn_name_vers="${patchfile/${package}/${pn}}"
+			local cn=( )
+
 			# create custom names to check
 			cn+=("${patchfile}")
 			cn+=("${patchfile/${package}/${pn}}")
 			cn+=("${patchfile/${package}-${ebuild_version}/${p}}")
 			cn+=("${patchfile/${ebuild_version}/${pv}}")
 
-			local cn_name_vers="${patchfile/${package}/${pn}}"
 			cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
-
-			# special naming
-			if $(grep -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=|^X509_VER|^HPN_VER" ${ebuild} >/dev/null); then
-				# set variables
-				local var_my_pn='${MY_PN}'
-				local var_my_p='${MY_P}'
-				local var_my_pv='${MY_PV}'
-				local var_mod_ver='${MODULE_VERSION}'
-				local var_dist_ver='${DIST_VERSION}'
-				local var_x509_ver='${X509_VER}'
-				local var_hpn_ver='${HPN_VER}'
-
-				local package_name_ver="${package}-${ebuild_version}"
-
-				# get the variables from the ebuilds
-				my_pn_name="$(grep ^MY_PN\= ${ebuild})"
-				my_p_name="$(grep ^MY_P\= ${ebuild})"
-				my_pv_name="$(grep ^MY_PV\= ${ebuild})"
-				my_mod_ver="$(grep ^MODULE_VERSION\= ${ebuild})"
-				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild})"
-				my_x509_ver="$(grep ^X509_VER\= ${ebuild}|cut -d' ' -f1)"
-				my_hpn_ver="$(grep ^HPN_VER\= ${ebuild})"
-
-				# this needs some better explanaition
-				[ -n "${my_pn_name}" ] && \
-					eval my_pn_name="$(echo ${my_pn_name:6}|sed "s|PN|package|g")" >/dev/null 2>&1
-				[ -n "${my_pv_name}" ] && \
-					eval my_pv_name="$(echo ${my_pv_name:6}|sed "s|PV|ebuild_version|g")" >/dev/null 2>&1
-				[ -n "${my_p_name}" ] && \
-					eval my_p_name="$(echo ${my_p_name:5}|sed "s|P|package_name_ver|g")" >/dev/null 2>&1
-
-				[ -n "${my_mod_ver}" ] && \
-					eval my_mod_ver="$(echo ${my_mod_ver:15})" >/dev/null 2>&1
-				[ -n "${my_dist_ver}" ] && \
-					eval my_dist_ver="$(echo ${my_dist_ver:13})" >/dev/null 2>&1
-				[ -n "${my_x509_ver}" ] && \
-					eval my_x509_ver="$(echo ${my_x509_ver:9})" >/dev/null 2>&1
-				[ -n "${my_hpn_ver}" ] && \
-					eval my_hpn_ver="$(echo ${my_hpn_ver:8})" >/dev/null 2>&1
-
-				[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  Found special vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
-
-				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
-				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
-				[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
-
-				if [ -n "${my_mod_ver}" ]; then
-					cn+=("${patchfile/${my_mod_ver}/${var_mod_ver}}")
-					n1="${patchfile/${my_mod_ver}/${var_mod_ver}}"
-					cn+=("${n1/${package}/${pn}}")
-				fi
-
-				if [ -n "${my_dist_ver}" ]; then
-					cn+=("${patchfile/${my_dist_ver}/${var_dist_ver}}")
-					n2="${patchfile/${my_dist_ver}/${var_dist_ver}}"
-					cn+=("${n2/${package}/${pn}}")
-				fi
-
-				if [ -n "${my_x509_ver}" ]; then
-					cn+=("${patchfile/${my_x509_ver}/${var_x509_ver}}")
-					n2="${patchfile/${my_x509_ver}/${var_x509_ver}}"
-					cn+=("${n2/${package}/${pn}}")
-					cn+=("${n2/${package}-${ebuild_version}/${p}}")
-				fi
-
-				if [ -n "${my_hpn_ver}" ]; then
-					cn+=("${patchfile/${my_hpn_ver}/${var_hpn_ver}}")
-					n2="${patchfile/${my_hpn_ver}/${var_hpn_ver}}"
-					cn+=("${n2/${package}/${pn}}")
-					cn+=("${n2/${package}-${ebuild_version}/${p}}")
-				fi
-			fi
-
 			# add special naming if there is a revision
 			if [ -n "${ebuild_revision}" ]; then
 				cn+=("${patchfile/${package}-${ebuild_version}-${ebuild_revision}/${pf}}")
@@ -197,40 +136,81 @@ main(){
 			# looks for names with slotes, if slot is not 0
 			if [ -n "${ebuild_slot}" ] && ! [ "${ebuild_slot}" = "0" ]; then
 				cn+=("${patchfile/${ebuild_slot}/${slot}}")
-				name_slot="${patchfile/${package}/${pn}}"
-				name_slot="${name_slot/${ebuild_slot}/${slot}}"
-				cn+=("${name_slot}")
+				cn+=("${cn_name_vers/${ebuild_slot}/${slot}}")
 			fi
-			# find vmware-modules patches
-			#if [ "${package}" = "vmware-modules" ]; then
-			#	local pv_major='${PV_MAJOR}'
-			#	cn+=("${patchfile/${ebuild_version%%.*}/${pv_major}}")
-			#fi
+
+			# special naming
+			if $(grep -q -E "^MY_PN=|^MY_P=|^MY_PV=|^MODULE_VERSION=|^DIST_VERSION=|^X509_VER=|^HPN_VER=" ${ebuild}); then
+
+				# get the variables from the ebuilds
+
+				# MY_PN and other such variables often are constructed with the usage of
+				# global variables like $PN and $PV.
+				# With using eval these variables are replaces by it's real content
+				my_pn_name="$(grep ^MY_PN\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e "s|PN|package|g" -e 's|"||g')"
+				[ -n "${my_pn_name}" ] && eval my_pn_name="$(echo ${my_pn_name})" >/dev/null 2>&1
+				my_pv_name="$(grep ^MY_PV\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e "s|PV|ebuild_version|g" -e 's|"||g')"
+				[ -n "${my_pv_name}" ] && eval my_pv_name="$(echo ${my_pv_name})" >/dev/null 2>&1
+				my_p_name="$(grep ^MY_P\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e "s|P|package_name_ver|g" -e 's|"||g')"
+				[ -n "${my_p_name}" ] && eval my_p_name="$(echo ${my_p_name})" >/dev/null 2>&1
+
+				my_mod_ver="$(grep ^MODULE_VERSION\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e 's|"||g')"
+				my_dist_ver="$(grep ^DIST_VERSION\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e 's|"||g')"
+				my_x509_ver="$(grep ^X509_VER\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e 's|"||g')"
+				my_hpn_ver="$(grep ^HPN_VER\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e 's|"||g')"
+
+
+				[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  Found special vars: $my_pv_name, $my_pn_name, $my_p_name, $my_mod_ver, $my_dist_ver, $my_x509_ver, $my_hpn_ver" | (debug_output)
+
+				[ -n "${my_pn_name}" ] && cn+=("${patchfile/${my_pn_name}/${var_my_pn}}")
+				[ -n "${my_pv_name}" ] && cn+=("${patchfile/${my_pv_name}/${var_my_pv}}")
+				[ -n "${my_p_name}" ] && cn+=("${patchfile/${my_p_name}/${var_my_p}}")
+
+				local tmpvar=""
+
+				if [ -n "${my_mod_ver}" ]; then
+					cn+=("${patchfile/${my_mod_ver}/${var_mod_ver}}")
+					tmpvar="${patchfile/${my_mod_ver}/${var_mod_ver}}"
+					cn+=("${tmpvar/${package}/${pn}}")
+				fi
+
+				if [ -n "${my_dist_ver}" ]; then
+					cn+=("${patchfile/${my_dist_ver}/${var_dist_ver}}")
+					tmpvar="${patchfile/${my_dist_ver}/${var_dist_ver}}"
+					cn+=("${tmpvar/${package}/${pn}}")
+				fi
+
+				if [ -n "${my_x509_ver}" ]; then
+					cn+=("${patchfile/${my_x509_ver}/${var_x509_ver}}")
+					tmpvar="${patchfile/${my_x509_ver}/${var_x509_ver}}"
+					cn+=("${tmpvar/${package}/${pn}}")
+					cn+=("${tmpvar/${package}-${ebuild_version}/${p}}")
+				fi
+
+				if [ -n "${my_hpn_ver}" ]; then
+					cn+=("${patchfile/${my_hpn_ver}/${var_hpn_ver}}")
+					tmpvar="${patchfile/${my_hpn_ver}/${var_hpn_ver}}"
+					cn+=("${tmpvar/${package}/${pn}}")
+					cn+=("${tmpvar/${package}-${ebuild_version}/${p}}")
+				fi
+			fi
 
 			# remove duplicates
 			mapfile -t cn < <(printf '%s\n' "${cn[@]}"|sort -u)
 			# replace list with newpackages
 			local searchpattern="$(echo ${cn[@]}|tr ' ' '\n')"
-
 			[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild:  Custom names: $(echo ${cn[@]}|tr ' ' ':')" | (debug_output)
 
 			# check ebuild for the custom names
-			if $(sed 's|"||g' ${ebuild} | grep -F "${searchpattern}" >/dev/null); then
-				found=true
+			if $(sed 's|"||g' ${ebuild} | grep -q -F "${searchpattern}"); then
 				[ ${DEBUGLEVEL} -ge 2 ] && echo " 1-check_ebuild: FOUND: ${patchfile}" | (debug_output)
+				return 0
 			else
-				found=false
 				[ ${DEBUGLEVEL} -ge 3 ] && echo " 1-check_ebuild: NOT FOUND: ${patchfile}" | (debug_output)
 			fi
-
-			$found && break
 		done
 
-		if $found; then
-			echo true
-		else
-			echo false
-		fi
+		return 1
 	}
 
 	# white list checking
@@ -459,8 +439,7 @@ main(){
 			[ ${DEBUGLEVEL} -ge 3 ] && echo "starting basic check for: ${patch_list[@]}" | (debug_output)
 			unused_patches=()
 			for patchfile in "${patch_list[@]}"; do
-				found=$(check_ebuild "${patchfile}")
-				if ! $found; then
+				if ! $(check_ebuild "${patchfile}"); then
 					unused_patches+=("${patchfile}")
 				fi
 			done
@@ -503,12 +482,11 @@ main(){
 			# find pachtes which are called with an asterix (*)
 			# net-misc/icaclient, app-admin/consul
 			if [ -n "${unused_patches}" ]; then
-				[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
-				[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: Nonzero unused patches, checking for asterixes" | (debug_output)
+				[ ${DEBUGLEVEL} -ge 3 ] && echo "starting third check for: ${unused_patches[@]}" | (debug_output)
 				for aster_ebuild in ${fullpath}/*.ebuild; do
 					for a in $(grep -E 'FILESDIR.*\*' ${aster_ebuild} ); do
-						[ ${DEBUGLEVEL} -ge 2 ] && echo "DEBUG: found asterixes in ebuild" | (debug_output)
-						if $(echo ${a}|grep FILESDIR >/dev/null); then
+						[ ${DEBUGLEVEL} -ge 2 ] && echo " 3-asterixes: found asterixes in ebuild" | (debug_output)
+						if $(echo ${a}|grep -q FILESDIR); then
 							if ! [ $(echo ${a}|grep -o '[/]'|wc -l) -gt 1 ]; then
 								snip="$(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')"
 
@@ -524,12 +502,12 @@ main(){
 
 								b="ls ${fullpath}/files/${snip}"
 								asterix_patches=$(eval ${b} 2> /dev/null)
-								[ ${DEBUGLEVEL} -ge 2 ] && echo "found following snipped: $(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')" | (debug_output)
-								[ ${DEBUGLEVEL} -ge 2 ] && echo "matching following files: ${asterix_patches}" | (debug_output)
+								[ ${DEBUGLEVEL} -ge 3 ] && echo " 3-asterixes: found following snipped: $(echo ${a}|cut -d'/' -f2|grep \*|tr -d '"')" | (debug_output)
+								[ ${DEBUGLEVEL} -ge 2 ] && echo " 3-asterixes: matching following files: ${asterix_patches}" | (debug_output)
 								for x in ${asterix_patches}; do
 									if $(echo ${unused_patches[@]} | grep $(basename ${x}) >/dev/null); then
 										asterix_remove=$(basename ${x})
-										[ ${DEBUGLEVEL} -ge 2 ] && echo "removing from list: ${asterix_remove}" | (debug_output)
+										[ ${DEBUGLEVEL} -ge 2 ] && echo " 3-asterixes: removing from list: ${asterix_remove}" | (debug_output)
 										for target in "${!unused_patches[@]}"; do
 											if [ "${unused_patches[target]}" = "${asterix_remove}" ]; then
 												unset 'unused_patches[target]'
@@ -543,8 +521,6 @@ main(){
 					done
 				done
 			fi
-
-			[ ${DEBUGLEVEL} -ge 2 ] && echo | (debug_output)
 
 			array_names
 			if [ ${#unused_patches[@]} -gt 0 ]; then
