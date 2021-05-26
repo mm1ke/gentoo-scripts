@@ -35,9 +35,13 @@ if [ -z "${DEBUG}" ]; then
 	export DEBUG=false
 	export DEBUGLEVEL=0
 else
-	if [ -z "${DEBUGLEVEL}" ]; then
-		# set debuglevel to 1 if nothing is set
-		export DEBUGLEVEL=1
+	if ${DEBUG}; then
+		if [ -z "${DEBUGLEVEL}" ]; then
+			# set debuglevel to 1 if nothing is set
+			export DEBUGLEVEL=1
+		fi
+	else
+		export DEBUGLEVEL=0
 	fi
 fi
 [ -z "${DRYRUN}" ] && DRYRUN=false
