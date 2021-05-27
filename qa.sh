@@ -20,8 +20,8 @@ DBWRITE=true
 # create website data
 SITEGEN=true
 # create git commit
-GITCOMMIT=true
-GITDIR="/media/qa/git/"
+#GITCOMMIT=true
+#GITDIR="/media/qa/git/"
 # remove previous log file
 CLEANLOG=true
 # set directory were the scripts are
@@ -124,19 +124,19 @@ if ${SITEGEN}; then
 fi
 
 echo -e "\nFinish generating HTML output\n" >>${LOGFILE}
-if ${GITCOMMIT}; then
-	echo -e "\nCreating git commit:\n" >>${LOGFILE}
-	# first remove old results
-	[ -n "${GITDIR}" ] && rm -rf /${GITDIR}/*
-	cd /${SITEDIR}/results/
-	## copy resutls to the git dir
-	find -mindepth 4 -maxdepth 4 -name full*.txt -exec cp --parent {} /${GITDIR}/ \;
-	## create git commit
-	cd /${GITDIR}/
-	git add -A . >/dev/null 2>&1
-	git commit -m "automated update @ $(date +%x%t%T)" >/dev/null 2>&1
-	git push
-fi
+#if ${GITCOMMIT}; then
+#	echo -e "\nCreating git commit:\n" >>${LOGFILE}
+#	# first remove old results
+#	[ -n "${GITDIR}" ] && rm -rf /${GITDIR}/*
+#	cd /${SITEDIR}/results/
+#	## copy resutls to the git dir
+#	find -mindepth 4 -maxdepth 4 -name full*.txt -exec cp --parent {} /${GITDIR}/ \;
+#	## create git commit
+#	cd /${GITDIR}/
+#	git add -A . >/dev/null 2>&1
+#	git commit -m "automated update @ $(date +%x%t%T)" >/dev/null 2>&1
+#	git push
+#fi
 
 # with /tmp/${scriptname} it's possible to override the default DIFFMODE to
 # force a full run. Since this should only be done once, we remove existings
