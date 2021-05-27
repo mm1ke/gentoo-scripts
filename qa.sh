@@ -88,9 +88,9 @@ for repodir in ${REPOSITORIES[@]}; do
 		echo "Processing script: ${s_v2}" >> ${LOGFILE}
 		export SCRIPT_NAME=${s_v2%%.*}
 		if ${DIFFMODE}; then
-			/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >>${LOGFILE} 2>&1
+			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >>${LOGFILE} 2>&1
 		else
-			/usr/bin/time -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} full >>${LOGFILE} 2>&1
+			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} full >>${LOGFILE} 2>&1
 		fi
 	done
 
