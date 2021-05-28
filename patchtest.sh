@@ -146,7 +146,8 @@ main(){
 
 				# MY_PN and other such variables often are constructed with the usage of
 				# global variables like $PN and $PV.
-				# With using eval these variables are replaces by it's real content
+				# With using eval these variables are replaces by it's real content,
+				# which must be replaced by our variable names first
 				my_pn_name="$(grep ^MY_PN\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e "s|PN|package|g" -e 's|"||g')"
 				[ -n "${my_pn_name}" ] && eval my_pn_name="$(echo ${my_pn_name})" >/dev/null 2>&1
 				my_pv_name="$(grep ^MY_PV\= ${ebuild} | cut -d' ' -f1 | cut -d'=' -f2 | sed -e "s|PV|ebuild_version|g" -e 's|"||g')"
