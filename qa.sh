@@ -19,17 +19,12 @@ DIFFMODE=true
 DBWRITE=true
 # create website data
 SITEGEN=true
-# create git commit
-#GITCOMMIT=true
-#GITDIR="/media/qa/git/"
 # remove previous log file
 CLEANLOG=true
 # set directory were the scripts are
 SCRIPTDIR="/home/bob/qa/"
 # logfile
 LOGFILE="/tmp/qa-scripts.log"
-
-mkdir -p ${GITINFO}
 
 #
 ## important settings
@@ -42,6 +37,7 @@ export SITEDIR="/media/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
 export GTREE="/tmp/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
+mkdir -p ${GITINFO}
 # testvars
 #export SITEDIR="/tmp/wwwsite/"
 
@@ -58,7 +54,6 @@ for repodir in ${REPOSITORIES[@]}; do
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
 	#export REPOTREE="/tmp/repos/${REPO}/"
 	#export HASHTREE="/tmp/repohashs/${REPO}/"
-
 
 	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 	# the repositories need to exists in order to be updated
@@ -124,19 +119,6 @@ if ${SITEGEN}; then
 fi
 
 echo -e "\nFinish generating HTML output\n" >>${LOGFILE}
-#if ${GITCOMMIT}; then
-#	echo -e "\nCreating git commit:\n" >>${LOGFILE}
-#	# first remove old results
-#	[ -n "${GITDIR}" ] && rm -rf /${GITDIR}/*
-#	cd /${SITEDIR}/results/
-#	## copy resutls to the git dir
-#	find -mindepth 4 -maxdepth 4 -name full*.txt -exec cp --parent {} /${GITDIR}/ \;
-#	## create git commit
-#	cd /${GITDIR}/
-#	git add -A . >/dev/null 2>&1
-#	git commit -m "automated update @ $(date +%x%t%T)" >/dev/null 2>&1
-#	git push
-#fi
 
 # with /tmp/${scriptname} it's possible to override the default DIFFMODE to
 # force a full run. Since this should only be done once, we remove existings
