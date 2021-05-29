@@ -295,9 +295,9 @@ find_func() {
 			" ${TMPFILE}
 		cp ${TMPFILE} ${RUNNING_CHECKS[0]}/full.txt
 
-		sort_result_v3
-		gen_sort_pak_v3
-		gen_sort_main_v3
+		sort_result_v4
+		gen_sort_pak_v4
+		gen_sort_main_v4
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
