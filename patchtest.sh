@@ -546,9 +546,9 @@ find_func(){
 
 	if ${FILERESULTS}; then
 		gen_descriptions
-		sort_result_v2
-		gen_sort_main_v3
-		gen_sort_pak_v3
+		sort_result_v4
+		gen_sort_main_v4
+		gen_sort_pak_v4
 
 		copy_checks ${SCRIPT_TYPE}
 	fi
