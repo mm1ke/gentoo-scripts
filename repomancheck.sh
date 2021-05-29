@@ -27,6 +27,10 @@
 #export REPOTREE=/usr/portage/
 #export FILERESULTS=true
 #export RESULTSDIR="${HOME}/repomancheck/"
+# enabling debug output
+#export DEBUG=true
+#export DEBUGLEVEL=1
+#export DEBUGFILE=/tmp/repostats.log
 
 # get dirpath and load funcs.sh
 realdir="$(dirname $(readlink -f $BASH_SOURCE))"
@@ -115,18 +119,11 @@ find_func(){
 
 	if ${FILERESULTS}; then
 		gen_descriptions
-		gen_sort_main_v3
+		gen_sort_filter_v1 2 ${RUNNING_CHECKS[0]}
 
-		for file in $(cat ${RUNNING_CHECKS[0]}/full.txt); do
-			for fp in $(echo ${file}|cut  -d'|' -f2|tr ':' ' '); do
-				mkdir -p ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}
-				echo ${file} >> ${RUNNING_CHECKS[0]}/sort-by-filter/${fp}/full.txt
-			done
-		done
-
+		gen_sort_main_v4
 		for ffp in $(ls ${RUNNING_CHECKS[0]}/sort-by-filter/); do
-			gen_sort_main_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ffp}
-			gen_sort_pak_v3 ${RUNNING_CHECKS[0]}/sort-by-filter/${ffp}
+			gen_sort_pak_v4 ${RUNNING_CHECKS[0]}/sort-by-filter/${ffp}
 		done
 
 		copy_checks ${SCRIPT_TYPE}
