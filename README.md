@@ -1,39 +1,67 @@
+
 # Gentoo QA Scripts
 
-This repository contains a collection of various gentoo related scripts to find and improve the gentoo portage tree. The results of the scripts can be seen on https://gentoo.levelnine.at/ and with Statistics on https://gentooqa.levelnine.at
+This repository contains a collection of various qa scripts for gentoo ebuild repositories. Results of the these scripts can be seen on https://gentooqa.levelnine.at/
 
 ## patchtest.sh
-This scripts tries to find unused patches from the gentoo portage tree by creating a list of files in the `files` directory and grep's every ebuild if it's used there.
-In order to improve its finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations.
-Further more it also creates lists of possible Name variation in order to find patches which are written like following:
-
+This scripts tries to find unused patches by creating a list of files from the `files` directory and tries to find them in ebuilds. In order to improve its finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations. Further more it also creates lists of possible Name variation in order to find patches which are written like following:
 `epatch foo-bar-{patch1,patch2,patch3}.patch`
-
-This however doesn't work 100% yet.
+However this has limitations and won't find every case. Lastly it also tries to find files and patches which are used in ebuilds by calling them via an asterisk ('*'), like:
+`epatch ${FILESDIR}/*.patch`
 
 ### Limitations:
 Following Structures can't be found yet and will give a false positive:
-
-* Usage of asterisk: `epatch foo-bar-*.patch`
-* Usage of special Vars: `epatch foo-bar-${MY_VERS}.patch`
-* Usage of patching via eclasses: In this case not the ebuild uses the file, but the eclass. For example: `apache-module` do that.
-* Usage of braces: `epatch foo-bar-{patch1,patch2}.patch`
-
-Note: The script already can find *some* of such versions.
-* Usage for loops:
+* Usage of special vars which are not included in the script: `epatch foo-bar-${MY_VERS}.patch`
+* Usage of patching via eclasses: In this case not the ebuild uses the file, but the eclass. For example: `apache-module` do that. However we exclude most of the beforehand.
+* Usage for loops like:
 ```
 for i in name1 name2 name3; do
 	epatch foo-bar-$i.patch
 done
 ```
-* False negative will also happen if the filename just contains the packagename and thus would be found anyway in the ebuild.
+* False negative can also occur if the filename is the same as the package name.
 * Directories under the `files` directory will be ignored (for now)
 
-## patchcheck.sh
-This scripts is more like an spin-off of `patchtest`. It also tries to find unused patches, but doesn't look to deep.
-patchcheck basically just looks into every package if it has a `files` directory and then check if the ebuilds matches (via grep) for one of the following words:
+## repostats.sh
+Repostats generates statistics about repos. Following statistics are generated:
+* ebuild_eapi_statistics: `EAPI` usage in repo
+* ebuild_live_statistics: lists all live `9999` ebuids
+* ebuild_eclass_statistics: eclass usage among ebuilds
+* ebuild_licenses_statistics: license usage among ebuilds
+* ebuild_keywords_statistics: keyword usage among ebuilds
+* ebuild_virtual_use_statistics: `virtual/*` usage among ebuilds
+* ebuild_obsolete_eapi: lists all ebuilds which have an obsolete `EAPI`
+* ebuild_cleanup_candidates: lists ebuilds which are candidates to cleanup
+* ebuild_stable_candidates: lists ebuilds which are candidates for stabilization
+* ebuild_glep81_group_statistics: `app-group/*` usage among ebuilds
+* ebuild_glep81_user_statistics: `app-user/*` usage among ebuilds
 
-`.patch|.diff|FILESDIR|...` + a list of eclasses who uses the FILESDIR as well.
+## repochecks.sh
+This is the main qa script which contains most of the checks. For following checks are being made:
+* ebuild_trailing_whitespaces: checks for trailing whitespaces in ebuilds
+* ebuild_obsolete_gentoo_mirror_usage: checks for `mirror://gentoo` usage in ebuilds
+* ebuild_epatch_in_eapi6: checks for `epatch` usage in `EAPI 6` ebuilds
+* ebuild_dohtml_in_eapi6: checks for `dohtml` usage in `EAPI 6`  ebuids
+* ebuild_description_over_80: checks if `DESCRIPTION` is longer then 80 chars
+* ebuild_variables_in_homepages: checks if `HOMEPAGE` contains variables
+* ebuild_insecure_git_uri_usage: checks for `git://` usage
+* ebuild_deprecated_eclasses: lists ebuilds which uses deprecated eclasses
+* ebuild_leading_trailing_whitespaces_in_variables: checks for leading / trailing whitespaces in certain variables
+* ebuild_multiple_deps_per_line: lists ebuilds which have multiple dependencies in on line
+* ebuild_nonexist_dependency: checks for dependencies which doesn't exists
+* ebuild_obsolete_virtual: lists virtuals which has effective only on consumer left
+* ebuild_missing_eclasses: lists ebuilds which are missing eclasses
+* ebuild_unused_eclasses: lists ebuilds who `inherit` eclasses which are not needed
+* ebuild_missing_eclasses_fatal: lists ebuilds which are missing eclasses and are not inherited indirectly
+* ebuild_homepage_upstream_shutdown: lists ebuilds who have a `HOMEPAGE` to a know shutdown service
+* ebuild_homepage_unsync: lists packages who have different `HOMEPAGE` among ebuilds
+* ebuild_missing_zip_dependency: lists ebuilds which misses `app-arch/unzip` dependency
+* ebuild_src_uri_offline: lists ebuilds who's upstream `SRC_URI` is unavailable and are the ebuild has mirror restricted enabled
+* ebuild_unused_patches_simple: simple check for unused patches
+* ebuild_insecure_pkg_post_config: lists ebuilds who use ch{mod,own} -R in `pkg_config` or `pkg_postinst`
+* ebuild_insecure_init_scripts: lists ebuilds who use ch{mod,own} -R in init scripts
+
+For a detailed explanation of each check please refer to the descriptions in the scripts.
 
 ## wwwtest.sh
 This script tries to get the http statuscode of every homepage of the `HOMEPAGE` variable. This script is more usefull if the `script_mode` is enabled as it will multiple lists of the result.
@@ -42,87 +70,16 @@ These a sorted after maintainer, httpcode, package and a special filter. Further
 ## srctest.sh
 This script checks if the `SRC_URI` links are available. It generates 3 return values. Available and not_available are obviously. maybe_available will be return when wget gets 403/Forbidden as return code. In that case the download might be still available but doesn't get recognized from wget when it behaves as a spider.
 
-## simplechecks.sh
-This is a simple script which check files for various mistakes in ebuilds and
-metadata.xml files.
-* trailing whitespaces in ebuilds
-* mixed indentiations in metadata.xml files
-* obosolete gentoo mirror usage
-* epatch in EAPI6
-* dohtml in EAPI6
-* DESCRIPTION over 80 charaters
-* missing proxy maintainer in metadata.xml file
-* variables in the HOMEPAGE variable
-* insecure git uri usage
-
-## eapistats.sh
-This script only generates statistics about EAPI usage. Also it sorts every EAPI by maintainer.
-
-## trailwhite.sh
-Simple check to find leading or trailing whitespaces in a set of variables.
-For example: SRC_URI=" www.foo.com/bar.tar.gz "
-
 ## repomancheck.sh
-A script which runs 'repoman full' on every package. The result is also filtered
-by repomans checks.
-
-## eclassusage.sh
-This script has two checks:
-* Lists ebuilds which use functions of eclasses which are not directly inherited. (usually inherited implicit)
-* Lists ebuilds which inherit eclasses but doesn't use their features.
-Following eclasses are checked:
- * ltprune, eutils, estack, preserve-libs, vcs-clean, epatch, desktop, versionator, user, eapi7-ver, flag-o-matic, libtool, pam, udev, xdg-utils
-
-## eclassstats.sh
-Lists the eclasses used by every ebuild.
-Not including packages which don't inherit anything. Also not included are eclasses inherited by other eclasses.
-
-## eapichecks.sh
-This script generates following results:
-
-###ebuild_obsolete_eapi
-This scirpt lists every ebuild with a EAPI 0-4. The first column prints the ebuilds EAPI, the second column
-prints the EAPI Versions of the packages other version (if available). This should make easier to find packages which
-can be removed and also package which need some attention.
-
-###ebuild_cleanup_candidates
-This script searches for ebuilds with EAPI 0-5 and checks if there is a newer EAPI6 reversion (-r1).
-If found it also checks if the KEYWORDS are the same. In this case the older versions is a good canditate to be removed.
-
-###ebuild_stable_candidates
-Also checks for ebuilds with EAPI 0-5 and a newer EAPI6 reversion (-r1).
-In this the newer version has different KEYWORDS which most likely means it haven't been stabilized, why these ebuilds are good
-stable request canditates
-
-## dupuse.sh
-Lists packages which define use flags locally in metadata.xml, which already exists as a global use flag.
-
-## deadeclasses.sh
-Lists ebuilds who use deprecated or obsolete eclasses.
-Currently looks for following eclasses:
-* fdo-mime, games, git-2, ltprune, readme.gentoo, autotools-multilib, autotools-utils and versionator
-
-## badstyle.sh
-Ebuilds which have multiple dependencies written in one line like:
-```
-	|| ( app-arch/foo app-arch/bar )
-```
-Should look like:
-```
-	|| (
-		app-arch/foo
-		app-arch/bar
-	)
-```
+A script which runs 'repoman full' on every package. The result is also filtered by repoman's checks.
 
 # Misc
 
-## treehashgen.sh
-This script is needed for the diff mode. It generates lists of changed packages
-in a regular basis.
-
 ## tmpcheck.sh
 This is a template file for new scripts.
+
+## qa.sh
+This script is used in order to run multiple repositories. It support to run scripts in `diff`mode in order to only run on packages which were changes since last run.
 
 # Tools
 
@@ -135,6 +92,9 @@ Simply prints the inheration tree of a particular eclass.
 ## whitecheck.sh
 Removes obsolete entries from whitelist files. (used for patchcheck.sh)
 
+## eclassinfo.sh
+Prints functions which can be used by ebuilds.
+
 # Usage:
 
 Following usage will work for every script:
@@ -143,38 +103,22 @@ Following usage will work for every script:
 * Scan a whole category: `./scriptname.sh app-admin`
 * Scan a single package: `./scriptname.sh app-admin/diradm`
 
-A few scripts also support a `diff` mode in order to only check changes since
-last run. This however needs `treehashgen.sh` configured to generate lists on a
-recuring basis.
-
 There are also a few Variables which can be set, but don't have too. Most importantly are:
 
-* `PORTTREE`: Set's the portage directory path, usually `/usr/portage`
-* `SCRIPT_MODE`: If this is set to `true` the script will save it's output in files. Default is `false`
-* `SITEDIR`: This is the directory were the files will be written if `SCRIPT_MODE` is enabled. Default is set to `${HOME}/checks-${RANDOM}`
+* `REPOTREE`: Set's the repository path, default is: `/usr/portage`
+* `FILERESULTS`: If this is set to `true` the script will save it's output in files. Default is `false`
+* `RESULTSDIR`: This is the directory were the files will be copied if `SCRIPT_MODE` is enabled. Default is set to `${HOME}/${scriptname}`
+
+### Debugging
+Most script also have some debugging possibilities. Following variables can be configured:
+* `DEBUG`: if this is set to `true`, debugging is enabled
+* `DEBUGLEVEL`: if unset, the default is set to `1`. Changes in Levels:
+	* `1` only print basic information, in this case script runs in parallel
+	* `2` includes important messages, script runs not in parallel anymore
+	* `3` includes non important messages
+	* `<=4` includes messages from `_funcs.sh` as well.
+* `DEBUGFILE`: redirects the debug output into a file.
 
 # License:
 
 All scripts are free software. You can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
-
-## Duration:
-
-All scripts are actually running once a day on a gentoo VM with following specs:
-* Gentoo VM
-* Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-* 8 GB-RAM
-
-
-Every script uses now ```parallel``` to improve duration time of every script. While most of the scripts improved quite a lot, only simplechecks didn't really improve. The reason might be because this script already makes its basic check via the find command before parallel even get exectued. Below are some numbers from before and after the usage of ```parallel``` :
-
-Below are the estimated duration time of every script:
-
-Script | without parallel | since parallel
-------|------|--------------
-eapistats | 30 m | 11 m
-patchcheck | ~50 sec |  ~35 sec
-patchtest | 15 m | 8 m
-simplechecks | 8 m | 8 m
-srctest | 11 h | 2.5 h
-wwwtest | 7.5 h | 1.5 h
-
