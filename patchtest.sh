@@ -391,6 +391,10 @@ main(){
 		fi
 	}
 
+	# find_patches_with_asterisk
+	# check for a certain text (FILESDIR.*\*) which is an indicater that files are
+	# being used by using '*'. In this case we are checking what files are
+	# matching and remove the from the unused_patches list
 	find_patches_with_asterisk() {
 		local work_list=( $(echo ${1}|tr ':' ' ') )
 
