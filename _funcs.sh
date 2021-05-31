@@ -267,6 +267,13 @@ get_file_status(){
 	fi
 }
 
+# return the http code of a given homepage
+get_site_status(){
+	local hp="${1}"
+	local code="$(curl -o /dev/null --silent --max-time 20 --head --write-out '%{http_code}\n' ${hp})"
+	echo "${code}"
+}
+
 count_ebuilds(){
 	local epath="${1}"
 	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
@@ -1202,4 +1209,4 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
 	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 \
-	clean_results get_file_status debug_output
+	clean_results get_file_status debug_output get_site_status
