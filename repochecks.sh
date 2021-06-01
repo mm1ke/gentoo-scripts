@@ -412,7 +412,8 @@ EOM
 		"${info_index11}" "${info_index12}" "${info_index13}" "${info_index14}" \
 		"${info_index15}" "${info_index16}" "${info_index17}" "${info_index18}" \
 		"${info_index19}" "${info_index20}" "${info_index21}" "${info_index22}" \
-		"${info_index23}" "${info_index24}" "${info_index25}" "${info_index26}"
+		"${info_index23}" "${info_index24}" "${info_index25}" "${info_index26}" \
+		"${info_index27}"
 	)
 	echo "${description[$1]}"
 }
