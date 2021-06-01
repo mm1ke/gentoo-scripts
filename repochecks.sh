@@ -63,6 +63,7 @@ fi
 
 SCRIPT_TYPE="checks"
 WORKDIR="/tmp/repochecks-${RANDOM}"
+TMPCHECK="/tmp/repochecks-tmp-${RANDOM}.txt"
 
 array_names(){
 	RUNNING_CHECKS=(
@@ -91,6 +92,9 @@ array_names(){
 		"${WORKDIR}/metadata_duplicate_useflag_description"	# Index 22
 		"${WORKDIR}/ebuild_insecure_pkg_post_config"				# Index 23
 		"${WORKDIR}/ebuild_insecure_init_scripts"						# Index 24
+		"${WORKDIR}/ebuild_homepage_bad_statuscode"					# Index 25
+		"${WORKDIR}/ebuild_homepage_redirections"						# Index 26
+		"${WORKDIR}/ebuild_src_uri_bad"											# Index 27
 	)
 }
 output_format(){
@@ -113,13 +117,16 @@ output_format(){
 		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}$(echo ${hp_shutdown[@]}|tr ' ' ':')${DL}${maintainer}"
 		"${hp_count}${DL}${cat}/${pak}${DL}${maintainer}"
 		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}$(echo ${missing_zip[@]}|tr ' ' ':')${DL}${maintainer}"
-		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}$(echo ${file_offline[@]}|tr ' ' ':')${DL}${maintainer}"
+		"${ebuild_eapi}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}$(echo ${file_offline[@]}|tr ' ' ':')${DL}${maintainer}"
 		"${cat}/${pak}${DL}${maintainer}"
 		"${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 		"${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 		"${cat}/${pak}${DL}$(echo ${dup_use[@]}|tr ' ' ':')${DL}${maintainer}"
 		"${ebuild_eapi}${DL}${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 		"${cat}/${pak}${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${maintainer}"
+		"${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
+		"${ebuild_eapi}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}$(echo ${bad_file_status[@]}|tr ' ' ':')${DL}${maintainer}"
 	)
 	echo "${index[$1]}"
 }
@@ -307,8 +314,9 @@ EOM
 read -r -d '' info_index18 <<- EOM
 Packages which can't be installed because the SRC_URI is offline and RESTRICT="mirror" enabled.
 
-Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
+Data Format ( 7|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
 7                                           EAPI Version
+2021-06-01                                  date of check
 dev-libs/foo                                package category/name
 foo-1.12-r2.ebuild                          full filename
 https://foo.bar.com/bar.zip                 file which is not available and mirror restricted
@@ -335,7 +343,46 @@ Data Format ( dev-libs/foo|dev@gentoo.org:loper@foo.de ):
 dev-libs/foo                                package category/name
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
+read -r -d '' info_index25 <<- EOM
+This checks tests every homepage and gets their http return code. The list contain packages with a bad returncodes.
+Following statuscodes are ignored: FTP, 200, 301, 302, 307, 400, 503.
+This check only runs if a package changed, thus the acutal status might not be correct anymore.
 
+Data Format ( 7|404|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+404                                         http statuscode
+2021-06-01                                  date of check
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         homepage corresponding to the statuscode
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+read -r -d '' info_index26 <<- EOM
+Lists ebuilds with a Homepage which actually redirects to another sites.
+This check only runs if a package changed, thus the acutal status might not be correct anymore.
+
+Data Format ( 7|404|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|https://bar.foo.com|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+404                                         http statuscode of redirected website
+2021-06-01                                  date of check
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com                         original hommepage in ebuild
+https://bar.foo.com                         redirected homepage
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
+read -r -d '' info_index27 <<- EOM
+This check uses wget's spider functionality to check if a ebuild's SRC_URI link still works.
+The timeout to try to get a file is 15 seconds.
+
+Data Format ( 7|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
+7                                           EAPI Version
+2021-06-01                                  date of check
+dev-libs/foo                                package category/name
+foo-1.12-r2.ebuild                          full filename
+https://foo.bar.com/bar.zip                 file which is not available
+dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+EOM
 
 # metadata checks
 read -r -d '' info_index20 <<- EOM
@@ -365,7 +412,7 @@ EOM
 		"${info_index11}" "${info_index12}" "${info_index13}" "${info_index14}" \
 		"${info_index15}" "${info_index16}" "${info_index17}" "${info_index18}" \
 		"${info_index19}" "${info_index20}" "${info_index21}" "${info_index22}" \
-		"${info_index23}" "${info_index24}"
+		"${info_index23}" "${info_index24}" "${info_index25}" "${info_index26}"
 	)
 	echo "${description[$1]}"
 }
@@ -604,12 +651,13 @@ ebuild-check() {
 		'berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com'
 		'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net'
 	)
-	local site hp_set
+	local site single_hp
 	local hp_shutdown=( )
+	local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
 	for site in ${_filters[@]}; do
-		for hp_set in $(grep ^HOMEPAGE ${abs_md5_path}|cut -d'=' -f2); do
-			if $(echo ${hp_set}|grep -q ${site}); then
-				hp_shutdown+=( ${hp_set} )
+		for single_hp in ${ebuild_hps}; do
+			if $(echo ${single_hp}|grep -q ${site}); then
+				hp_shutdown+=( ${single_hp} )
 			fi
 		done
 	done
@@ -618,9 +666,10 @@ ebuild-check() {
 	# check if upstream source is available (only if mirror restricted) + missing
 	# unzip dependency
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unavailable upstreams + missing unzip dependency" | (debug_output)
-	local _src_links=( $(grep ^SRC_URI= ${abs_md5_path}|cut -d'=' -f2) )
+	local _src_links=( $(grep ^SRC_URI= ${abs_md5_path}|cut -d'=' -f2-) )
 	local missing_zip=( )
 	local file_offline=( )
+	local bad_file_status=( )
 	if [ -n "${_src_links}" ]; then
 		for l in ${_src_links}; do
 			if $(echo ${l} | grep -q -E "^http://|^https://"); then
@@ -630,16 +679,24 @@ ebuild-check() {
 						missing_zip+=( ${l} )
 					fi
 				fi
-				# offline (restrict)
-				if $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}); then
-					if $(get_file_status ${l}); then
-						file_offline+=( ${l} )
+				# exclude ebuilds which inherit one of the following eclasses:
+				# toolchain-binutils toolchain-glibc texlive-module
+				# these generate lots of false postive by generating SRC_URI via the
+				# eclasses
+				if ! $(get_eclasses "${cat}/${pak}/${pakname}" | grep -q -E "toolchain-binutils|toolchain-glibc|texlive-module"); then
+					if $(get_file_status_detailed ${l}); then
+						if $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}); then
+							# offline (restrict)
+							file_offline+=( ${l} )
+						fi
+						bad_file_status+=( ${l} )
 					fi
 				fi
 			fi
 		done
 		[ -n "${missing_zip}" ] && output 17
 		[ -n "${file_offline}" ] && output 18
+		[ -n "${bad_file_status}" ] && output 27
 	fi
 
 	# inscure pkg_config or pkg_postinst
@@ -695,6 +752,53 @@ package-check(){
 			fi
 		fi
 	fi
+
+	# check if homepage is reachable and if it redirects to another link.
+	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unreachable sites or homepage which redirect" | (debug_output)
+	for eb in ${REPOTREE}/${rel_path}/*.ebuild; do
+		local ebuild_eapi="$(get_eapi ${eb})"
+		local ebuild=$(basename ${eb%.*})
+		local filename="${ebuild}.ebuild"
+		local cat="$(echo ${rel_path}|cut -d'/' -f1)"													# package category:						app-admin
+		local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${ebuild}"	# full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
+
+		local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
+
+		if [ -n "${ebuild_hps}" ]; then
+			local hp
+			for hp in ${ebuild_hps}; do
+				[ ${DEBUGLEVEL} -ge 2 ] && echo "checking following sites: ${ebuild_hps}" | (debug_output)
+				if $(echo ${hp}|grep -q ^ftp); then
+					[ ${DEBUGLEVEL} -ge 2 ] && echo "${hp} is a ftp link" | (debug_output)
+					local statuscode="FTP"
+				else
+					local _checktmp="$(grep "${DL}${hp}${DL}" ${TMPCHECK}|head -1)"
+					if [ -z "${_checktmp}" ]; then
+						[ ${DEBUGLEVEL} -ge 2 ] && echo "checking site status ${hp}" | (debug_output)
+						local statuscode="$(get_site_status ${hp})"
+						echo "${ebuild_eapi}${DL}${statuscode}${DL}${hp}${DL}" >> ${TMPCHECK}
+					else
+						[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hp} in ${TMPCHECK}" | (debug_output)
+						statuscode="${_checktmp:2:3}"
+					fi
+				fi
+
+				case ${statuscode} in
+					301)
+						local correct_site="$(curl -Ls -o /dev/null --silent --max-time 20 --head -w %{url_effective} ${hp})"
+						local new_code="$(get_site_status ${correct_site})"
+						output 26
+						;;
+					FTP|200|302|307|400|429|503)
+						continue
+						;;
+					*)
+						output 25
+						;;
+				esac
+			done
+		fi
+	done
 }
 
 metadata-check(){
@@ -873,6 +977,7 @@ find_func(){
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[14]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[15]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[22]}
+		gen_sort_filter_v1 2 ${RUNNING_CHECKS[25]}
 
 		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_main_v4" | (debug_output)
 		gen_sort_main_v4
@@ -887,14 +992,16 @@ find_func(){
 [ ${DEBUGLEVEL} -ge 1 ] && echo "*** starting repochecks" | (debug_output)
 
 cd ${REPOTREE}
+touch ${TMPCHECK}
 array_names
 gen_eclass_funcs
 gen_repo_categories
 gen_whitelist
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 export -f metadata-check ebuild-check package-check array_names output_format
-export WORKDIR
+export WORKDIR TMPCHECK
 depth_set_v3 ${1}
 ${FILERESULTS} && rm -rf ${WORKDIR}
+rm ${TMPCHECK}
 
 [ ${DEBUGLEVEL} -ge 1 ] && echo "*** finished repostats" | (debug_output)
