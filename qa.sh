@@ -37,7 +37,7 @@ export SITEDIR="/media/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
 export GTREE="/tmp/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
-mkdir -p ${GITINFO}
+mkdir -p "${GITINFO}"
 # testvars
 #export SITEDIR="/tmp/wwwsite/"
 
@@ -57,8 +57,8 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 	# the repositories need to exists in order to be updated
-	if ! [ -d ${REPOTREE} ]; then
-		mkdir -p ${REPOTREE}
+	if ! [ -d "${REPOTREE}" ]; then
+		mkdir -p "${REPOTREE}"
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
 	elif [ -z "$(ls -A ${REPOTREE})" ]; then
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
