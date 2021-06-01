@@ -267,6 +267,18 @@ get_file_status(){
 	fi
 }
 
+get_file_status_detailed(){
+	local uri="${1}"
+	# sort out false positives
+	local _code="Remote file exists|403 Forbidden|405 Method Not Allowed"
+
+	if $(timeout 15 wget -T 10 --no-check-certificate -S --spider ${uri} 2>&1 | grep -q -E "${_code}" ); then
+		return 1
+	else
+		return 0
+	fi
+}
+
 # return the http code of a given homepage
 get_site_status(){
 	local hp="${1}"
@@ -1209,4 +1221,5 @@ export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
 	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 \
-	clean_results get_file_status debug_output get_site_status
+	clean_results get_file_status debug_output get_site_status \
+	get_file_status_detailed
