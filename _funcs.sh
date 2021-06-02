@@ -1088,12 +1088,9 @@ END`
 	echo ${ret// /_}
 }
 
-export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
-	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
-	count_keywords compare_keywords get_bugs_bool get_bugs_count \
-	get_age_v2 get_age_last get_git_age get_age_v3 date_update \
-	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
-	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
-	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 \
-	clean_results get_file_status debug_output get_site_status \
-	get_file_status_detailed
+export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
+	compare_keywords get_bugs_bool get_age_last get_git_age date_update \
+	get_time_diff sort_result_v4 check_mask gen_sort_eapi_v1 gen_sort_filter_v1 \
+	get_licenses get_eclasses get_keywords get_depend gen_sort_main_v4 \
+	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
+	get_site_status get_file_status_detailed
