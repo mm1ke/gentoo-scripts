@@ -102,6 +102,7 @@ if ${DRYRUN}; then
 	exit 1
 fi
 
+# used for debug output, either into a file or directly to stderr
 debug_output() {
 	while IFS='' read -r line; do
 		if [ -n "${DEBUGFILE}" ]; then
@@ -172,6 +173,7 @@ get_bugs_bool(){
 	fi
 }
 
+### NOTUSED ###
 # returns the amout of bugs found - 3 digits long
 get_bugs_count(){
 	local value="${1}"
@@ -184,6 +186,7 @@ get_bugs_count(){
 	fi
 }
 
+### NOTUSED ###
 # returns a list of Bug Numbers for a given ebuild
 get_bugs(){
 	local value="${1}"
@@ -256,6 +259,7 @@ get_depend(){
 	echo ${real_dep[@]}|tr ' ' ':'
 }
 
+### NOTUSED ###
 # return true or false if file exits remotly (or not)
 get_file_status(){
 	local uri="${1}"
@@ -286,6 +290,7 @@ get_site_status(){
 	echo "${code}"
 }
 
+### NOTUSED ###
 count_ebuilds(){
 	local epath="${1}"
 	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
@@ -308,59 +313,6 @@ check_mask(){
 
 # function to sort the output, takes one argument (optional)
 # the argument is the column number to sort after
-sort_result_v2(){
-	local column="${1}"
-	local rc_id
-
-	for rc_id in ${RUNNING_CHECKS[@]}; do
-		# check input
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				continue
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			continue
-		fi
-
-		if [ -z "${column}" ]; then
-			sort -o ${rc_id} ${rc_id}
-		else
-			sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
-		fi
-	done
-}
-
-sort_result_v3(){
-	local column="${1}"
-	local rc_id
-
-	for rc_id in ${RUNNING_CHECKS[@]}; do
-		# check input
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				continue
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			continue
-		fi
-
-		# find package location in result
-		if [ -z "${column}" ]; then
-			local pak_loc="$(_find_package_location "${rc_id}")"
-			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
-		fi
-
-		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
-
-		# clear column variable after sorting
-		column=""
-	done
-}
-
 sort_result_v4(){
 	local column="${1}"
 	local single_rc="${2}"
@@ -457,53 +409,6 @@ compare_keywords(){
 }
 
 # function which sorts a list by it's maintainer
-gen_sort_main_v3(){
-	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
-	else
-		local check_files=( "${1}" )
-	fi
-
-	local main
-	local rc_id
-
-	for rc_id in ${check_files[@]}; do
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				continue
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			continue
-		fi
-
-		# find pakackge location in result first
-		local pak_loc="$(_find_package_location "${rc_id}")"
-		if [ -s "${rc_id}" ]; then
-			# check the first 10 entries
-			for x in $(head -n10 ${rc_id}); do
-				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
-				local pak_main="$(get_main_min ${pak})"
-				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-					if [ "$(echo ${x}|cut -d'|' -f${i})" = "${pak_main}" ]; then
-						local main_loc=${i}
-						break 2
-					fi
-				done
-			done
-		fi
-		# generate maintainer sortings only if we find the location
-		if [ -n "${main_loc}" ]; then
-			mkdir -p ${rc_id%/*}/sort-by-maintainer
-			for main in $(cat ${rc_id} |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
-				grep "${main}" ${rc_id} > ${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt
-			done
-		fi
-	done
-}
-
-# function which sorts a list by it's maintainer
 gen_sort_main_v4(){
 	if [ -z "${1}" ]; then
 		local check_files=( "${RUNNING_CHECKS[@]}" )
@@ -562,44 +467,6 @@ gen_sort_main_v4(){
 		_gen_sort "${id}" &
 	done
 	wait
-}
-
-# function which sorts a list by it's package
-gen_sort_pak_v3() {
-	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
-	else
-		local check_files=( "${1}" )
-	fi
-
-	local pack
-	local rc_id
-
-	for rc_id in ${check_files[@]}; do
-		# check input
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				continue
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			continue
-		fi
-
-		# find pakackge location in result
-		pak_loc="$(_find_package_location "${rc_id}")"
-		# only create package sorting if we found package location
-		if [ -n "${pak_loc}" ]; then
-			local f_packages="$(cat ${rc_id}| cut -d "${DL}" -f${pak_loc} |sort -u)"
-			for pack in ${f_packages}; do
-				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
-				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
-				mkdir -p ${rc_id%/*}/sort-by-package/${f_cat}
-				grep "\<${pack}\>" ${rc_id} > ${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt
-			done
-		fi
-	done
 }
 
 # function which sorts a list by it's package
@@ -727,7 +594,6 @@ clean_results(){
 		fi
 	done
 }
-
 
 usage() {
 	echo "You need at least one argument:"
@@ -860,6 +726,7 @@ depth_set_v3() {
 	fi
 }
 
+### NOTUSED ###
 # this function get the age (file creation) of a particular ebuild file
 # depends on ${ENABLE_GIT}
 # returns the age in days
@@ -877,6 +744,7 @@ get_age() {
 	fi
 }
 
+### NOTUSED ###
 get_age_v2() {
 	local filedate="${1}"
 	local date_today="$(date '+%s' -d today)"
@@ -893,6 +761,7 @@ get_age_v2() {
 	fi
 }
 
+### NOTUSED ###
 get_age_v3() {
 	local filedate="${1}"
 	local date_today="$(date '+%s' -d today)"
@@ -990,6 +859,7 @@ get_eapi() {
 	[ -n "${eapi}" ] && echo ${eapi} || echo "0"
 }
 
+### NOTUSED ###
 # list all eapi versions for a given package only showing used EAPIs. the list
 # looks like following:
 # 7(1):6(2):5(1)
@@ -1010,6 +880,7 @@ get_eapi_pak(){
 	echo "$(echo ${return_string[@]}|tr ' ' ':')"
 }
 
+### NOTUSED ###
 # list all eapi's for a given package. the list looks like following:
 # EAPI Version:		0 1 2 3 4 5 6 7			(not outputed)
 # EAPI Count:			0:0:0:0:0:1:2:0
@@ -1022,6 +893,7 @@ get_eapi_list(){
 	echo "$(echo ${eapi_list[@]}|tr ' ' ':')"
 }
 
+### NOTUSED ###
 # return all eclasses inherited by a ebuild
 # the list is generated from the md5-cache, which means it also includes
 # eclasses inherited by other eclasses
@@ -1033,6 +905,7 @@ get_eclasses_real() {
 		echo ${real_eclasses[@]}|tr ' ' ':'
 	fi
 }
+
 get_eclasses_real_v2() {
 	local ebuild="${1}"
 
@@ -1068,6 +941,7 @@ check_eclasses_usage() {
 	fi
 }
 
+### NOTUSED ###
 # list all eclasses used by a given ebuild file
 # returns the list as followed:
 #  eclass1:eclass2
@@ -1217,7 +1091,7 @@ END`
 export -f get_main_min get_perm get_age get_bugs get_eapi get_eclasses_file \
 	get_eclasses_real check_eclasses_usage get_eapi_pak get_eapi_list \
 	count_keywords compare_keywords get_bugs_bool get_bugs_count \
-	get_age_v2 get_age_last get_git_age get_age_v3 date_update sort_result_v3 \
+	get_age_v2 get_age_last get_git_age get_age_v3 date_update \
 	get_time_diff sort_result_v4 count_ebuilds check_mask gen_sort_eapi_v1 \
 	gen_sort_filter_v1 get_licenses get_eclasses get_keywords get_depend \
 	gen_sort_main_v4 gen_sort_pak_v4 get_eclasses_real_v2 \
