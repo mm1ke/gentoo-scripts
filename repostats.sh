@@ -219,23 +219,22 @@ main() {
 	# everything below $min_allow_eapi is considered deprecated
 	local min_allow_eapi=6
 
-	local rel_path=${1}																								# path relative to ${REPOTREE}:	./app-admin/salt/salt-0.5.2.ebuild
-	local cat="$(echo ${rel_path}|cut -d'/' -f1)"											# package category:							app-admin
-	local pak="$(echo ${rel_path}|cut -d'/' -f2)"											# package name:									salt
-	local filename="$(echo ${rel_path}|cut -d'/' -f3)"								# package filename:							salt-0.5.2.ebuild
-	local pakname="${filename%.*}"																		# package name-version:					salt-0.5.2
-	local pakver="${pakname/${pak}-/}"																# package version								0.5.2
-	local abs_path="${REPOTREE}/${cat}/${pak}"												# full path:										/usr/portage/app-admin/salt
-	local abs_path_ebuild="${REPOTREE}/${cat}/${pak}/${filename}"			# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
+	local rel_path=${1}																									# path relative to ${REPOTREE}:	./app-admin/salt/salt-0.5.2.ebuild
+	local cat="$(echo ${rel_path}|cut -d'/' -f1)"												# package category:							app-admin
+	local pak="$(echo ${rel_path}|cut -d'/' -f2)"												# package name:									salt
+	local filename="$(echo ${rel_path}|cut -d'/' -f3)"									# package filename:							salt-0.5.2.ebuild
+	local pakname="${filename%.*}"																			# package name-version:					salt-0.5.2
+	local pakver="${pakname/${pak}-/}"																	# package version								0.5.2
+	local abs_path="${REPOTREE}/${cat}/${pak}"													# full path:										/usr/portage/app-admin/salt
+	local abs_path_ebuild="${REPOTREE}/${cat}/${pak}/${filename}"				# full path ebuild:							/usr/portage/app-admin/salt/salt-0.5.2.ebuild
 
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating detailed information for ${1}" | (debug_output)
-	local maintainer="$(get_main_min "${cat}/${pak}")"								# maintainer of package:				foo@gentoo.org:bar@gmail.com
-	#local fileage="$(get_age "${cat}/${pak}/${filename}")"						# age of ebuild in days:				145
-	local ebuild_eapi="$(get_eapi ${rel_path})"												# eapi of ebuild:								6
-	local ebuild_eclasses="$(get_eclasses "${cat}/${pak}/${pakname}")"
-	local ebuild_licenses="$(get_licenses "${cat}/${pakname}")"
-	local ebuild_keywords="$(get_keywords "${cat}/${pakname}")"
-	local ebuild_depend="$(get_depend "${cat}/${pak}/${pakname}")"
+	local maintainer="$(get_main_min "${cat}/${pak}")"									# maintainer of package:				foo@gentoo.org:bar@gmail.com
+	local ebuild_eapi="$(get_eapi ${rel_path})"													# eapi of ebuild:								6
+	local ebuild_eclasses="$(get_eclasses "${cat}/${pak}/${pakname}")"	# elasses inherited by ebuild:	pam:udev
+	local ebuild_licenses="$(get_licenses "${cat}/${pakname}")"					# licenses set by ebuild:				GPL2+:BSD-2
+	local ebuild_keywords="$(get_keywords "${cat}/${pakname}")"					# keywords set by ebuild:				amd64:x86
+	local ebuild_depend="$(get_depend "${cat}/${pak}/${pakname}")"			# dependencies set by ebuild:		dev-libs/gdl:app-admin/diradm
 
 	if [ "${pakname: -3}" = "-r${pakname: -1}" ]; then
 		start=$(expr ${pakname: -1} + 1)

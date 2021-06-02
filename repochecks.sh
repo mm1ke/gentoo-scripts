@@ -437,12 +437,7 @@ ebuild-check() {
 
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "generating detailed information for ${1}" | (debug_output)
 	local maintainer="$(get_main_min "${cat}/${pak}")"									# maintainer of package:				foo@gentoo.org:bar@gmail.com
-	#local fileage="$(get_age "${cat}/${pak}/${filename}")"							# age of ebuild in days:				145
 	local ebuild_eapi="$(get_eapi ${rel_path})"													# eapi of ebuild:								6
-	#local ebuild_eclasses="$(get_eclasses "${cat}/${pak}/${pakname}")" # elasses inherited by ebuild:	pam:udev
-	#local ebuild_licenses="$(get_licenses "${cat}/${pakname}")"				# licenses set by ebuild:				GPL2+:BSD-2
-	#local ebuild_keywords="$(get_keywords "${cat}/${pakname}")"				# keywords set by ebuild:				amd64:x86
-	#local ebuild_depend="$(get_depend "${cat}/${pak}/${pakname}")"			# dependencies set by ebuild:		dev-libs/gdl:app-admin/diradm
 
 	output(){
 		local checkid=${1}
