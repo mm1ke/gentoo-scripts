@@ -42,6 +42,7 @@ mkdir -p "${GITINFO}"
 #export SITEDIR="/tmp/wwwsite/"
 
 ${CLEANLOG} && rm ${LOGFILE}
+cd ${SCRIPTDIR}
 
 for repodir in ${REPOSITORIES[@]}; do
 	# set important variables
