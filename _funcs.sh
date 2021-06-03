@@ -102,17 +102,7 @@ if ${DRYRUN}; then
 	exit 1
 fi
 
-# used for debug output, either into a file or directly to stderr
-debug_output() {
-	while IFS='' read -r line; do
-		if [ -n "${DEBUGFILE}" ]; then
-			echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}" >> ${DEBUGFILE}
-		else
-			>&2 echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}"
-		fi
-	done
-}
-
+### LOCAL FUNCTIONS ###
 _update_buglists(){
 	local bug_files="UNCONFIRMED CONFIRMED IN_PROGRESS"
 
@@ -161,6 +151,155 @@ _find_package_location(){
 		done
 	fi
 }
+### LOCAL FUNCTIONS END ###
+
+# simple usage info of how to use these scripts
+usage() {
+	echo "You need at least one argument:"
+	echo
+	echo "${0} full"
+	echo -e "\tCheck against the full tree"
+	echo "${0} app-admin"
+	echo -e "\tCheck against the category app-admin"
+	echo "${0} app-admin/diradm"
+	echo -e "\tCheck against the package app-admin/diradm"
+}
+
+# dummy function which can be used by script individually
+upd_results() {
+	return 0
+}
+
+# used for debug output, either into a file or directly to stderr
+debug_output() {
+	while IFS='' read -r line; do
+		if [ -n "${DEBUGFILE}" ]; then
+			echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}" >> ${DEBUGFILE}
+		else
+			>&2 echo "$(date +%F-%H:%M:%S) ${0##*/}: ${line}"
+		fi
+	done
+}
+
+depth_set_v3() {
+	arg="${1}"
+
+	_default_full_search() {
+		searchp=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[ -e ${REPOTREE}/virtual ] && searchp+=( "virtual" )
+		# full provides only categories so we need maxd=2 and mind=2
+		# setting both vars to 1 because the find command adds 1 anyway
+		MAXD=1
+		MIND=1
+		find_func
+	}
+
+	if [ -z "${arg}" ]; then
+		usage
+		exit 1
+	else
+		# test if user provided input exist
+		if [ -d "${REPOTREE}/${arg}" ]; then
+			MAXD=0
+			MIND=0
+			# case if user provides only category
+			# if there is a '/', everything after need to be empty
+			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
+			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
+				MAXD=1
+				MIND=1
+			fi
+			searchp=( ${arg} )
+			find_func
+		elif [ "${arg}" = "full" ]; then
+			_default_full_search
+		elif [ "${arg}" = "diff" ]; then
+
+			TODAYCHECKS="${GITINFO}/${REPO}-catpak.log"
+
+			if ! [ -f "${TODAYCHECKS}" ]; then
+				echo "No diff file found"
+				exit 1
+			fi
+			searchp=( $(cat ${TODAYCHECKS} | sort -u) )
+
+			# diff provides categories/package so we need maxd=1 and mind=1
+			# setting both vars to 0 because the find command adds 1 anyway
+			MAXD=0
+			MIND=0
+
+			# if /tmp/${SCRIPT_NAME} exist run in normal mode
+			# this way it's possible to override the diff mode
+			# this is usefull when the script got updates which should run
+			# on the whole tree
+			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
+				# only run diff mode if todaychecks exist and doesn't have zero bytes
+				if [ -s ${TODAYCHECKS} ]; then
+					# special case for repomancheck
+					# copying old sort-by-packages files are only important for repomancheck
+					# because these files aren't generated via gen_sort_pak (like on other scripts)
+					if ${REPOCHECK}; then
+						cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+					fi
+
+					# we need to copy all existing results first and remove packages which
+					# were changed (listed in TODAYCHECKS). If no results file exists, do
+					# nothing - the script would create a new one anyway
+					for oldfull in ${RUNNING_CHECKS[@]}; do
+						# SCRIPT_TYPE = checks or stats
+						# first set the full.txt path from the old log
+						OLDLOG="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+						# check if the oldlog exist (don't have to be)
+						if [ -e ${OLDLOG} ]; then
+							# copy old result file to workdir and filter the result
+							cp ${OLDLOG} ${oldfull}/
+							for cpak in $(cat ${TODAYCHECKS}); do
+								# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+								# will fail because '/' aren't escapted. also remove first slash
+								pakcat="${cpak:1}"
+								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+								# like before, only important for repomancheck
+								if ${REPOCHECK}; then
+									rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+								fi
+							done
+						fi
+					done
+
+					# first: remove packages which doesn't exist anymore
+					diff_rm_dropped_paks_v3
+					# second: run the script only on the changed packages
+					find_func
+
+				else
+					# if ${TODAYCHECKS} has zero bytes, do nothing, except in
+					# this case, update old results (git_age or bugs information)
+					# this is a special case for scripts who provide gitage or bugs information:
+					# following function can be configured in each script in order to
+					# update git_age or bug information (or anything else)
+					# in contrast to gen_results, this function would be also called if
+					# nothing changed since last run (see below)
+					local x=( )
+					local i
+					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+						x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+					done
+					local RUNNING_CHECKS=( ${x[@]} )
+					upd_results
+				fi
+			else
+				# if override is enabled, do a normal full search.
+				_default_full_search
+			fi
+		else
+			echo "${REPOTREE}/${arg}: Path not found"
+			exit 1
+		fi
+	fi
+}
 
 # retruns true if bug is found, false if not
 get_bugs_bool(){
@@ -171,28 +310,6 @@ get_bugs_bool(){
 	else
 		return 1
 	fi
-}
-
-### NOTUSED ###
-# returns the amout of bugs found - 3 digits long
-get_bugs_count(){
-	local value="${1}"
-	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | wc -l)"
-
-	if [ -n "${return}" ]; then
-		printf "%03d\n" "${return}"
-	else
-		echo "000"
-	fi
-}
-
-### NOTUSED ###
-# returns a list of Bug Numbers for a given ebuild
-get_bugs(){
-	local value="${1}"
-	local return="$(grep ${value} ${BUGTMPDIR}/full-$(date -I).txt | cut -d' ' -f2 | tr '\n' ':')"
-
-	[ -n "${return}" ] && echo "${return::-1}"
 }
 
 # returns a list of Bugs for a given ebuild. Also includes Bugtitle
@@ -259,18 +376,6 @@ get_depend(){
 	echo ${real_dep[@]}|tr ' ' ':'
 }
 
-### NOTUSED ###
-# return true or false if file exits remotly (or not)
-get_file_status(){
-	local uri="${1}"
-
-	if $(timeout 15 wget -T 10 --no-check-certificate -q --method=HEAD ${uri}); then
-		return 1
-	else
-		return 0
-	fi
-}
-
 get_file_status_detailed(){
 	local uri="${1}"
 	# sort out false positives
@@ -288,14 +393,6 @@ get_site_status(){
 	local hp="${1}"
 	local code="$(curl -o /dev/null --silent --max-time 20 --head --write-out '%{http_code}\n' ${hp})"
 	echo "${code}"
-}
-
-### NOTUSED ###
-count_ebuilds(){
-	local epath="${1}"
-	local return="$(find ${epath} -mindepth 1 -maxdepth 1 -type f -name "*.ebuild" | wc -l)"
-
-	[ -n "${return}" ] && echo "${return}"
 }
 
 check_mask(){
@@ -595,188 +692,6 @@ clean_results(){
 	done
 }
 
-usage() {
-	echo "You need at least one argument:"
-	echo
-	echo "${0} full"
-	echo -e "\tCheck against the full tree"
-	echo "${0} app-admin"
-	echo -e "\tCheck against the category app-admin"
-	echo "${0} app-admin/diradm"
-	echo -e "\tCheck against the package app-admin/diradm"
-}
-
-depth_set_v3() {
-	arg="${1}"
-
-	_default_full_search() {
-		searchp=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
-			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-		# virtual wouldn't be included by the find command, adding it manually if
-		# it's present
-		[ -e ${REPOTREE}/virtual ] && searchp+=( "virtual" )
-		# full provides only categories so we need maxd=2 and mind=2
-		# setting both vars to 1 because the find command adds 1 anyway
-		MAXD=1
-		MIND=1
-		find_func
-	}
-
-	if [ -z "${arg}" ]; then
-		usage
-		exit 1
-	else
-		# test if user provided input exist
-		if [ -d "${REPOTREE}/${arg}" ]; then
-			MAXD=0
-			MIND=0
-			# case if user provides only category
-			# if there is a '/', everything after need to be empty
-			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
-			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
-				MAXD=1
-				MIND=1
-			fi
-			searchp=( ${arg} )
-			find_func
-		elif [ "${arg}" = "full" ]; then
-			_default_full_search
-		elif [ "${arg}" = "diff" ]; then
-
-			TODAYCHECKS="${GITINFO}/${REPO}-catpak.log"
-
-			if ! [ -f "${TODAYCHECKS}" ]; then
-				echo "No diff file found"
-				exit 1
-			fi
-			searchp=( $(cat ${TODAYCHECKS} | sort -u) )
-
-			# diff provides categories/package so we need maxd=1 and mind=1
-			# setting both vars to 0 because the find command adds 1 anyway
-			MAXD=0
-			MIND=0
-
-			# if /tmp/${SCRIPT_NAME} exist run in normal mode
-			# this way it's possible to override the diff mode
-			# this is usefull when the script got updates which should run
-			# on the whole tree
-			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
-				# only run diff mode if todaychecks exist and doesn't have zero bytes
-				if [ -s ${TODAYCHECKS} ]; then
-					# special case for repomancheck
-					# copying old sort-by-packages files are only important for repomancheck
-					# because these files aren't generated via gen_sort_pak (like on other scripts)
-					if ${REPOCHECK}; then
-						cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
-					fi
-
-					# we need to copy all existing results first and remove packages which
-					# were changed (listed in TODAYCHECKS). If no results file exists, do
-					# nothing - the script would create a new one anyway
-					for oldfull in ${RUNNING_CHECKS[@]}; do
-						# SCRIPT_TYPE = checks or stats
-						# first set the full.txt path from the old log
-						OLDLOG="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-						# check if the oldlog exist (don't have to be)
-						if [ -e ${OLDLOG} ]; then
-							# copy old result file to workdir and filter the result
-							cp ${OLDLOG} ${oldfull}/
-							for cpak in $(cat ${TODAYCHECKS}); do
-								# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-								# will fail because '/' aren't escapted. also remove first slash
-								pakcat="${cpak:1}"
-								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-								# like before, only important for repomancheck
-								if ${REPOCHECK}; then
-									rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
-								fi
-							done
-						fi
-					done
-
-					# first: remove packages which doesn't exist anymore
-					diff_rm_dropped_paks_v3
-					# second: run the script only on the changed packages
-					find_func
-
-				else
-					# if ${TODAYCHECKS} has zero bytes, do nothing, except in
-					# this case, update old results (git_age or bugs information)
-					# this is a special case for scripts who provide gitage or bugs information:
-					# following function can be configured in each script in order to
-					# update git_age or bug information (or anything else)
-					# in contrast to gen_results, this function would be also called if
-					# nothing changed since last run (see below)
-					local x=( )
-					local i
-					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-						x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
-					done
-					local RUNNING_CHECKS=( ${x[@]} )
-					upd_results
-				fi
-			else
-				# if override is enabled, do a normal full search.
-				_default_full_search
-			fi
-		else
-			echo "${REPOTREE}/${arg}: Path not found"
-			exit 1
-		fi
-	fi
-}
-
-### NOTUSED ###
-# this function get the age (file creation) of a particular ebuild file
-# depends on ${ENABLE_GIT}
-# returns the age in days
-get_age() {
-	local file=${1}
-	local date_today="$(date '+%s' -d today)"
-
-	if ${ENABLE_GIT}; then
-		fileage="$(expr \( "${date_today}" - \
-			"$(date '+%s' -d $(git -C ${REPOTREE} log --format="format:%ci" --name-only --diff-filter=A ${REPOTREE}/${file} \
-			| head -1|cut -d' ' -f1) 2>/dev/null )" \) / 86400 2>/dev/null)"
-		printf "%05d\n" "${fileage}"
-	else
-		echo "-----"
-	fi
-}
-
-### NOTUSED ###
-get_age_v2() {
-	local filedate="${1}"
-	local date_today="$(date '+%s' -d today)"
-
-	if ${ENABLE_GIT}; then
-		if [ -n "${filedate}" ]; then
-			fileage="$(expr \( "${date_today}" - "$(date '+%s' -d ${filedate})" \) / 86400 2>/dev/null)"
-			printf "%05d\n" "${fileage}"
-		else
-			echo "-----"
-		fi
-	else
-		echo "-----"
-	fi
-}
-
-### NOTUSED ###
-get_age_v3() {
-	local filedate="${1}"
-	local date_today="$(date '+%s' -d today)"
-
-	if ${ENABLE_GIT}; then
-		if [ -n "${filedate}" ]; then
-			fileage="$(expr \( "${date_today}" - "${filedate}" \) / 86400 2>/dev/null)"
-			printf "%05d\n" "${fileage}"
-		else
-			echo "-----"
-		fi
-	else
-		echo "-----"
-	fi
-}
 
 date_update(){
 	local datevalue="${1}"
@@ -859,52 +774,6 @@ get_eapi() {
 	[ -n "${eapi}" ] && echo ${eapi} || echo "0"
 }
 
-### NOTUSED ###
-# list all eapi versions for a given package only showing used EAPIs. the list
-# looks like following:
-# 7(1):6(2):5(1)
-get_eapi_pak(){
-	local package=${1}
-	local eapi_list=( $(grep EAPI ${package}/*.ebuild 2> /dev/null | cut -d'=' -f2 | cut -d' ' -f1 | grep -Eo '[0-9]' | sort | uniq -c | sed 's/^\s*//'|tr ' ' '_') )
-
-	local x
-	local return_string=( )
-	for x in ${eapi_list[@]}; do
-		local eapi=$(echo ${x}|rev|cut -d'_' -f1)
-		local count=$(echo ${x}|cut -d'_' -f1)
-		return_string+=( "${eapi}(${count})" )
-	done
-
-	IFS=$'\n' return_string=($(sort -r <<<"${return_string[*]}"))
-
-	echo "$(echo ${return_string[@]}|tr ' ' ':')"
-}
-
-### NOTUSED ###
-# list all eapi's for a given package. the list looks like following:
-# EAPI Version:		0 1 2 3 4 5 6 7			(not outputed)
-# EAPI Count:			0:0:0:0:0:1:2:0
-get_eapi_list(){
-	local package=${1}
-	local eapi_list=( )
-	for eapi in $(seq 0 7); do
-		eapi_list+=( $(grep -h EAPI ${package}/*.ebuild |cut -d' ' -f1 | grep ${eapi}| wc -l) )
-	done
-	echo "$(echo ${eapi_list[@]}|tr ' ' ':')"
-}
-
-### NOTUSED ###
-# return all eclasses inherited by a ebuild
-# the list is generated from the md5-cache, which means it also includes
-# eclasses inherited by other eclasses
-get_eclasses_real() {
-	local md5_file=${1}
-
-	if ${ENABLE_MD5}; then
-		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
-		echo ${real_eclasses[@]}|tr ' ' ':'
-	fi
-}
 
 get_eclasses_real_v2() {
 	local ebuild="${1}"
@@ -938,35 +807,6 @@ check_eclasses_usage() {
 		return 0
 	else
 		return 1
-	fi
-}
-
-### NOTUSED ###
-# list all eclasses used by a given ebuild file
-# returns the list as followed:
-#  eclass1:eclass2
-# NOTE: metadata files also include a INHERIT variable, but for some reason not
-# for every ebuild.
-get_eclasses_file() {
-	local md5_file=${1}
-	local real_file=${2}
-
-	if ${ENABLE_MD5}; then
-		local real_eclasses=( $(grep '_eclasses_=' ${md5_file}|cut -c12-|sed 's/\(\t[^\t]*\)\t/\1\n/g'|cut -d$'\t' -f1) )
-		local file_eclasses=( )
-		local eclass_var="$(grep ^inherit ${real_file} |grep -o $\{.*\}|sed 's/${\(.*\)}/\1/')"
-		if [ -n "${eclass_var}" ]; then
-			eclass_in_var="$(grep -o "${eclass_var}=.*" ${real_file} | tail -n1 | tr -d '"' | cut -d '=' -f2 | cut -d ' ' -f1 )"
-			if $(echo ${real_eclasses[@]}|grep -q ${eclass_in_var}); then
-				file_eclasses+=( "${eclass_in_var}" )
-			fi
-		fi
-		for ecl in ${real_eclasses[@]}; do
-			if $(sed -e :a -e '/\\$/N; s/\\\n//; s/\t/ /; ta' ${real_file} | grep inherit | grep -q " ${ecl} \\| ${ecl}\$"); then
-				file_eclasses+=( ${ecl} )
-			fi
-		done
-		echo ${file_eclasses[@]}|tr ' ' ':'
 	fi
 }
 
@@ -1046,11 +886,6 @@ diff_rm_dropped_paks_v3(){
 			fi
 		fi
 	done
-}
-
-# dummy function which can be used by script individually
-upd_results() {
-	return 0
 }
 
 get_main_min(){
