@@ -719,6 +719,22 @@ get_age_last() {
 	fi
 }
 
+get_age_v3() {
+	local filedate="${1}"
+	local date_today="$(date '+%s' -d today)"
+
+	if ${ENABLE_GIT}; then
+		if [ -n "${filedate}" ]; then
+			fileage="$(expr \( "${date_today}" - "${filedate}" \) / 86400 2>/dev/null)"
+			printf "%05d\n" "${fileage}"
+		else
+			echo "-----"
+		fi
+	else
+		echo "-----"
+	fi
+}
+
 get_git_age() {
 	local file="${1}"
 	local time_format="${2}"
@@ -928,4 +944,4 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	get_time_diff sort_result_v4 check_mask gen_sort_eapi_v1 gen_sort_filter_v1 \
 	get_licenses get_eclasses get_keywords get_depend gen_sort_main_v4 \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
-	get_site_status get_file_status_detailed
+	get_site_status get_file_status_detailed get_age_v3

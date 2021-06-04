@@ -103,23 +103,6 @@ get_age_v2() {
 }
 
 ### NOTUSED ###
-get_age_v3() {
-	local filedate="${1}"
-	local date_today="$(date '+%s' -d today)"
-
-	if ${ENABLE_GIT}; then
-		if [ -n "${filedate}" ]; then
-			fileage="$(expr \( "${date_today}" - "${filedate}" \) / 86400 2>/dev/null)"
-			printf "%05d\n" "${fileage}"
-		else
-			echo "-----"
-		fi
-	else
-		echo "-----"
-	fi
-}
-
-### NOTUSED ###
 # list all eapi versions for a given package only showing used EAPIs. the list
 # looks like following:
 # 7(1):6(2):5(1)
