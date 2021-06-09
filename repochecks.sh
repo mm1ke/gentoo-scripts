@@ -972,7 +972,7 @@ find_func(){
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[13]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[14]}
 		gen_sort_filter_v1 4 ${RUNNING_CHECKS[15]}
-		gen_sort_filter_v1 4 ${RUNNING_CHECKS[22]}
+		gen_sort_filter_v1 2 ${RUNNING_CHECKS[22]}
 		gen_sort_filter_v1 2 ${RUNNING_CHECKS[25]}
 
 		[ ${DEBUGLEVEL} -ge 1 ] && echo "calling sort_main_v4" | (debug_output)
