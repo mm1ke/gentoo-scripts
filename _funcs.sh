@@ -411,15 +411,20 @@ check_mask(){
 # function to sort the output, takes one argument (optional)
 # the argument is the column number to sort after
 sort_result_v4(){
-	local column="${1}"
+	local fixed_column="${1}"
 	local single_rc="${2}"
 	local rc_id
 
 	# find pakackge location in result
 	_file_sort(){
+		local column=""
+		[ -n "${fixed_column}" ] && column="${fixed_column}"
+		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: sorting ${rc_id}" | (debug_output)
 		if [ -z "${column}" ]; then
 			local pak_loc="$(_find_package_location "${rc_id}")"
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: package location found ${pak_loc}" | (debug_output)
 			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: column set: ${column}" | (debug_output)
 		fi
 
 		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
@@ -430,25 +435,33 @@ sort_result_v4(){
 		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: rc_id is ${rc_id}" | (debug_output)
 				return 0
 			else
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
 				return 1
 			fi
 		elif ! [ -e ${rc_id} ]; then
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
 			return 1
 		else
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: rc_id is ${rc_id}" | (debug_output)
 			return 0
 		fi
 	}
 
 	if [ -z "${single_rc}" ]; then
+		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo ">>> sort_result_v4: calling sorting for all running checks (column: ${fixed_column})" | (debug_output)
 		for rc_id in ${RUNNING_CHECKS[@]}; do
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: checking and try sorting ${rc_id}" | (debug_output)
 			_file_check && _file_sort
 		done
 	else
+		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo ">>> sort_result_v4: calling sorting for ${RUNNING_CHECKS[${single_rc}]} (column: ${fixed_column})" | (debug_output)
 		rc_id="${RUNNING_CHECKS[${single_rc}]}"
 		_file_check && _file_sort
 	fi
+	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< sort_result_v4: finish sorting" | (debug_output)
 }
 
 count_keywords(){
