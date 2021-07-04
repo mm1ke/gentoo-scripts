@@ -9,7 +9,6 @@ REPOSITORIES=(
 	"kde|https://github.com/gentoo/kde"
 	"guru|https://github.com/gentoo/guru"
 	"science|https://github.com/gentoo/sci"
-	"rust|https://github.com/gentoo/gentoo-rust"
 	"pentoo|https://github.com/pentoo/pentoo-overlay"
 	)
 
