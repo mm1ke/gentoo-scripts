@@ -353,4 +353,11 @@ white_list=(
 	"media-video/vlc;vlc-3.0.12.1-limits-p1.patch;vlc-3.0.12.1-r100.ebuild"
 	"media-video/vlc;vlc-3.0.12.1-limits-p2.patch;vlc-3.0.12.1-r100.ebuild"
 	"sci-libs/opencascade;opencascade-7.5.env.in;opencascade-7.5.1.ebuild"
+	"app-office/gtg;0.5-mouse-cursor-fixes1.patch;gtg-0.5.ebuild"
+	"app-office/gtg;0.5-mouse-cursor-fixes2.patch;gtg-0.5.ebuild"
+	"app-office/gtg;0.5-mouse-cursor-fixes3.patch;gtg-0.5.ebuild"
+	"dev-libs/cyrus-sasl;saslauthd-2.1.26.conf;cyrus-sasl-2.1.27-r4.ebuild"
+	"dev-python/pip;virtualenv-16.7.10-py310.patch;pip-21.1.2-r1.ebuild:pip-21.1.3.ebuild"
+	"media-sound/pulseaudio;pulseaudio-14.99.2-require-bluez-dependency.patch;pulseaudio-14.99.2_pre1.ebuild"
+	"media-sound/pulseaudio;pulseaudio-14.99.2-require-GIO-for-RTP-GStreamer.patch;pulseaudio-14.99.2_pre1.ebuild"
 )
