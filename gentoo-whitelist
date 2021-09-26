@@ -348,6 +348,8 @@ white_list=(
 	"app-misc/oneko;oneko-1.2-include.patch;oneko-1.2_p6_p14-r1.ebuild"
 	"x11-misc/xkeycaps;xkeycaps-2.47-Imakefile.patch;xkeycaps-2.47_p7.ebuild"
 	"media-libs/libsdl;libsdl-1.2.15-slibtool.patch;libsdl-1.2.15_p20210224.ebuild"
+	"media-libs/libsdl;libsdl-1.2.15-gamma.patch;libsdl-1.2.15_p20210224.ebuild"
+	"media-libs/libsdl;libsdl-1.2.15-sdl-config.patch;libsdl-1.2.15_p20210224.ebuild"
 	"dev-util/clazy;clazy-1.9-llvm12.patch;clazy-1.9.ebuild"
 	"dev-util/clazy;clazy-1.9-llvm13.patch;clazy-1.9.ebuild"
 	"media-video/vlc;vlc-3.0.12.1-limits-p1.patch;vlc-3.0.12.1-r100.ebuild"
@@ -360,4 +362,6 @@ white_list=(
 	"dev-python/pip;virtualenv-16.7.10-py310.patch;pip-21.1.2-r1.ebuild:pip-21.1.3.ebuild"
 	"media-sound/pulseaudio;pulseaudio-14.99.2-require-bluez-dependency.patch;pulseaudio-14.99.2_pre1.ebuild"
 	"media-sound/pulseaudio;pulseaudio-14.99.2-require-GIO-for-RTP-GStreamer.patch;pulseaudio-14.99.2_pre1.ebuild"
+	"dev-python/pipenv;pipenv-2021-5-29-r2-remove-attr-vendor-import.patch;pipenv-2021.5.29-r2.ebuild"
+	"dev-python/pipenv;pipenv-2021-5-29-r2-remove-colorama-vendor-import.patch;pipenv-2021.5.29-r2.ebuild"
 )
