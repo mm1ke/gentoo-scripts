@@ -377,6 +377,7 @@ white_list=(
 	"dev-python/pipenv;pipenv-2021-5-29-r2-remove-colorama-vendor-import.patch;pipenv-2021.5.29-r2.ebuild"
 	"dev-python/pipenv;pipenv-2021-11-9-remove-attr-vendor-import.patch;pipenv-2021.11.9.ebuild"
 	"dev-python/pipenv;pipenv-2021-11-9-remove-colorama-vendor-import.patch;pipenv-2021.11.9.ebuild"
+	"dev-python/pipenv;pipenv-2022-1-8-remove-first-vendor-import.patch;pipenv-2022.1.8.ebuild"
 	"app-office/calligra;calligra-3.2.1-imath-1.patch;calligra-3.2.1-r4.ebuild"
 	"app-office/calligra;calligra-3.2.1-imath-2.patch;calligra-3.2.1-r4.ebuild"
 	"app-office/calligra;calligra-3.2.1-openexr-3.patch;calligra-3.2.1-r4.ebuild"
@@ -387,4 +388,6 @@ white_list=(
 	"sci-electronics/labone;labone-data-server.conf;labone-21.08.20515-r1.ebuild"
 	"sci-electronics/puff;puff-20100127-Makefile.patch;puff-20100127-r1.ebuild"
 	"sci-electronics/puff;puff-20181104-Makefile.patch;puff-20181104.ebuild"
+	"app-shells/scsh;scsh-0.7-Makefile.in-LDFLAGS.patch;scsh-0.7_pre20160820.ebuild"
+	"app-shells/scsh;scsh-0.7-test-packages.patch;scsh-0.7_pre20160820.ebuild"
 )
