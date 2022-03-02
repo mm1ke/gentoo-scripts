@@ -325,4 +325,5 @@ white_list=(
 	"sci-electronics/puff;puff-20181104-Makefile.patch;puff-20181104.ebuild"
 	"app-shells/scsh;scsh-0.7-Makefile.in-LDFLAGS.patch;scsh-0.7_pre20160820.ebuild"
 	"app-shells/scsh;scsh-0.7-test-packages.patch;scsh-0.7_pre20160820.ebuild"
+	"sci-mathematics/cadabra;cadabra2-CMake.patch;cadabra-2.3.8.ebuild"
 )
