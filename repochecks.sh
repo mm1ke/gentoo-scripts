@@ -477,10 +477,7 @@ ebuild-check() {
 	$(grep -q "EGIT_REPO_URI=\"git://" ${rel_path}) && output 6
 
 	# dead eclasses
-	local _dead_eclasses=( readme.gentoo base bash-completion boost-utils clutter \
-		cmake-utils confutils distutils epatch fdo-mime games gems git-2 gpe \
-		gst-plugins-bad gst-plugins-base gst-plugins-good gst-plugins-ugly \
-		gst-plugins10 ltprune mono python ruby user versionator x-modular xfconf )
+	local _dead_eclasses=( cmake-utils epatch ltprune mono user versionator )
 	local dead_ec_used=( )
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for DEAD eclasses usage" | (debug_output)
 	for dead_eclass in ${_dead_eclasses[@]}; do
@@ -727,7 +724,7 @@ package-check(){
 
 	# simple patchtest
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for unused patches (simple)" | (debug_output)
-	local eclasses="apache-module|elisp|vdr-plugin-2|ruby-ng|readme.gentoo|readme.gentoo-r1|java-vm-2|php-ext-source-r3|selinux-policy-2|toolchain-glibc"
+	local eclasses="apache-module|elisp|vdr-plugin-2|ruby-ng|readme.gentoo-r1|java-vm-2|php-ext-source-r3|selinux-policy-2|toolchain-glibc"
 	if [ -d "${REPOTREE}/${rel_path}/files" ]; then
 		if ! $(echo ${WHITELIST}|grep -q "${cat}/${pak}"); then
 			if ! $(grep -q -E ".diff|.patch|FILESDIR|${eclasses}" ${REPOTREE}/${rel_path}/*.ebuild); then
@@ -863,7 +860,7 @@ gen_repo_categories(){
 gen_eclass_funcs(){
 	if [ -n "${GTREE}" ]; then
 		# a list of eclass which we going to check
-		local etc=( optfeature wrapper edos2unix ltprune l10n eutils estack preserve-libs \
+		local etc=( optfeature wrapper edos2unix ltprune eutils estack preserve-libs \
 			vcs-clean epatch desktop versionator user user-info flag-o-matic xdg-utils \
 			libtool udev eapi7-ver pam ssl-cert toolchain-funcs )
 
