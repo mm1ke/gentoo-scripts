@@ -282,13 +282,14 @@ depth_set_v3() {
 					# update git_age or bug information (or anything else)
 					# in contrast to gen_results, this function would be also called if
 					# nothing changed since last run (see below)
-					local x=( )
-					local i
-					for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-						x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
-					done
-					local RUNNING_CHECKS=( ${x[@]} )
 					upd_results
+
+					#local x=( )
+					#local i
+					#for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
+					#	x+=( "${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[${i}]/${WORKDIR}/}" )
+					#done
+					#local RUNNING_CHECKS=( ${x[@]} )
 				fi
 			else
 				# if override is enabled, do a normal full search.
