@@ -456,6 +456,7 @@ ebuild-check() {
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for mirror:// usage" | (debug_output)
 	$(grep -q 'mirror://gentoo' ${rel_path}) && output 1
 
+	# EAPI6 only checks, remove when EAPI 6 is gone
 	if [ "${ebuild_eapi}" = "6" ]; then
 		[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for epatch/dohtml usage" | (debug_output)
 		# epatch usage
@@ -463,6 +464,7 @@ ebuild-check() {
 		# dohtml usage
 		$(grep -q "\<dohtml\>" ${rel_path}) && output 3
 	fi
+
 	# DESCRIPTION over 80
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for description over 80" | (debug_output)
 	[ $(grep DESCRIPTION ${abs_md5_path} | wc -m) -gt 95 ] && output 4
@@ -472,6 +474,7 @@ ebuild-check() {
 	if $(grep -q "HOMEPAGE=.*\${" ${rel_path}); then
 		$(grep -q 'HOMEPAGE=.*${HOMEPAGE}' ${rel_path}) && output 5
 	fi
+
 	# insecure git usage
 	[ ${DEBUGLEVEL} -ge 2 ] && echo "checking for git:// usage" | (debug_output)
 	$(grep -q "EGIT_REPO_URI=\"git://" ${rel_path}) && output 6
