@@ -859,7 +859,7 @@ gen_repo_categories(){
 # need to know where the main gentoo tree resides. GTREE is usually set in qa.sh
 gen_eclass_funcs(){
 	if [ -n "${GTREE}" ]; then
-		# a list of eclass which we going to check
+		# a list of eclass which we're going to check
 		local etc=( optfeature wrapper edos2unix ltprune eutils estack preserve-libs \
 			vcs-clean epatch desktop versionator user user-info flag-o-matic xdg-utils \
 			libtool udev eapi7-ver pam ssl-cert toolchain-funcs )
@@ -868,7 +868,7 @@ gen_eclass_funcs(){
 
 		local i x
 		for i in ${etc[@]}; do
-			# check if the eclass exports functions (these eclass cannot be checked)
+			# check if the eclass exports EXPORT_FUNCTIONS (these eclass cannot be checked)
 			if ! $(grep -q "EXPORT_FUNCTIONS" /${GTREE}/eclass/${i}.eclass); then
 				# get all functions of the eclass
 				local efuncs="$(sed -n 's/# @FUNCTION: //p' "/${GTREE}/eclass/${i}.eclass" | sed ':a;N;$!ba;s/\n/ /g')"
@@ -928,7 +928,9 @@ gen_whitelist(){
 find_func(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo "starting find with MIND:${MIND} and MAXD:${MAXD}" | (debug_output)
 
+	# do not run in parallel if DEBUGLEVEL -ge 2
 	if [ ${DEBUGLEVEL} -ge 2 ]; then
+		## DEBUGRUN ##
 		[ ${DEBUGLEVEL} -ge 2 ] && echo "NORMAL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.ebuild" -print 2>/dev/null | while read -r line; do ebuild-check ${line}; done
@@ -938,6 +940,7 @@ find_func(){
 
 		find ${searchp[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.xml" -print 2>/dev/null | while read -r line; do metadata-check ${line}; done
+		## DEBUGRUN END ##
 	else
 		[ ${DEBUGLEVEL} -ge 1 ] && echo "PARALLEL run: searchpattern is ${searchp[@]}" | (debug_output)
 		find ${searchp[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
