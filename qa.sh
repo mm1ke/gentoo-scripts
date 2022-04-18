@@ -76,7 +76,7 @@ for repodir in ${REPOSITORIES[@]}; do
 		DIFFMODE=false
 	fi
 
-	scripts_diff="repostats.sh repochecks.sh repomancheck.sh patchtest.sh"
+	scripts_diff="repostats.sh repochecks.sh ebuildchecks.sh repomancheck.sh patchtest.sh"
 	for s_v2 in ${scripts_diff}; do
 		printf "${s_v2}|" >> ${TIMELOG}
 		echo "Processing script: ${s_v2}" >> ${LOGFILE}
