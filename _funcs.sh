@@ -136,6 +136,7 @@ _update_buglists(){
 _update_buglists
 
 _find_package_location(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	local rc_id=${1}
 	local x i
 	# find pakackge location in result first
@@ -144,6 +145,7 @@ _find_package_location(){
 		for x in $(head -n10 ${rc_id}); do
 			for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
 				if [ -d "${REPOTREE}/$(echo ${x}| cut -d'|' -f${i})" ]; then
+					[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: found location: ${i}" | (debug_output)
 					echo ${i}
 					return 0
 				fi
@@ -304,16 +306,15 @@ depth_set_v3() {
 }
 
 depth_set_v4() {
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	arg="${1}"
 
-	searchpattern_full=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
-		-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
-	# virtual wouldn't be included by the find command, adding it manually if
-	# it's present
-	[ -e ${REPOTREE}/virtual ] && searchpattern_full+=( "virtual" )
-
 	_default_full_search() {
-		searchp=("${searchpattern_full[@]}")
+		SEARCHPATTERN=( $(find ${REPOTREE} -mindepth 1 -maxdepth 1 \
+			-type d -regextype sed -regex "./*[a-z0-9].*-[a-z0-9].*" -printf '%P\n') )
+		# virtual wouldn't be included by the find command, adding it manually if
+		# it's present
+		[[ -e ${REPOTREE}/virtual ]] && SEARCHPATTERN+=( "virtual" )
 		# full provides only categories so we need maxd=2 and mind=2
 		# setting both vars to 1 because the find command adds 1 anyway
 		MAXD=1
@@ -321,97 +322,88 @@ depth_set_v4() {
 		find_func
 	}
 
-	if [ -z "${arg}" ]; then
+	if [[ -z "${arg}" ]]; then
 		usage
 		exit 1
 	else
 		# test if user provided input exist
-		if [ -d "${REPOTREE}/${arg}" ]; then
+		if [[ -d "${REPOTREE}/${arg}" ]]; then
 			MAXD=0
 			MIND=0
 			# case if user provides only category
 			# if there is a '/', everything after need to be empty
 			# if there are no '/', both checks (arg%%/* and arg##*/) print the same
-			if [ -z "${arg##*/}" ] || [ "${arg%%/*}" = "${arg##*/}" ]; then
+			if [[ -z "${arg##*/}" ]] || [[ "${arg%%/*}" = "${arg##*/}" ]]; then
 				MAXD=1
 				MIND=1
 			fi
-			searchp=( ${arg} )
+			SEARCHPATTERN=( ${arg} )
 			find_func
-		elif [ "${arg}" = "full" ]; then
+		elif [[ "${arg}" = "full" ]]; then
 			_default_full_search
-		elif [ "${arg}" = "diff" ]; then
+		elif [[ "${arg}" = "diff" ]]; then
 
-			TODAYCHECKS="${GITINFO}/${REPO}-catpak.log"
+			local changed_packages="${GITINFO}/${REPO}-catpak.log"
 
-			if ! [ -f "${TODAYCHECKS}" ]; then
+			if ! [[ -f "${changed_packages}" ]]; then
 				echo "No diff file found"
 				exit 1
 			fi
-			searchp=( $(cat ${TODAYCHECKS} | sort -u) )
+			SEARCHPATTERN=( $(cat ${changed_packages} | sort -u) )
 
 			# diff provides categories/package so we need maxd=1 and mind=1
 			# setting both vars to 0 because the find command adds 1 anyway
 			MAXD=0
 			MIND=0
 
-			# if /tmp/${SCRIPT_NAME} exist run in normal mode
-			# this way it's possible to override the diff mode
-			# this is usefull when the script got updates which should run
-			# on the whole tree
-			if ! [ -e "/tmp/${SCRIPT_NAME}" ]; then
-				# only run diff mode if todaychecks exist and doesn't have zero bytes
-				if [ -s ${TODAYCHECKS} ]; then
-					# special case for repomancheck
-					# copying old sort-by-packages files are only important for repomancheck
-					# because these files aren't generated via gen_sort_pak (like on other scripts)
-					if ${REPOCHECK}; then
-						cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
-					fi
-
-					# we need to copy all existing results first and remove packages which
-					# were changed (listed in TODAYCHECKS). If no results file exists, do
-					# nothing - the script would create a new one anyway
-					for oldfull in ${RUNNING_CHECKS[@]}; do
-						# SCRIPT_TYPE = checks or stats
-						# first set the full.txt path from the old log
-						OLDLOG="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
-						# check if the oldlog exist (don't have to be)
-						if [ -e ${OLDLOG} ]; then
-							# copy old result file to workdir and filter the result
-							cp ${OLDLOG} ${oldfull}/
-							for cpak in $(cat ${TODAYCHECKS}); do
-								# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
-								# will fail because '/' aren't escapted. also remove first slash
-								pakcat="${cpak:1}"
-								sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-								# like before, only important for repomancheck
-								if ${REPOCHECK}; then
-									rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
-								fi
-							done
-						fi
-					done
-
-					# first: remove packages which doesn't exist anymore
-					diff_rm_dropped_paks_v3
-					# second: run the script only on the changed packages
-					find_func
-
-				else
-					# if ${TODAYCHECKS} has zero bytes, do nothing, except in
-					# this case, update old results (git_age or bugs information)
-					# this is a special case for scripts who provide gitage or bugs information:
-					# following function can be configured in each script in order to
-					# update git_age or bug information (or anything else)
-					# in contrast to gen_results, this function would be also called if
-					# nothing changed since last run (see below)
-					upd_results
-
+			# only run diff mode if todaychecks exist and doesn't have zero bytes
+			if [[ -s ${changed_packages} ]]; then
+				# special case for repomancheck
+				# copying old sort-by-packages files are only important for repomancheck
+				# because these files aren't generated via gen_sort_pak (like on other scripts)
+				if ${REPOCHECK}; then
+					cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
 				fi
+
+				# we need to copy all existing results first and remove packages which
+				# were changed (listed in TODAYCHECKS). If no results file exists, do
+				# nothing - the script would create a new one anyway
+				local oldfull oldlog
+				for oldfull in ${RUNNING_CHECKS[@]}; do
+					# SCRIPT_TYPE = checks or stats
+					# first set the full.txt path from the old log
+					local oldlog="${RESULTSDIR}/${SCRIPT_TYPE}/${oldfull/${WORKDIR}/}/full.txt"
+					# check if the oldlog exist (don't have to be)
+					if [[ -e ${oldlog} ]]; then
+						# copy old result file to workdir and filter the result
+						cp ${oldlog} ${oldfull}/
+						for cpak in $(cat ${changed_packages}); do
+							# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
+							# will fail because '/' aren't escapted. also remove first slash
+							pakcat="${cpak:1}"
+							sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
+							# like before, only important for repomancheck
+							if ${REPOCHECK}; then
+								rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+							fi
+						done
+					fi
+				done
+
+				# first: remove packages which doesn't exist anymore
+				diff_rm_dropped_paks_v3
+				# second: run the script only on the changed packages
+				find_func
+
 			else
-				# if override is enabled, do a normal full search.
-				_default_full_search
+				# if ${TODAYCHECKS} has zero bytes, do nothing, except in
+				# this case, update old results (git_age or bugs information)
+				# this is a special case for scripts who provide gitage or bugs information
+				# following function can be configured in each script in order to
+				# update git_age or bug information (or anything else)
+				# in contrast to gen_results, this function would be also called if
+				# nothing changed since last run
+				upd_results
 			fi
 		else
 			echo "${REPOTREE}/${arg}: Path not found"
@@ -551,6 +543,7 @@ sort_result_v4(){
 
 	# check input
 	_file_check(){
+		# check if rc_id is directory
 		if [ -d "${rc_id}" ]; then
 			if [ -e "${rc_id}/full.txt" ]; then
 				rc_id="${rc_id}/full.txt"
@@ -560,9 +553,11 @@ sort_result_v4(){
 				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
 				return 1
 			fi
+		# else check if rc_id exists (must be a file then)
 		elif ! [ -e ${rc_id} ]; then
 			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
 			return 1
+		# otherwise rc_id doesn't exist
 		else
 			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: rc_id is ${rc_id}" | (debug_output)
 			return 0
@@ -581,6 +576,61 @@ sort_result_v4(){
 		_file_check && _file_sort
 	fi
 	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< sort_result_v4: finish sorting" | (debug_output)
+}
+
+sort_result_v5(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+
+	if [[ -z "${1}" ]]; then
+		return 0
+	else
+		local single_rc=( "${1}" )
+	fi
+	local rc_id
+
+	# find pakackge location in result
+	_file_sort(){
+		local column=""
+		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: sorting ${rc_id}" | (debug_output)
+		if [ -z "${column}" ]; then
+			local pak_loc="$(_find_package_location "${rc_id}")"
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: got location: ${pak_loc}" | (debug_output)
+			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: column set: ${column}" | (debug_output)
+		fi
+
+		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+	}
+
+	# check input
+	_file_check(){
+		# check if rc_id is directory
+		if [[ -d "${rc_id}" ]]; then
+			if [[ -e "${rc_id}/full.txt" ]]; then
+				rc_id="${rc_id}/full.txt"
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: rc_id is ${rc_id}" | (debug_output)
+				return 0
+			else
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: W: no rc_id(dir) set!" | (debug_output)
+				return 1
+			fi
+		# else check if rc_id exists (must be a file then)
+		elif ! [[ -e "${rc_id}" ]]; then
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: W: no rc_id(file) set!" | (debug_output)
+			return 1
+		# otherwise rc_id doesn't exist
+		else
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: rc_id is ${rc_id}" | (debug_output)
+			return 0
+		fi
+	}
+
+	if [[ -n "${single_rc}" ]]; then
+		for rc_id in ${single_rc[@]}; do
+			_file_check && _file_sort
+		done
+	fi
+	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< ${FUNCNAME[0]}: finish sorting" | (debug_output)
 }
 
 count_keywords(){
@@ -698,6 +748,68 @@ gen_sort_main_v4(){
 	wait
 }
 
+# function which sorts a list by it's maintainer
+gen_sort_main_v5(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local id d v
+
+	_gen_sort(){
+		local rc_id="${1}"
+
+		if [ -d "${rc_id}" ]; then
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				return 0
+			fi
+		elif ! [ -e "${rc_id}" ]; then
+			return 0
+		fi
+
+		# find pakackge location in result first
+		local pak_loc="$(_find_package_location "${rc_id}")"
+		if [ -s "${rc_id}" ]; then
+			# check the first 10 entries
+			for x in $(head -n10 "${rc_id}"); do
+				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
+				local pak_main="$(get_main_min ${pak})"
+				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
+					if [ "$(echo ${x}|cut -d'|' -f${i})" = "${pak_main}" ]; then
+						local main_loc=${i}
+						break 2
+					fi
+				done
+			done
+		fi
+		# generate maintainer sortings only if we find the location
+		if [ -n "${main_loc}" ]; then
+			mkdir -p "${rc_id%/*}/sort-by-maintainer"
+			local main
+			for main in $(cat "${rc_id}" |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
+				grep "${main}" "${rc_id}" > "${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt"
+			done
+		fi
+	}
+
+	for id in ${check_files[@]}; do
+		for v in sort-by-filter sort-by-eapi; do
+			if [ -d "${id}/${v}" ]; then
+				for d in $(find ${id}/${v}/* -type d); do
+					_gen_sort "${d}" &
+				done
+			fi
+		done
+		_gen_sort "${id}" &
+	done
+	wait
+}
+
 # function which sorts a list by it's package
 gen_sort_pak_v4() {
 	if [ -z "${1}" ]; then
@@ -750,7 +862,62 @@ gen_sort_pak_v4() {
 	wait
 }
 
+# function which sorts a list by it's package
+gen_sort_pak_v5() {
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+
+	if [ -z "${1}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	local id d v
+
+	_gen_sort(){
+		local rc_id="${1}"
+
+		if [ -d "${rc_id}" ]; then
+			# check input
+			if [ -e "${rc_id}/full.txt" ]; then
+				rc_id="${rc_id}/full.txt"
+			else
+				return 0
+			fi
+		elif ! [ -e "${rc_id}" ]; then
+			return 0
+		fi
+
+		# find pakackge location in result
+		pak_loc="$(_find_package_location "${rc_id}")"
+		# only create package sorting if we found package location
+		if [ -n "${pak_loc}" ]; then
+			local f_packages="$(cat "${rc_id}"| cut -d "${DL}" -f${pak_loc} |sort -u)"
+			local pack
+			for pack in ${f_packages}; do
+				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
+				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
+				mkdir -p "${rc_id%/*}/sort-by-package/${f_cat}"
+				grep "\<${pack}\>" "${rc_id}" > "${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt"
+			done
+		fi
+	}
+
+	for id in ${check_files[@]}; do
+		for v in sort-by-filter sort-by-eapi; do
+			if [ -d "${id}/${v}" ]; then
+				for d in $(find ${id}/${v}/* -type d); do
+					_gen_sort "${d}" &
+				done
+			fi
+		done
+		_gen_sort "${id}" &
+	done
+	wait
+}
+
 gen_sort_eapi_v1(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo "calling ${FUNCNAME[0]}" | (debug_output)
 	if [ -z "${1}" ]; then
 		local check_files=( "${RUNNING_CHECKS[@]}" )
 	else
@@ -807,6 +974,38 @@ gen_sort_filter_v1(){
 	wait
 }
 
+gen_sort_filter_v2(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+	local column="${1}"
+	if [ -z "${2}" ]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${2}" )
+	fi
+
+	local rc_id file ec ecd
+
+	_gen_sort_filter() {
+		local file="${1}"
+		local col="${2}"
+		local ec
+		for ec in $(echo "${file}"|cut -d'|' -f${col}|tr ':' ' '|cut -d'(' -f1); do
+			mkdir -p "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')"
+			echo "${file}" >> "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt"
+		done
+	}
+
+	local _file
+	for rc_id in ${check_files[@]}; do
+		if [ -e "${rc_id}/full.txt" ]; then
+			for _file in $(cat "${rc_id}/full.txt"); do
+				_gen_sort_filter "${_file}" "${column}" &
+			done
+		fi
+	done
+	wait
+}
+
 gen_descriptions(){
 	for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
 		data_descriptions ${i} >> "${RUNNING_CHECKS[${i}]}/description.txt"
@@ -814,6 +1013,7 @@ gen_descriptions(){
 }
 
 clean_results(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	local c
 	for c in ${RUNNING_CHECKS[@]}; do
 		if [ -e "${c}/full.txt" ]; then
@@ -988,6 +1188,26 @@ get_eclasses() {
 # this function simply copies all results from the WORKDIR to
 # the RESULTSDIR
 copy_checks() {
+	[ ${DEBUGLEVEL} -ge 1 ] && echo "calling ${FUNCNAME[0]}" | (debug_output)
+	local type=${1}
+
+	if ! [ -e ${RESULTSDIR}/${type}/ ]; then
+		mkdir -p ${RESULTSDIR}/${type}
+		cp -r ${RUNNING_CHECKS[@]} ${RESULTSDIR}/${type}/
+	else
+		for lcheck in ${RUNNING_CHECKS[@]}; do
+			rm -rf ${RESULTSDIR}/${type}/${lcheck##*/}
+		done
+		cp -r ${RUNNING_CHECKS[@]} ${RESULTSDIR}/${type}/
+	fi
+}
+
+#pre_checks() {
+#
+#}
+
+post_checks() {
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	local type=${1}
 
 	if ! [ -e ${RESULTSDIR}/${type}/ ]; then
@@ -1076,4 +1296,5 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	get_time_diff sort_result_v4 check_mask gen_sort_eapi_v1 gen_sort_filter_v1 \
 	get_licenses get_eclasses get_keywords get_depend gen_sort_main_v4 \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
-	get_site_status get_file_status_detailed get_age_v3
+	get_site_status get_file_status_detailed get_age_v3 post_checks \
+	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2
