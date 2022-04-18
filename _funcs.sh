@@ -771,6 +771,7 @@ gen_sort_main_v5(){
 		elif ! [ -e "${rc_id}" ]; then
 			return 0
 		fi
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "*** ${FUNCNAME[0]}: checking ${rc_id}" | (debug_output)
 
 		# find pakackge location in result first
 		local pak_loc="$(_find_package_location "${rc_id}")"
@@ -887,6 +888,7 @@ gen_sort_pak_v5() {
 		elif ! [ -e "${rc_id}" ]; then
 			return 0
 		fi
+		[ ${DEBUGLEVEL} -ge 2 ] && echo "*** ${FUNCNAME[0]}: checking ${rc_id}" | (debug_output)
 
 		# find pakackge location in result
 		pak_loc="$(_find_package_location "${rc_id}")"
