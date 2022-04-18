@@ -67,14 +67,14 @@ TMPCHECK="/tmp/repochecks-tmp-${RANDOM}.txt"
 
 array_names(){
 	RUNNING_CHECKS=(
-		"${WORKDIR}/ebuild_trailing_whitespaces"						# Index 0
+		"${WORKDIR}/ebuild_dummy"						# Index 0
 		"${WORKDIR}/ebuild_obsolete_gentoo_mirror_usage"		# Index 1
 		"${WORKDIR}/ebuild_epatch_in_eapi6"									# Index 2
 		"${WORKDIR}/ebuild_dohtml_in_eapi6"									# Index 3
 		"${WORKDIR}/ebuild_description_over_80"							# Index 4
 		"${WORKDIR}/ebuild_variables_in_homepages"					# Index 5
 		"${WORKDIR}/ebuild_insecure_git_uri_usage"					# Index 6
-		"${WORKDIR}/ebuild_deprecated_eclasses"							# Index 7
+		"${WORKDIR}/ebuild_dummy"							# Index 7
 		"${WORKDIR}/ebuild_leading_trailing_whitespaces_in_variables"	# Index 8
 		"${WORKDIR}/ebuild_multiple_deps_per_line"					# Index 9
 		"${WORKDIR}/ebuild_nonexist_dependency"							# Index 10
@@ -956,6 +956,7 @@ find_func(){
 			-type f -name "*.xml" -print 2>/dev/null | parallel metadata-check {}
 	fi
 
+	rm -rf "${WORKDIR}/ebuild_dummy"
 	# check for empty results and remove them
 	clean_results
 
