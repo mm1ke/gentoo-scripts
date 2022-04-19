@@ -136,7 +136,7 @@ _update_buglists(){
 _update_buglists
 
 _find_package_location(){
-	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+	[ ${DEBUGLEVEL} -ge 2 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	local rc_id=${1}
 	local x i
 	# find pakackge location in result first
