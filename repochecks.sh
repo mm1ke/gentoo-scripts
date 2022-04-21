@@ -370,7 +370,7 @@ var_descriptions(){
 	https://foo.bar.com                         homepage corresponding to the statuscode
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
-	read -r -d '' pa_hobs <<- EOM
+	read -r -d '' pa_hore <<- EOM
 	Lists ebuilds with a Homepage which actually redirects to another sites.
 	This check only runs if a package changed, thus the acutal status might not be correct anymore.
 
