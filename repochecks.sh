@@ -44,7 +44,6 @@ fi
 #
 ### IMPORTANT SETTINGS START ###
 #
-#${TREE_IS_MASTER} || exit 0		# only works with gentoo main tree
 ${ENABLE_MD5} || exit 0					# only works with md5 cache
 #${ENABLE_GIT} || exit 0				# only works with git tree
 
