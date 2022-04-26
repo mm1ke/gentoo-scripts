@@ -449,6 +449,16 @@ get_keywords(){
 	local eb_keywords=( $(grep ^KEYWORDS ${eb_path} |cut -d'=' -f2 | tr ' ' '\n') )
 	echo ${eb_keywords[@]}|tr ' ' ':'
 }
+get_keywords_v2(){
+	local rel_ebuild="${1}"
+	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
+	local eb_keywords=( $(grep ^KEYWORDS ${eb_path} |cut -d'=' -f2 | tr ' ' '\n') )
+	if [[ -z "${eb_keywords}" ]]; then
+		echo "none"
+	else
+		echo ${eb_keywords[@]}|tr ' ' ':'
+	fi
+}
 
 # returns all packages set in [R,B]DEPEND, not taking contional dependencies or
 # versions into account
@@ -1299,4 +1309,5 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	get_licenses get_eclasses get_keywords get_depend gen_sort_main_v4 \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
 	get_site_status get_file_status_detailed get_age_v3 post_checks \
-	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2
+	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2 \
+	get_keywords_v2
