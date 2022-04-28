@@ -588,6 +588,48 @@ sort_result_v4(){
 	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< sort_result_v4: finish sorting" | (debug_output)
 }
 
+# sort results after a certain column
+sort_result_column_v1(){
+	local column="${1}"
+	local rc="${2}"
+
+	# find pakackge location in result
+	_file_sort(){
+		sort -t"${DL}" -k${column} -o${rc} ${rc}
+	}
+
+	# check input
+	_file_check(){
+		# check if rc_id is directory
+		if [ -d "${rc}" ]; then
+			if [ -e "${rc}/full.txt" ]; then
+				rc="${rc}/full.txt"
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "${FUNCNAME[0]}: rc is ${rc}" | (debug_output)
+				return 0
+			else
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "${FUNCNAME[0]}: W: full.txt missing in ${rc}!" | (debug_output)
+				return 1
+			fi
+		# else check if rc_id exists (must be a file then)
+		elif ! [ -e ${rc} ]; then
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "${FUNCNAME[0]}: W: ${rc} doesn't exist!" | (debug_output)
+			return 1
+		# otherwise rc_id doesn't exist
+		else
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "${FUNCNAME[0]}: rc is ${rc}" | (debug_output)
+			return 0
+		fi
+	}
+
+	if [[ -n "${rc}" ]] && [[ -n "${column}" ]]; then
+		[[ ${DEBUGLEVEL} -ge ${FDL} ]] && echo ">>> ${FUNCNAME[0]}: calling sorting for ${rc} ,column: ${column})" | (debug_output)
+		_file_check && _file_sort
+	else
+		return 1
+	fi
+	[[ ${DEBUGLEVEL} -ge ${FDL} ]] && echo "<<< ${FUNCNAME[0]}: finish sorting" | (debug_output)
+}
+
 sort_result_v5(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 
@@ -1310,4 +1352,4 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
 	get_site_status get_file_status_detailed get_age_v3 post_checks \
 	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2 \
-	get_keywords_v2
+	get_keywords_v2 sort_result_column_v1
