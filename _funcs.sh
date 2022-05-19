@@ -634,9 +634,9 @@ sort_result_v5(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 
 	if [[ -z "${1}" ]]; then
-		return 0
+		local check_files=( "${RUNNING_CHECKS[@]}" )
 	else
-		local single_rc=( "${1}" )
+		local check_files=( "${1}" )
 	fi
 	local rc_id
 
@@ -677,8 +677,8 @@ sort_result_v5(){
 		fi
 	}
 
-	if [[ -n "${single_rc}" ]]; then
-		for rc_id in ${single_rc[@]}; do
+	if [[ -n "${check_files}" ]]; then
+		for rc_id in ${check_files[@]}; do
 			_file_check && _file_sort
 		done
 	fi
