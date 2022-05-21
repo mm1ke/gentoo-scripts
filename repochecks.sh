@@ -750,7 +750,7 @@ ebuild-check() {
 					fi
 				fi
 			done
-			[ -n "${array_results1}" ] && output eb_def0 eb_mizd
+			[ -n "${array_results1}" ] && output eb_def1 eb_mizd
 			[ -n "${file_offline}" ] && output eb_sruo eb_sruo
 			[ -n "${bad_file_status}" ] && output eb_srub eb_srub
 		fi
