@@ -16,6 +16,7 @@ white_list=(
 	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
 	"sys-apps/portage;README.RESCUE;*"
 	"sys-firmware/seabios;README;*"
+	"x11-wm/fvwm3;README.translucency;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
 	"sys-boot/milo;linux-2.2.25-gcc3-milo.diff;milo-2.4.18.ebuild"
@@ -249,6 +250,7 @@ white_list=(
 	"dev-java/openjdk;openjdk-17.env.sh;openjdk-17.0.1_p12.ebuild"
 	"dev-java/openjdk;openjdk-11.env.sh;openjdk-11.0.11_p9-r1.ebuild"
 	"dev-java/openjdk;openjdk-8.env.sh;openjdk-8.272_p10.ebuild"
+	"dev-java/openjdk-jre-bin;openjdk-jre-bin-17.env.sh;openjdk-jre-bin-17.0.3_p7.ebuild"
 	"dev-java/openjdk-jre-bin;openjdk-jre-bin-11.env.sh;openjdk-jre-bin-11.0.11_p9.ebuild"
 	"dev-java/openjdk-jre-bin;openjdk-jre-bin-8.env.sh;openjdk-jre-bin-8.292_p10.ebuild"
 	"www-apps/karma-bin;karma-0.24.yaml;karma-bin-0.24.ebuild"
@@ -338,4 +340,6 @@ white_list=(
 	"net-vpn/frp;frpc.service;frp-0.43.0.ebuild"
 	"net-vpn/frp;frps.service;frp-0.43.0.ebuild"
 	"sys-kernel/raspberrypi-sources;raspberrypi-sources-5.15.32-gentoo-kconfig.patch;raspberrypi-sources-5.15.32_p20220331-r1.ebuild"
+	"dev-libs/openssl-compat;openssl-1.1.0j-parallel_install_fix.patch;openssl-compat-1.1.1o.ebuild"
+	"dev-libs/openssl-compat;openssl-1.1.1i-riscv32.patch;openssl-compat-1.1.1o.ebuild"
 )
