@@ -361,9 +361,9 @@ depth_set_v4() {
 				# special case for repomancheck
 				# copying old sort-by-packages files are only important for repomancheck
 				# because these files aren't generated via gen_sort_pak (like on other scripts)
-				if ${REPOCHECK}; then
-					cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
-				fi
+				#if ${REPOCHECK}; then
+				#	cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+				#fi
 
 				# we need to copy all existing results first and remove packages which
 				# were changed (listed in TODAYCHECKS). If no results file exists, do
@@ -383,9 +383,9 @@ depth_set_v4() {
 							pakcat="${cpak:1}"
 							sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
 							# like before, only important for repomancheck
-							if ${REPOCHECK}; then
-								rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
-							fi
+							#if ${REPOCHECK}; then
+							#	rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+							#fi
 						done
 					fi
 				done

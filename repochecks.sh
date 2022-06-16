@@ -87,6 +87,7 @@ array_names(){
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore
+		#pa_fure
 		me_miin
 		me_mipm
 		me_duud
@@ -119,6 +120,7 @@ array_names(){
 		[pa_inis]="${WORKDIR}/ebuild_insecure_init_scripts"
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
 		[pa_hore]="${WORKDIR}/ebuild_homepage_redirections"
+		[pa_fure]="${WORKDIR}/packages_full_repoman"
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
 		[me_duud]="${WORKDIR}/metadata_duplicate_useflag_description"
@@ -391,6 +393,15 @@ var_descriptions(){
 	foo-1.12-r2.ebuild                          full filename
 	https://foo.bar.com                         original hommepage in ebuild
 	https://bar.foo.com                         redirected homepage
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
+	read -r -d '' pa_fure <<- EOM
+	A script which runs 'repoman full' on every package. The result is also filtered
+	by repomans checks.
+
+	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
+	dev-libs/foo                                package category/name
+	inherit.deprecated:uri.https                repoman problem(s), seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' me_miin <<- EOM
@@ -775,6 +786,7 @@ package-check() {
 	local rel_path=${1}																		# path relative to ${REPOTREE}:	./app-admin/salt/
 	local cat="$(echo ${rel_path}|cut -d'/' -f1)"					# package category:							app-admin
 	local pak="$(echo ${rel_path}|cut -d'/' -f2)"					# package name:									salt
+	local abs_path="${REPOTREE}/${cat}/${pak}"						# full path:										/usr/portage/app-admin/salt
 	local maintainer="$(get_main_min "${cat}/${pak}")"		# maintainer of package:				foo@gentoo.org:bar@gmail.com
 
 	output_formats(){
@@ -784,6 +796,8 @@ package-check() {
 			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${maintainer}"
 			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
 			[pa_unpa]="${cat}/${pak}${DL}${upatch}${DL}${maintainer}"
+			[pa_fure]="${cat}/${pak}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"]
+
 		)
 		echo "${array_formats[${1}]}"
 	}
@@ -1334,6 +1348,40 @@ package-check() {
 			fi
 		done
 	fi
+
+	# repoman check [pa_fure]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
+		#if ${REPOCHECK}; then
+		#	cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
+		#fi
+		#if ${REPOCHECK}; then
+		#	rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
+		#fi
+
+
+		cd ${abs_path}
+		local TMPFILE="/tmp/${cat}-${pak}-${RANDOM}.log"
+		/usr/bin/repoman -q full > ${TMPFILE}
+
+		local affected_checks=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d' ' -f3 ) )
+
+		if ! [ "$(cat ${TMPFILE})" = "No QA issues found" ]; then
+			if ${FILERESULTS}; then
+				mkdir -p ${FULL_CHECKS[pa_fure]}/sort-by-package/${category}/
+				head -n-1 ${TMPFILE} > ${FULL_CHECKS[pa_fure]}/sort-by-package/${category}/${package}.txt
+				output pa_fure pa_fure
+			else
+				#if [ "${1}" = "full" ]; then
+					output pa_fure pa_fure
+				#else
+				#	echo "${category}/${package}${DL}${maintainer}"
+				#	head -n-1 ${TMPFILE}
+				#fi
+			fi
+		fi
+
+		rm ${TMPFILE}
+	fi
 }
 
 metadata-check() {
@@ -1526,8 +1574,12 @@ find_func(){
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_mief]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_hobs]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[me_duud]}"
+		#gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
 		gen_sort_pak_v5
 		gen_sort_main_v5
+		#for ffp in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
+		#	gen_sort_pak_v5 ${FULL_CHECKS[pa_fure]}/sort-by-filter/${ffp}
+		#done
 		post_checks ${SCRIPT_TYPE}
 	fi
 }
