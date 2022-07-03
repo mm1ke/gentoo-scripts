@@ -88,6 +88,7 @@ array_names(){
 		pa_inis
 		pa_hobs pa_hore
 		#pa_fure
+		#pa_pksc
 		me_miin
 		me_mipm
 		me_duud
@@ -121,6 +122,7 @@ array_names(){
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
 		[pa_hore]="${WORKDIR}/ebuild_homepage_redirections"
 		[pa_fure]="${WORKDIR}/packages_full_repoman"
+		[pa_pksc]="${WORKDIR}/packages_pkgcheck_scan"
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
 		[me_duud]="${WORKDIR}/metadata_duplicate_useflag_description"
@@ -402,6 +404,15 @@ var_descriptions(){
 	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
 	inherit.deprecated:uri.https                repoman problem(s), seperated by ':'
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
+	read -r -d '' pa_pksc <<- EOM
+	A script which runs 'pkgcheck scan --net --keywords=-info -q' on every package. The result is also filtered
+	by pkgcheck keywords.
+
+	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
+	dev-libs/foo                                package category/name
+	RequiredUseDefaults:                        repoman problem(s), seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' me_miin <<- EOM
@@ -792,12 +803,12 @@ package-check() {
 	output_formats(){
 		declare -gA array_formats=(
 			[pa_def0]="${cat}/${pak}${DL}${maintainer}"
+			[pa_def1]="${cat}/${pak}${DL}$(echo ${array_results1[@]}|tr ' ' ':')${DL}${maintainer}"
 			[pa_houn]="${hp_count}${DL}${cat}/${pak}${DL}${maintainer}"
 			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${maintainer}"
 			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
 			[pa_unpa]="${cat}/${pak}${DL}${upatch}${DL}${maintainer}"
-			[pa_fure]="${cat}/${pak}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"]
-
+			[pa_fure]="${cat}/${pak}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"
 		)
 		echo "${array_formats[${1}]}"
 	}
@@ -821,7 +832,7 @@ package-check() {
 			done
 		else
 			for upatch in "${unused_patches[@]}"; do
-				output_formats ${output}
+				echo "${file##*/}${DL}$(output_formats ${output})"
 			done
 		fi
 	}
@@ -1306,10 +1317,9 @@ package-check() {
 		for eb in ${REPOTREE}/${rel_path}/*.ebuild; do
 			local ebuild_eapi="$(get_eapi ${eb})"
 			local ebuild=$(basename ${eb%.*})
-			local filename="${ebuild}.ebuild"
-			local cat="$(echo ${rel_path}|cut -d'/' -f1)"													# package category:						app-admin
+			#local filename="${ebuild}.ebuild"
+			#local cat="$(echo ${rel_path}|cut -d'/' -f1)"													# package category:						app-admin
 			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${ebuild}"	# full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
-
 			local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
 
 			if [ -n "${ebuild_hps}" ]; then
@@ -1351,35 +1361,51 @@ package-check() {
 
 	# repoman check [pa_fure]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
-		#if ${REPOCHECK}; then
-		#	cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
-		#fi
-		#if ${REPOCHECK}; then
-		#	rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
-		#fi
 
+		if ${FILERESULTS}; then
+			rm -rf ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/${pak}.txt
+		fi
 
 		cd ${abs_path}
 		local TMPFILE="/tmp/${cat}-${pak}-${RANDOM}.log"
 		/usr/bin/repoman -q full > ${TMPFILE}
 
-		local affected_checks=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d' ' -f3 ) )
+		local array_results1=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d' ' -f3 ) )
 
 		if ! [ "$(cat ${TMPFILE})" = "No QA issues found" ]; then
 			if ${FILERESULTS}; then
-				mkdir -p ${FULL_CHECKS[pa_fure]}/sort-by-package/${category}/
-				head -n-1 ${TMPFILE} > ${FULL_CHECKS[pa_fure]}/sort-by-package/${category}/${package}.txt
-				output pa_fure pa_fure
+				mkdir -p ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/
+				head -n-1 ${TMPFILE} > ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/${pak}.txt
+				output pa_def1 pa_fure
 			else
-				#if [ "${1}" = "full" ]; then
-					output pa_fure pa_fure
-				#else
-				#	echo "${category}/${package}${DL}${maintainer}"
-				#	head -n-1 ${TMPFILE}
-				#fi
+				output pa_def1 pa_fure
 			fi
 		fi
+		rm ${TMPFILE}
+	fi
 
+	# pkgcheck check [pa_pksc]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
+
+		if ${FILERESULTS}; then
+			rm -rf ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
+		fi
+
+		cd ${abs_path}
+		local TMPFILE="/tmp/${cat}-${pak}-${RANDOM}.log"
+		/usr/bin/pkgcheck scan --net --keywords=-info -q --color=n > ${TMPFILE}
+
+		local array_results1=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d':' -f1| sort -u ) )
+
+		if [ -s ${TMPFILE} ]; then
+			if ${FILERESULTS}; then
+				mkdir -p ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/
+				tail -n+2 ${TMPFILE} > ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
+				output pa_def1 pa_pksc
+			else
+				output pa_def1 pa_pksc
+			fi
+		fi
 		rm ${TMPFILE}
 	fi
 }
@@ -1539,6 +1565,17 @@ find_func(){
 	[[ ${DEBUGLEVEL} -ge 1 ]] && echo ">>> calling ${FUNCNAME[0]} (MIND:${MIND} MAXD:${MAXD})" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** searchpattern is: ${SEARCHPATTERN[@]}" | (debug_output)
 
+	# restore results for pa_fure and pa_pksc since they are not generated via
+	# gen_sort_pak_v5 for them
+	if ${FILERESULTS}; then
+		if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
+				cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_fure]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_fure]}/
+		fi
+		if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
+				cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_pksc]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_pksc]}/
+		fi
+	fi
+
 	# do not run in parallel if DEBUGLEVEL -ge 2
 	if [[ ${DEBUGLEVEL} -ge 2 ]]; then
 		find ${SEARCHPATTERN[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
@@ -1574,12 +1611,32 @@ find_func(){
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_mief]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_hobs]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[me_duud]}"
-		#gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
-		gen_sort_pak_v5
+		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
+		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_pksc]}"
+
+		# excldue pa_fure and pa_pksc from package sort
+		local exclude_pak=(pa_fure pa_pksc)
+		local del
+		local RUNNING_CHECKS_FILTERED=($(echo ${RUNNING_CHECKS[@]}))
+		for del in ${exclude_pak[@]}; do
+			RUNNING_CHECKS_FILTERED=("${RUNNING_CHECKS_FILTERED[@]/${del}}")
+		done
+		gen_sort_pak_v5 "${RUNNING_CHECKS_FILTERED[@]}"
+
 		gen_sort_main_v5
-		#for ffp in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
-		#	gen_sort_pak_v5 ${FULL_CHECKS[pa_fure]}/sort-by-filter/${ffp}
-		#done
+
+		# additional sortings for pa_fure and pa_pksc
+		local x y
+		if [ -d "${FULL_CHECKS[pa_fure]}/sort-by-filter/" ]; then
+			for x in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
+				gen_sort_pak_v5 "${FULL_CHECKS[pa_fure]}/sort-by-filter/${x}"
+			done
+		fi
+		if [ -d "${FULL_CHECKS[pa_pksc]}/sort-by-filter/" ]; then
+			for y in $(ls ${FULL_CHECKS[pa_pksc]}/sort-by-filter/); do
+				gen_sort_pak_v5 "${FULL_CHECKS[pa_pksc]}/sort-by-filter/${y}"
+			done
+		fi
 		post_checks ${SCRIPT_TYPE}
 	fi
 }
