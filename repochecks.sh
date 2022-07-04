@@ -88,7 +88,7 @@ array_names(){
 		pa_inis
 		pa_hobs pa_hore
 		#pa_fure
-		#pa_pksc
+		pa_pksc
 		me_miin
 		me_mipm
 		me_duud
@@ -412,7 +412,7 @@ var_descriptions(){
 
 	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
-	RequiredUseDefaults:                        repoman problem(s), seperated by ':'
+	RequiredUseDefaults:RedirectedUrl           pkgcheck problem(s), seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' me_miin <<- EOM
@@ -1362,6 +1362,9 @@ package-check() {
 	# repoman check [pa_fure]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
 
+		# remove old results first
+		# we remove the file in case problems got resolved and the file would be
+		# changed
 		if ${FILERESULTS}; then
 			rm -rf ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/${pak}.txt
 		fi
@@ -1387,6 +1390,9 @@ package-check() {
 	# pkgcheck check [pa_pksc]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
 
+		# remove old results first
+		# we remove the file in case problems got resolved and the file would be
+		# changed
 		if ${FILERESULTS}; then
 			rm -rf ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
 		fi
