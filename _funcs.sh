@@ -358,15 +358,8 @@ depth_set_v4() {
 
 			# only run diff mode if todaychecks exist and doesn't have zero bytes
 			if [[ -s ${changed_packages} ]]; then
-				# special case for repomancheck
-				# copying old sort-by-packages files are only important for repomancheck
-				# because these files aren't generated via gen_sort_pak (like on other scripts)
-				#if ${REPOCHECK}; then
-				#	cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${RUNNING_CHECKS[0]/${WORKDIR}/}/sort-by-package ${RUNNING_CHECKS[0]}/
-				#fi
-
 				# we need to copy all existing results first and remove packages which
-				# were changed (listed in TODAYCHECKS). If no results file exists, do
+				# were changed (listed in ${changed_packages}). If no results file exists, do
 				# nothing - the script would create a new one anyway
 				local oldfull oldlog
 				for oldfull in ${RUNNING_CHECKS[@]}; do
@@ -382,10 +375,6 @@ depth_set_v4() {
 							# will fail because '/' aren't escapted. also remove first slash
 							pakcat="${cpak:1}"
 							sed -i "/${pakcat//\//\\/}${DL}/d" ${oldfull}/full.txt
-							# like before, only important for repomancheck
-							#if ${REPOCHECK}; then
-							#	rm -rf ${RUNNING_CHECKS[0]}/sort-by-package/${cpak}.txt
-							#fi
 						done
 					fi
 				done
@@ -396,7 +385,7 @@ depth_set_v4() {
 				find_func
 
 			else
-				# if ${TODAYCHECKS} has zero bytes, do nothing, except in
+				# if ${changed_packages} has zero bytes, do nothing, except in
 				# this case, update old results (git_age or bugs information)
 				# this is a special case for scripts who provide gitage or bugs information
 				# following function can be configured in each script in order to
