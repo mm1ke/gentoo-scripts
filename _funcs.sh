@@ -793,7 +793,16 @@ gen_sort_main_v4(){
 gen_sort_main_v5(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
+		if [ -n "${EXCLUDE_SORT_MAIN}" ]; then
+			local del
+			local RUNNING_CHECKS_FILTERED=($(echo ${RUNNING_CHECKS[@]}))
+			for del in ${EXCLUDE_SORT_MAIN}; do
+				RUNNING_CHECKS_FILTERED=("${RUNNING_CHECKS_FILTERED[@]/${del}}")
+			done
+			local check_files=( "${RUNNING_CHECKS_FILTERED[@]}" )
+		else
+			local check_files=( "${RUNNING_CHECKS[@]}" )
+		fi
 	else
 		local check_files=( "${1}" )
 	fi
@@ -839,6 +848,7 @@ gen_sort_main_v5(){
 		fi
 	}
 
+	[ ${DEBUGLEVEL} -ge 3 ] && echo ">>> full list: ${check_files[@]}" | (debug_output)
 	for id in ${check_files[@]}; do
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
@@ -909,10 +919,20 @@ gen_sort_pak_v5() {
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 
 	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
+		if [ -n "${EXCLUDE_SORT_PAK}" ]; then
+			local del
+			local RUNNING_CHECKS_FILTERED=($(echo ${RUNNING_CHECKS[@]}))
+			for del in ${EXCLUDE_SORT_PAK}; do
+				RUNNING_CHECKS_FILTERED=("${RUNNING_CHECKS_FILTERED[@]/${del}}")
+			done
+			local check_files=( "${RUNNING_CHECKS_FILTERED[@]}" )
+		else
+			local check_files=( "${RUNNING_CHECKS[@]}" )
+		fi
 	else
 		local check_files=( "${1}" )
 	fi
+
 
 	local id d v
 
@@ -946,6 +966,7 @@ gen_sort_pak_v5() {
 		fi
 	}
 
+	[ ${DEBUGLEVEL} -ge 3 ] && echo ">>> full list: ${check_files[@]}" | (debug_output)
 	for id in ${check_files[@]}; do
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then

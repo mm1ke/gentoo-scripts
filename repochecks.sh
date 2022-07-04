@@ -1621,14 +1621,10 @@ find_func(){
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_pksc]}"
 
 		# excldue pa_fure and pa_pksc from package sort
-		local exclude_pak=(pa_fure pa_pksc)
-		local del
-		local RUNNING_CHECKS_FILTERED=($(echo ${RUNNING_CHECKS[@]}))
-		for del in ${exclude_pak[@]}; do
-			RUNNING_CHECKS_FILTERED=("${RUNNING_CHECKS_FILTERED[@]/${del}}")
-		done
-		gen_sort_pak_v5 "${RUNNING_CHECKS_FILTERED[@]}"
+		EXCLUDE_SORT_PAK="${FULL_CHECKS[pa_fure]} ${FULL_CHECKS[pa_pksc]}"
+		gen_sort_pak_v5
 
+		EXCLUDE_SORT_MAIN=""
 		gen_sort_main_v5
 
 		# additional sortings for pa_fure and pa_pksc
