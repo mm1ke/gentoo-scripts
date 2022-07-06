@@ -410,7 +410,7 @@ var_descriptions(){
 	A script which runs 'pkgcheck scan --net --keywords=-info -q' on every package. The result is also filtered
 	by pkgcheck keywords.
 
-	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
+	Data Format ( dev-libs/foo|RequiredUseDefaults:RedirectedUrl|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
 	RequiredUseDefaults:RedirectedUrl           pkgcheck problem(s), seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
