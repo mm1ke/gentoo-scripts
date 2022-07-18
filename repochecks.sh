@@ -87,7 +87,7 @@ array_names(){
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore
-		#pa_fure
+		#pa_fure								# deprecated with portage 3.0.31
 		pa_pksc
 		me_miin
 		me_mipm
@@ -1394,7 +1394,7 @@ package-check() {
 		# we remove the file in case problems got resolved and the file would be
 		# changed
 		if ${FILERESULTS}; then
-			rm -rf ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
+			rm ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
 		fi
 
 		cd ${abs_path}
@@ -1574,9 +1574,9 @@ find_func(){
 	# restore results for pa_fure and pa_pksc since they are not generated via
 	# gen_sort_pak_v5 for them
 	if ${FILERESULTS}; then
-		if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
-				cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_fure]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_fure]}/
-		fi
+		#if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
+		#		cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_fure]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_fure]}/
+		#fi
 		if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
 				cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_pksc]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_pksc]}/
 		fi
@@ -1617,11 +1617,11 @@ find_func(){
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_mief]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_hobs]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[me_duud]}"
-		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
+		#gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_pksc]}"
 
 		# excldue pa_fure and pa_pksc from package sort
-		EXCLUDE_SORT_PAK="${FULL_CHECKS[pa_fure]} ${FULL_CHECKS[pa_pksc]}"
+		EXCLUDE_SORT_PAK="${FULL_CHECKS[pa_pksc]}"
 		gen_sort_pak_v5
 
 		EXCLUDE_SORT_MAIN=""
@@ -1629,11 +1629,11 @@ find_func(){
 
 		# additional sortings for pa_fure and pa_pksc
 		local x y
-		if [ -d "${FULL_CHECKS[pa_fure]}/sort-by-filter/" ]; then
-			for x in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
-				gen_sort_pak_v5 "${FULL_CHECKS[pa_fure]}/sort-by-filter/${x}"
-			done
-		fi
+		#if [ -d "${FULL_CHECKS[pa_fure]}/sort-by-filter/" ]; then
+		#	for x in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
+		#		gen_sort_pak_v5 "${FULL_CHECKS[pa_fure]}/sort-by-filter/${x}"
+		#	done
+		#fi
 		if [ -d "${FULL_CHECKS[pa_pksc]}/sort-by-filter/" ]; then
 			for y in $(ls ${FULL_CHECKS[pa_pksc]}/sort-by-filter/); do
 				gen_sort_pak_v5 "${FULL_CHECKS[pa_pksc]}/sort-by-filter/${y}"
