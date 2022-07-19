@@ -67,7 +67,7 @@ TMPCHECK="/tmp/$(basename ${0})-tmp-${RANDOM}.txt"
 array_names(){
 	SELECTED_CHECKS=(
 		eb_trwh
-		eb_deec									# remove? (available via stats)
+		#eb_deec									# remove? (available via stats)
 		eb_obge
 		eb_obvi eb_node
 		eb_epe6									# remove when EAPI6 is gone

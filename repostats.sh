@@ -59,7 +59,7 @@ array_names(){
 		rs_lics
 		rs_keys
 		rs_vius
-		rs_obse								# remove after eapi5 is gone
+		#rs_obse								# remove after eapi5 is gone
 		rs_clec rs_stac
 		rs_ggrs
 		rs_guss
