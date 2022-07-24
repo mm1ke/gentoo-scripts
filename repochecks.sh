@@ -53,10 +53,11 @@ if [ -z "${PT_WHITELIST}" ]; then
 else
 	WFILE="${realdir}/${PT_WHITELIST}"
 fi
-# try to use /usr/portage if GTREE is not set
+# try to use default portage tree if GTREE is not set
 if [ -z "${GTREE}" ]; then
-	if [ "$(cat /usr/portage/profiles/repo_name)" = "gentoo" ]; then
-		GTREE="/usr/portage"
+	gtree_location="$(grep location /etc/portage/repos.conf/gentoo.conf | cut -d' ' -f3)"
+	if [ "$(cat ${gtree_location}/profiles/repo_name)" = "gentoo" ]; then
+		GTREE="${gtree_location}"
 	fi
 fi
 
