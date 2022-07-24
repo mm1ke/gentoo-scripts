@@ -805,8 +805,8 @@ package-check() {
 			[pa_def0]="${cat}/${pak}${DL}${maintainer}"
 			[pa_def1]="${cat}/${pak}${DL}$(echo ${array_results1[@]}|tr ' ' ':')${DL}${maintainer}"
 			[pa_houn]="${hp_count}${DL}${cat}/${pak}${DL}${maintainer}"
-			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${maintainer}"
-			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
+			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${maintainer}"
+			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
 			[pa_unpa]="${cat}/${pak}${DL}${upatch}${DL}${maintainer}"
 			[pa_fure]="${cat}/${pak}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"
 		)
@@ -1314,12 +1314,14 @@ package-check() {
 	# & pa_hore]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobs " ]] || [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hore " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobs]/${WORKDIR}\/} and ${FULL_CHECKS[pa_hore]/${WORKDIR}\/}" | (debug_output)
-		for eb in ${REPOTREE}/${rel_path}/*.ebuild; do
+		for eb in ${abs_path}/*.ebuild; do
 			local ebuild_eapi="$(get_eapi ${eb})"
-			local ebuild=$(basename ${eb%.*})
+			local ebuild_filename="$(basename ${eb})"
+			local ebuild_name="${ebuild_filename%.*}"
+			#local ebuild=$(basename ${eb%.*})
 			#local filename="${ebuild}.ebuild"
 			#local cat="$(echo ${rel_path}|cut -d'/' -f1)"													# package category:						app-admin
-			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${ebuild}"	# full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
+			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${ebuild_name}"	# full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
 			local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
 
 			if [ -n "${ebuild_hps}" ]; then
