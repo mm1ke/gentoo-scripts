@@ -51,7 +51,7 @@ if [ -z "${REPOTREE}" ]; then
 		REPOTREE="/usr/portage/"
 		export REPOTREE
 	else
-		exit "No portage tree set"
+		echo "No portage tree set"
 		exit 1
 	fi
 else
