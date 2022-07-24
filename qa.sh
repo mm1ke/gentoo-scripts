@@ -76,15 +76,17 @@ for repodir in ${REPOSITORIES[@]}; do
 		DIFFMODE=false
 	fi
 
+	echo -e "\nUpdate pkgcheck cache for ${REPO}" >> ${LOGFILE}
+	pkgcheck cache -r ${REPOTREE} -uf >> ${LOGFILE}
+
 	scripts_diff="repostats.sh repochecks.sh repomancheck.sh"
 	for s_v2 in ${scripts_diff}; do
 		printf "${s_v2}|" >> ${TIMELOG}
 		echo "Processing script: ${s_v2}" >> ${LOGFILE}
 		export SCRIPT_NAME=${s_v2%%.*}
-		# if /tmp/${SCRIPT_NAME} exist run in normal mode
-		# this way it's possible to override the diff mode
-		# this is usefull when the script got updates which should run
-		# on the whole tree
+		# if /tmp/${SCRIPT_NAME} exist run in normal mode this way it's possible
+		# to override the diff mode this is usefull when the script got updates
+		# which should run on the whole tree
 		if ${DIFFMODE} && ! [[ -e "/tmp/${SCRIPT_NAME}" ]]; then
 			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >>${LOGFILE} 2>&1
 		else
