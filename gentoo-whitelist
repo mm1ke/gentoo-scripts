@@ -348,4 +348,5 @@ white_list=(
 	"net-analyzer/pmacct;pmacctd.service;pmacct-1.7.7-r1.ebuild:pmacct-9999.ebuild"
 	"net-analyzer/pmacct;sfacctd.service;pmacct-1.7.7-r1.ebuild:pmacct-9999.ebuild"
 	"sys-apps/apmd;apmd-3.2.2-libtool.patch;apmd-3.2.2_p14-r3.ebuild"
+	"dev-games/aseprite;skia-m102_remove_angle2.patch;aseprite-1.2.37.ebuild"
 )
