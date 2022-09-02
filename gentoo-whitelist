@@ -19,6 +19,7 @@ white_list=(
 	"x11-wm/fvwm3;README.translucency;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
 	"net-misc/ssh-askpass-fullscreen;ssh-askpass-fullscreen.1;*" #bug 606714
+	"dev-util/buildbot-worker;buildbot_worker.service;*" #bug 865347
 	"sys-boot/milo;linux-2.2.25-gcc3-milo.diff;milo-2.4.18.ebuild"
 	"sys-boot/milo;milo-2.2-18-gcc3-gentoo.diff;milo-2.4.18.ebuild"
 	"dev-util/plan9port;plan9port-builderr.patch;plan9port-20140306-r4.ebuild"
