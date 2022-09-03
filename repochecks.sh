@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Filename: repochecks.sh
-# Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
+# Autor: Michael Mair-Keimberger (mmk AT levelnine DOT at)
 # Date: 16/05/2021
 
 # Copyright (C) 2021  Michael Mair-Keimberger

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Filename: repomancheck.sh
-# Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
+# Autor: Michael Mair-Keimberger (mmk AT levelnine DOT at)
 # Date: 01/06/2018
 
 # Copyright (C) 2018  Michael Mair-Keimberger

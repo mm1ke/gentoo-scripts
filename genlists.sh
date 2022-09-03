@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Filename: genlists.sh
-# Autor: Michael Mair-Keimberger (m DOT mairkeimberger AT gmail DOT com)
+# Autor: Michael Mair-Keimberger (mmk AT levelnine DOT at)
 # Date: 12/11/2017
 
 # Copyright (C) 2017  Michael Mair-Keimberger
