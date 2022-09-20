@@ -79,7 +79,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	echo -e "\nUpdate pkgcheck cache for ${REPO}" >> ${LOGFILE}
 	pkgcheck cache -r ${REPOTREE} -uf >> ${LOGFILE}
 
-	scripts_diff="repostats.sh repochecks.sh repomancheck.sh"
+	scripts_diff="repostats.sh repochecks.sh"
 	for s_v2 in ${scripts_diff}; do
 		printf "${s_v2}|" >> ${TIMELOG}
 		echo "Processing script: ${s_v2}" >> ${LOGFILE}
