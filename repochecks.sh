@@ -68,7 +68,6 @@ TMPCHECK="/tmp/$(basename ${0})-tmp-${RANDOM}.txt"
 array_names(){
 	SELECTED_CHECKS=(
 		eb_trwh
-		#eb_deec									# remove? (available via stats)
 		eb_obge
 		eb_obvi eb_node
 		eb_epe6									# remove when EAPI6 is gone
@@ -88,7 +87,6 @@ array_names(){
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore
-		#pa_fure								# deprecated with portage 3.0.31
 		pa_pksc
 		me_miin
 		me_mipm
@@ -96,7 +94,6 @@ array_names(){
 	)
 	declare -gA FULL_CHECKS=(
 		[eb_trwh]="${WORKDIR}/ebuild_trailing_whitespaces"
-		[eb_deec]="${WORKDIR}/ebuild_deprecated_eclasses"
 		[eb_obge]="${WORKDIR}/ebuild_obsolete_gentoo_mirror_usage"
 		[eb_obvi]="${WORKDIR}/ebuild_obsolete_virtual"
 		[eb_node]="${WORKDIR}/ebuild_nonexist_dependency"
@@ -122,7 +119,6 @@ array_names(){
 		[pa_inis]="${WORKDIR}/ebuild_insecure_init_scripts"
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
 		[pa_hore]="${WORKDIR}/ebuild_homepage_redirections"
-		[pa_fure]="${WORKDIR}/packages_full_repoman"
 		[pa_pksc]="${WORKDIR}/packages_pkgcheck_scan"
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
@@ -150,16 +146,6 @@ var_descriptions(){
 	For example: SRC_URI=" www.foo.com/bar.tar.gz "
 
 	${info_default0}
-	EOM
-	read -r -d '' eb_deec <<- EOM
-	Lists ebuilds who use deprecated or obsolete eclasses.
-
-	Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|user:cmake-utils|dev@gentoo.org:loper@foo.de ):
-	7                                           EAPI Version
-	dev-libs/foo                                package category/name
-	foo-1.12-r2.ebuild                          full filename
-	user:cmake-utils                            list obsolete eclasse(s), seperated by ':'
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' eb_obge <<- EOM
 	Ebuilds shouldn't use mirror://gentoo in SRC_URI because it's deprecated.
@@ -398,15 +384,6 @@ var_descriptions(){
 	https://bar.foo.com                         redirected homepage
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
-	read -r -d '' pa_fure <<- EOM
-	A script which runs 'repoman full' on every package. The result is also filtered
-	by repomans checks.
-
-	Data Format ( dev-libs/foo|inherit.deprecated:uri.https|dev@gentoo.org:loper@foo.de ):
-	dev-libs/foo                                package category/name
-	inherit.deprecated:uri.https                repoman problem(s), seperated by ':'
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
 	read -r -d '' pa_pksc <<- EOM
 	A script which runs 'pkgcheck scan --net --keywords=-info -q' on every package. The result is also filtered
 	by pkgcheck keywords.
@@ -524,21 +501,8 @@ ebuild-check() {
 		$(grep -q "EGIT_REPO_URI=\"git://" ${rel_path}) && output eb_def0 eb_ingu
 	fi
 
-	# dead eclasses [eb_deec]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_deec " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_deec]/${WORKDIR}\/}" | (debug_output)
-		local _dead_eclasses=( cmake-utils epatch ltprune mono user versionator )
-		local array_results1=( )
-		for dead_eclass in ${_dead_eclasses[@]}; do
-			if $(check_eclasses_usage ${rel_path} ${dead_eclass}); then
-				array_results1+=( ${dead_eclass} )
-			fi
-		done
-		[[ -n "${array_results1}" ]] && output eb_def1 eb_deec
-	fi
-
 	# trailing/leading whitespaces in variables [eb_ltwv]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_deec " ]]; then
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_ltwv " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_ltwv]/${WORKDIR}\/}" | (debug_output)
 		local _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 		local array_results1=( )
@@ -809,7 +773,6 @@ package-check() {
 			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${maintainer}"
 			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
 			[pa_unpa]="${cat}/${pak}${DL}${upatch}${DL}${maintainer}"
-			[pa_fure]="${cat}/${pak}${DL}$(echo ${affected_checks[@]}|tr ' ' ':')${DL}${maintainer}"
 		)
 		echo "${array_formats[${1}]}"
 	}
@@ -1362,34 +1325,6 @@ package-check() {
 		done
 	fi
 
-	# repoman check [pa_fure]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
-
-		# remove old results first
-		# we remove the file in case problems got resolved and the file would be
-		# changed
-		if ${FILERESULTS}; then
-			rm -rf ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/${pak}.txt
-		fi
-
-		cd ${abs_path}
-		local TMPFILE="/tmp/${cat}-${pak}-${RANDOM}.log"
-		/usr/bin/repoman -q full > ${TMPFILE}
-
-		local array_results1=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d' ' -f3 ) )
-
-		if ! [ "$(cat ${TMPFILE})" = "No QA issues found" ]; then
-			if ${FILERESULTS}; then
-				mkdir -p ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/
-				head -n-1 ${TMPFILE} > ${FULL_CHECKS[pa_fure]}/sort-by-package/${cat}/${pak}.txt
-				output pa_def1 pa_fure
-			else
-				output pa_def1 pa_fure
-			fi
-		fi
-		rm ${TMPFILE}
-	fi
-
 	# pkgcheck check [pa_pksc]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
 
@@ -1574,12 +1509,9 @@ find_func(){
 	[[ ${DEBUGLEVEL} -ge 1 ]] && echo ">>> calling ${FUNCNAME[0]} (MIND:${MIND} MAXD:${MAXD})" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** searchpattern is: ${SEARCHPATTERN[@]}" | (debug_output)
 
-	# restore results for pa_fure and pa_pksc since they are not generated via
+	# restore results for pa_pksc since they are not generated via
 	# gen_sort_pak_v5 for them
 	if ${FILERESULTS}; then
-		#if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_fure " ]]; then
-		#		cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_fure]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_fure]}/
-		#fi
 		if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
 				cp -r ${RESULTSDIR}/${SCRIPT_TYPE}/${FULL_CHECKS[pa_pksc]/${WORKDIR}/}/sort-by-package ${FULL_CHECKS[pa_pksc]}/
 		fi
@@ -1611,7 +1543,6 @@ find_func(){
 		done
 
 		sort_result_v5
-		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_deec]}"
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_vamb]}"
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_node]}"
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_ltwv]}"
@@ -1620,23 +1551,17 @@ find_func(){
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_mief]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_hobs]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[me_duud]}"
-		#gen_sort_filter_v2 2 "${FULL_CHECKS[pa_fure]}"
 		gen_sort_filter_v2 2 "${FULL_CHECKS[pa_pksc]}"
 
-		# excldue pa_fure and pa_pksc from package sort
+		# excldue pa_pksc from package sort
 		EXCLUDE_SORT_PAK="${FULL_CHECKS[pa_pksc]}"
 		gen_sort_pak_v5
 
 		EXCLUDE_SORT_MAIN=""
 		gen_sort_main_v5
 
-		# additional sortings for pa_fure and pa_pksc
+		# additional sortings for pa_pksc
 		local x y
-		#if [ -d "${FULL_CHECKS[pa_fure]}/sort-by-filter/" ]; then
-		#	for x in $(ls ${FULL_CHECKS[pa_fure]}/sort-by-filter/); do
-		#		gen_sort_pak_v5 "${FULL_CHECKS[pa_fure]}/sort-by-filter/${x}"
-		#	done
-		#fi
 		if [ -d "${FULL_CHECKS[pa_pksc]}/sort-by-filter/" ]; then
 			for y in $(ls ${FULL_CHECKS[pa_pksc]}/sort-by-filter/); do
 				gen_sort_pak_v5 "${FULL_CHECKS[pa_pksc]}/sort-by-filter/${y}"
