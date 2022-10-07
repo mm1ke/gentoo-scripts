@@ -351,4 +351,10 @@ white_list=(
 	"sys-apps/apmd;apmd-3.2.2-libtool.patch;apmd-3.2.2_p14-r3.ebuild"
 	"dev-games/aseprite;skia-m102_remove_angle2.patch;aseprite-1.2.37.ebuild"
 	"dev-lang/spidermonkey;spidermonkey-102-known-test-failures.txt;spidermonkey-102.1.0-r1.ebuild"
+	"dev-games/KXL;KXL-1.1.7-implicit-function-declarations.patch;KXL-1.1.7_p17.ebuild"
+	"media-sound/rplay;rplay-3.3.2-built-in_function_exit-r1.patch;rplay-3.3.2_p16-r4.ebuild"
+	"sci-astronomy/siril;siril-1.0-dependencies.patch;siril-1.0.3.ebuild:siril-1.0.5.ebuild"
+	"sci-astronomy/siril;siril-1.0-execinfo.patch;siril-1.0.5.ebuild"
+	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15.patch;nvidia-drivers-390.154.ebuild"
+	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15-x86.patch;nvidia-drivers-390.154.ebuild"
 )
