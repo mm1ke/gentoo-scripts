@@ -460,7 +460,7 @@ ebuild-check() {
 	# trailing whitespace [eb_trwh]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_trwh " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_trwh]/${WORKDIR}\/}" | (debug_output)
-		$(egrep -q " +$" ${rel_path}) && output eb_def0 eb_trwh
+		$(grep -Eq " +$" ${rel_path}) && output eb_def0 eb_trwh
 	fi
 
 	# epatch usage [eb_epe6]
@@ -507,7 +507,7 @@ ebuild-check() {
 		local _varibales="DESCRIPTION LICENSE KEYWORDS IUSE RDEPEND DEPEND SRC_URI"
 		local array_results1=( )
 		for var in ${_varibales}; do
-			if $(egrep -q "^${var}=\" |^${var}=\".* \"$" ${rel_path}); then
+			if $(grep -Eq "^${var}=\" |^${var}=\".* \"$" ${rel_path}); then
 				array_results1+=( ${var} )
 			fi
 		done
@@ -564,7 +564,7 @@ ebuild-check() {
 				done
 
 
-				if $(grep "^[^#;]" ${rel_path} | egrep -q "$(echo ${z[@]}|tr ' ' '|')" ); then
+				if $(grep "^[^#;]" ${rel_path} | grep -Eq "$(echo ${z[@]}|tr ' ' '|')" ); then
 					output eb_def0 eb_mude
 				fi
 			fi
@@ -650,7 +650,7 @@ ebuild-check() {
 							${catch} || array_results1+=( ${eclass} )
 						# check the ebuild if one the eclass functions are used
 						else
-							# get the fucntion(s) which are used by the ebuild, if any
+							# get the function(s) which are used by the ebuild, if any
 							for e in ${eclass_funcs}; do
 								if $(grep -qP "^(?!.*#).*(?<!-)((^|\W)${e}(?=\W|$))" ${rel_path}); then
 									# check if ebuild provides function by its own
