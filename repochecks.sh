@@ -619,36 +619,39 @@ ebuild-check() {
 
 		if [ -n "${ECLASSES}" ]; then
 			if $(grep -q "inherit" ${rel_path}); then
-				if [ "${ebuild_eapi}" = "6" ] || [ "${ebuild_eapi}" = "7" ]; then
+				local array_results1=( )
+				local array_results3=( )
+				local array_results2=( )
 
-					local array_results1=( )
-					local array_results3=( )
-					local array_results2=( )
+				local func_in_use=( )
+				local func_in_use_fatal=( )
 
-					local func_in_use=( )
-					local func_in_use_fatal=( )
+				for echeck in ${ECLASSES}; do
+					local eclass="$(echo ${echeck}|cut -d';' -f1)"
+					local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' ' ')"
 
-					for echeck in ${ECLASSES}; do
-						local eclass="$(echo ${echeck}|cut -d';' -f1)"
-						local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' ' ')"
+					# don't check for eapi7-ver at EAPI=7 ebuilds
+					if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" = "7" ]; then
+						continue
+					fi
 
-						# don't check for eapi7-ver at EAPI=7 ebuilds
-						if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" = "7" ]; then
+					# check if ebuild uses ${eclass}
+					if $(check_eclasses_usage ${rel_path} ${eclass}); then
+						# check if ebuild uses one of the functions provided by the eclass
+						local catch=false
+						for i in ${eclass_funcs}; do
+							if $(grep -qP "^(?!#).*(?<!-)((^|\W)${i}(?=\W|$))" ${rel_path}); then
+								catch=true
+								break
+							fi
+						done
+						${catch} || array_results1+=( ${eclass} )
+					# check the ebuild if one the eclass functions are used
+					else
+						# ignore case were functions from xdg-utils are used but only xdg is
+						# inherited (xdg inherits xdg-utils)
+						if [ "${eclass}" == "xdg-utils" ] && $(check_eclasses_usage ${rel_path} xdg); then
 							continue
-						fi
-
-						# check if ebuild uses ${eclass}
-						if $(check_eclasses_usage ${rel_path} ${eclass}); then
-							# check if ebuild uses one of the functions provided by the eclass
-							local catch=false
-							for i in ${eclass_funcs}; do
-								if $(grep -qP "^(?!#).*(?<!-)((^|\W)${i}(?=\W|$))" ${rel_path}); then
-									catch=true
-									break
-								fi
-							done
-							${catch} || array_results1+=( ${eclass} )
-						# check the ebuild if one the eclass functions are used
 						else
 							# get the function(s) which are used by the ebuild, if any
 							for e in ${eclass_funcs}; do
@@ -665,19 +668,19 @@ ebuild-check() {
 									fi
 								fi
 							done
-							[ -n "${func_in_use}" ] && \
-								array_results3+=( "${eclass}($(echo ${func_in_use[@]}|tr ' ' ','))" )
-							[ -n "${func_in_use_fatal}" ] && \
-								array_results2+=( "${eclass}($(echo ${func_in_use_fatal[@]}|tr ' ' ','))" )
 						fi
-						func_in_use=( )
-						func_in_use_fatal=( )
-					done
+						[ -n "${func_in_use}" ] && \
+							array_results3+=( "${eclass}($(echo ${func_in_use[@]}|tr ' ' ','))" )
+						[ -n "${func_in_use_fatal}" ] && \
+							array_results2+=( "${eclass}($(echo ${func_in_use_fatal[@]}|tr ' ' ','))" )
+					fi
+					func_in_use=( )
+					func_in_use_fatal=( )
+				done
 
-					[ -n "${array_results3}" ] && output eb_def3 eb_miec
-					[ -n "${array_results1}" ] && output eb_def1 eb_unec
-					[ -n "${array_results2}" ] && output eb_def2 eb_mief
-				fi
+				[ -n "${array_results3}" ] && output eb_def3 eb_miec
+				[ -n "${array_results1}" ] && output eb_def1 eb_unec
+				[ -n "${array_results2}" ] && output eb_def2 eb_mief
 			fi
 		fi
 	fi
