@@ -47,8 +47,8 @@ fi
 [ -z "${DRYRUN}" ] && DRYRUN=false
 # check and set set the REPOTREE
 if [ -z "${REPOTREE}" ]; then
-	if [ -d /usr/portage/metadata/ ]; then
-		REPOTREE="/usr/portage/"
+	if [ -d /var/db/repos/gentoo/metadata/ ]; then
+		REPOTREE="/var/db/repos/gentoo/"
 		export REPOTREE
 	else
 		echo "No portage tree set"
