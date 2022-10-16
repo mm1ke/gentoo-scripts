@@ -630,8 +630,8 @@ ebuild-check() {
 					local eclass="$(echo ${echeck}|cut -d';' -f1)"
 					local eclass_funcs="$(echo ${echeck}|cut -d';' -f2|tr ':' ' ')"
 
-					# don't check for eapi7-ver at EAPI=7 ebuilds
-					if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" = "7" ]; then
+					# don't check for eapi7-ver at ebuilds greater EAPI=7
+					if [ "${eclass}" = "eapi7-ver" ] && [ "${ebuild_eapi}" -gt 6 ]; then
 						continue
 					fi
 
