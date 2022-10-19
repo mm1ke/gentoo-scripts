@@ -312,6 +312,7 @@ white_list=(
 	"media-libs/libsdl;libsdl-1.2.15-slibtool.patch;libsdl-1.2.15_p20210224.ebuild"
 	"media-libs/libsdl;libsdl-1.2.15-gamma.patch;libsdl-1.2.15_p20210224.ebuild"
 	"media-libs/libsdl;libsdl-1.2.15-sdl-config.patch;libsdl-1.2.15_p20210224.ebuild"
+	"media-libs/libsdl;libsdl-1.2.15-strict-prototypes.patch;libsdl-1.2.15_p20210224.ebuild"
 	"app-office/gtg;0.5-mouse-cursor-fixes1.patch;gtg-0.5.ebuild"
 	"app-office/gtg;0.5-mouse-cursor-fixes2.patch;gtg-0.5.ebuild"
 	"app-office/gtg;0.5-mouse-cursor-fixes3.patch;gtg-0.5.ebuild"
@@ -357,4 +358,6 @@ white_list=(
 	"sci-astronomy/siril;siril-1.0-execinfo.patch;siril-1.0.5.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15.patch;nvidia-drivers-390.154.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15-x86.patch;nvidia-drivers-390.154.ebuild"
+	"media-fonts/source-sans;63-source-sans-3.conf;source-sans-3.046.ebuild"
+	"media-fonts/source-serif;63-source-serif-4.conf;source-serif-4.004.ebuild"
 )
