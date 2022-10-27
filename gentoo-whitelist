@@ -15,6 +15,8 @@ white_list=(
 	"dev-lang/gnat-gpl;gcc-configure-texinfo.patch;*" #used as long as toolchain.eclass is used
 	"app-emulation/virtualbox-modules;create_vbox_modules_tarball.sh;*"
 	"sys-apps/portage;README.RESCUE;*"
+	"sys-apps/portage;portage-ccache.conf;portage-3.0.38.1-r2.ebuild:portage-9999.ebuild"
+	"sys-apps/portage;portage-tmpdir.conf;portage-3.0.38.1-r2.ebuild:portage-9999.ebuild"
 	"sys-firmware/seabios;README;*"
 	"x11-wm/fvwm3;README.translucency;*"
 	"sys-cluster/ceph;make-node-frontend-tarball.bash;*"
@@ -353,6 +355,8 @@ white_list=(
 	"dev-games/aseprite;skia-m102_remove_angle2.patch;aseprite-1.2.37.ebuild"
 	"dev-lang/spidermonkey;spidermonkey-102-known-test-failures.txt;spidermonkey-102.1.0-r1.ebuild"
 	"dev-games/KXL;KXL-1.1.7-implicit-function-declarations.patch;KXL-1.1.7_p17.ebuild"
+	"dev-games/KXL;KXL-1.1.7-ldflags.patch;KXL-1.1.7_p17.ebuild"
+	"dev-games/KXL;KXL-1.1.7-as-needed.patch;KXL-1.1.7_p17.ebuild"
 	"media-sound/rplay;rplay-3.3.2-built-in_function_exit-r1.patch;rplay-3.3.2_p16-r4.ebuild"
 	"sci-astronomy/siril;siril-1.0-dependencies.patch;siril-1.0.3.ebuild:siril-1.0.5.ebuild"
 	"sci-astronomy/siril;siril-1.0-execinfo.patch;siril-1.0.5.ebuild"
