@@ -1331,11 +1331,11 @@ package-check() {
 	# pkgcheck check [pa_pksc]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
 
-		# remove old results first
+		# remove old results first (previosly restored at the begining of the script)
 		# we remove the file in case problems got resolved and the file would be
 		# changed
 		if ${FILERESULTS}; then
-			rm ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
+			rm -f ${FULL_CHECKS[pa_pksc]}/sort-by-package/${cat}/${pak}.txt
 		fi
 
 		cd ${abs_path}
