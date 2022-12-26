@@ -1444,7 +1444,7 @@ _gen_gentoo_eclasses(){
 	if [[ -n "${GTREE}" ]]; then
 		# a list of eclass which we're going to check
 		local etc=( optfeature wrapper edos2unix ltprune eutils estack preserve-libs \
-			vcs-clean epatch desktop versionator user user-info flag-o-matic xdg-utils \
+			vcs-clean epatch desktop versionator user-info flag-o-matic xdg-utils \
 			libtool udev eapi7-ver pam ssl-cert toolchain-funcs )
 
 		local eclasses_with_funcs=( )
