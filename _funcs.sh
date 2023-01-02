@@ -674,6 +674,62 @@ sort_result_v5(){
 	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< ${FUNCNAME[0]}: finish sorting" | (debug_output)
 }
 
+sort_result_v6(){
+	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
+
+	if [[ -z "${1}" ]]; then
+		local check_files=( "${RUNNING_CHECKS[@]}" )
+	else
+		local check_files=( "${1}" )
+	fi
+
+	# find pakackge location in result
+	_file_sort(){
+		local column=""
+		local rc_id="${1}"
+
+		# check if rc_id is directory
+		if [[ -d "${rc_id}" ]]; then
+			if [[ -e "${rc_id}/full.txt" ]]; then
+				rc_id="${rc_id}/full.txt"
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: rc_id is ${rc_id}" | (debug_output)
+			else
+				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: W: no rc_id(dir) set!" | (debug_output)
+				return 0
+			fi
+		# else check if rc_id exists (must be a file then)
+		elif ! [[ -e "${rc_id}" ]]; then
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: W: no rc_id(file) set!" | (debug_output)
+			return 0
+		fi
+
+		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: sorting ${rc_id}" | (debug_output)
+		if [ -z "${column}" ]; then
+			local pak_loc="$(_find_package_location "${rc_id}")"
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: got location: ${pak_loc}" | (debug_output)
+			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
+			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo " ${FUNCNAME[0]}: column set: ${column}" | (debug_output)
+		fi
+
+		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
+	}
+
+	local id v d
+	if [[ -n "${check_files}" ]]; then
+		for id in ${check_files[@]}; do
+			for v in sort-by-filter sort-by-eapi; do
+				if [ -d "${id}/${v}" ]; then
+					for d in $(find ${id}/${v}/* -type d); do
+						_file_sort "${d}" &
+					done
+				fi
+			done
+			_file_sort "${id}" &
+		done
+	fi
+	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< ${FUNCNAME[0]}: finish sorting" | (debug_output)
+}
+
 count_keywords(){
 	local ebuild1="${1}"
 	local ebuild2="${2}"
