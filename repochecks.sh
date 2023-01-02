@@ -1330,7 +1330,7 @@ package-check() {
 
 	# pkgcheck check [pa_pksc]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_pksc " ]]; then
-
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_pksc]/${WORKDIR}\/}" | (debug_output)
 		# remove old results first (previosly restored at the begining of the script)
 		# we remove the file in case problems got resolved and the file would be
 		# changed
@@ -1545,7 +1545,7 @@ find_func(){
 			echo "${!s}" >> ${FULL_CHECKS[${s}]}/description.txt
 		done
 
-		sort_result_v5
+		sort_result_v6
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_vamb]}"
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_node]}"
 		gen_sort_filter_v2 4 "${FULL_CHECKS[eb_ltwv]}"
@@ -1564,7 +1564,7 @@ find_func(){
 		gen_sort_main_v5
 
 		# additional sortings for pa_pksc
-		local x y
+		local y
 		if [ -d "${FULL_CHECKS[pa_pksc]}/sort-by-filter/" ]; then
 			for y in $(ls ${FULL_CHECKS[pa_pksc]}/sort-by-filter/); do
 				gen_sort_pak_v5 "${FULL_CHECKS[pa_pksc]}/sort-by-filter/${y}"
