@@ -1418,4 +1418,4 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
 	get_site_status get_file_status_detailed get_age_v3 post_checks \
 	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2 \
-	get_keywords_v2 sort_result_column_v1 sort_results_v6
+	get_keywords_v2 sort_result_column_v1 sort_result_v6
