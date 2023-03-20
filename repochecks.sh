@@ -1298,6 +1298,9 @@ package-check() {
 					if $(echo ${hp}|grep -q ^ftp); then
 						[ ${DEBUGLEVEL} -ge 2 ] && echo "${hp} is a ftp link" | (debug_output)
 						local statuscode="FTP"
+					# ignore metacpan.org redirections
+					elif $(echo ${hp}|grep -q metacpan.org/release); then
+						continue
 					else
 						local _checktmp="$(grep "${DL}${hp}${DL}" ${TMPCHECK}|head -1)"
 						if [ -z "${_checktmp}" ]; then
