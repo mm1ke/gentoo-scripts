@@ -369,10 +369,13 @@ white_list=(
 	"sci-astronomy/siril;siril-1.2-execinfo.patch;siril-1.2.0_beta1.ebuild"
 	"sci-astronomy/siril;siril-1.2-htmesh.patch;siril-1.2.0_beta1.ebuild"
 	"sci-astronomy/siril;siril-1.2-prototypes.patch;siril-1.2.0_beta1.ebuild"
+	"sci-astronomy/siril;siril-1.2-openmp.patch;siril-1.2.0_beta1.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15.patch;nvidia-drivers-390.154.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15-x86.patch;nvidia-drivers-390.154.ebuild"
 	"media-fonts/source-sans;63-source-sans-3.conf;source-sans-3.046.ebuild"
 	"media-fonts/source-serif;63-source-serif-4.conf;source-serif-4.004.ebuild"
 	"media-libs/tiff-compat;tiff-4.4.0-hylafaxplus-regression.patch;tiff-compat-4.4.0-r1.ebuild"
 	"media-libs/tiff-compat;tiff-4.4.0_rc1-skip-thumbnail-test.patch;tiff-compat-4.4.0-r1.ebuild"
+	"sys-apps/flatpak;flatpak-update.service;flatpak-1.14.4-r1.ebuild"
+	"sys-apps/flatpak;flatpak-update.timer;flatpak-1.14.4-r1.ebuild"
 )
