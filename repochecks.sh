@@ -524,7 +524,7 @@ ebuild-check() {
 		local array_results1=( )
 		if grep -Fq "$(echo ${_variables[@]}|tr ' ' '\n')" ${rel_path}; then
 			for var in ${_variables[@]}; do
-				if $(grep -v '^\s*$\|^\s*\#' ${rel_path}| grep -wq ${var}); then
+				if $(grep -v '^\s*$\|^\s*#' ${rel_path}| grep -wq ${var}); then
 					array_results1+=( ${var/$} )
 				fi
 			done
