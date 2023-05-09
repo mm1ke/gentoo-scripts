@@ -378,4 +378,5 @@ white_list=(
 	"media-libs/tiff-compat;tiff-4.4.0_rc1-skip-thumbnail-test.patch;tiff-compat-4.4.0-r1.ebuild"
 	"sys-apps/flatpak;flatpak-update.service;flatpak-1.14.4-r1.ebuild"
 	"sys-apps/flatpak;flatpak-update.timer;flatpak-1.14.4-r1.ebuild"
+	"app-misc/logiops;ipcgull-0.1-gcc13.patch;logiops-0.3.1.ebuild"
 )
