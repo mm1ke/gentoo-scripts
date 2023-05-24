@@ -1,4 +1,6 @@
 white_list=(
+	"sys-apps/portage;README.RESCUE;*"
+	"x11-wm/fvwm3;README.translucency;*"
 	"app-portage/gpyutils;implementations.txt;*"
 	"app-office/libreoffice-l10n;lo_gen_langs.sh;*"
 	"net-libs/czmq;version.sh;*"
