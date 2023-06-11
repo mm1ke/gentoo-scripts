@@ -946,15 +946,17 @@ package-check() {
 				return 1
 			fi
 
-			if $(echo ${white_list[@]} | grep -q "${cat}/${pak};${pfile}"); then
+			# check if the file in in the whitelist
+			if $(echo ${white_list[@]} | grep -q "${cat}/${pak};${pfile};"); then
 				# detailed output only if debugging is enabled
 				if [ ${DEBUGLEVEL} -ge 2 ]; then
 					for white in ${white_list[@]}; do
 						local cat_pak="$(echo ${white}|cut -d';' -f1)"
 						local white_file="$(echo ${white}|cut -d';' -f2)"
 						local white_ebuild="$(echo ${white}|cut -d';' -f3)"
+						# only continue if we found the right line
 						if [ "${cat}/${pak};${pfile}" = "${cat_pak};${white_file}" ]; then
-							if [ "${white_ebuild}" = "*" ]; then
+							if [ "${white_ebuild}" = "all" ]; then
 								[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: found patch ${pfile} in all ebuilds" | (debug_output)
 								return 0
 							else
@@ -965,12 +967,19 @@ package-check() {
 									fi
 								done
 							fi
-							[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: error in whitecheck with ${pfile}" | (debug_output)
+							[ ${DEBUGLEVEL} -ge 2 ] && echo " 0-whitelist: ${pfile} not found" | (debug_output)
 							return 1
 						fi
 					done
 				fi
-				return 0
+				for ebx in $(grep "${cat}/${pak};${pfile};" ${WFILE} | sed 's|"||g' | cut -d ';' -f 3 | tr ':' ' '); do
+					if [ "${ebx}" = "all" ]; then
+						return 0
+					elif [ -e "${REPOTREE}/${rel_path}/${ebx}" ]; then
+						return 0
+					fi
+				done
+				return 1
 			else
 				return 1
 			fi
