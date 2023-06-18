@@ -288,6 +288,8 @@ white_list=(
 	"sci-astronomy/siril;siril-1.2-execinfo.patch;siril-1.2.0_beta1.ebuild"
 	"sci-astronomy/siril;siril-1.2-htmesh.patch;siril-1.2.0_beta1.ebuild"
 	"sci-astronomy/siril;siril-1.2-openmp.patch;siril-1.2.0_beta1.ebuild"
+	"sci-astronomy/siril;siril-1.2-stdint.patch;siril-1.2.0_rc1.ebuild"
+	"sci-astronomy/siril;siril-1.2-tiff.patch;siril-1.2.0_rc1.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15.patch;nvidia-drivers-390.157.ebuild"
 	"x11-drivers/nvidia-drivers;nvidia-drivers-390.154-clang15-x86.patch;nvidia-drivers-390.157.ebuild"
 	"media-fonts/source-sans;63-source-sans-3.conf;source-sans-3.046.ebuild"
