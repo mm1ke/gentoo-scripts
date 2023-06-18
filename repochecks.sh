@@ -848,6 +848,7 @@ package-check() {
 				cn+=("${patchfile/${ebuild_version}/${pv}}")
 
 				cn+=("${cn_name_vers/${ebuild_version}/${pv}}")
+				cn+=("${patchfile/${pak}-${ebuild_version}/${pf}}")
 				# add special naming if there is a revision
 				if [ -n "${ebuild_revision}" ]; then
 					cn+=("${patchfile/${pak}-${ebuild_version}-${ebuild_revision}/${pf}}")
