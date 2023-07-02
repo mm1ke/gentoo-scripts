@@ -72,7 +72,7 @@ array_names(){
 		eb_obvi eb_node
 		eb_epe6									# remove when EAPI6 is gone
 		eb_doe6									# remove when EAPI6 is gone
-		eb_de80									# remove? (available via repoman checks)
+		eb_de80
 		eb_vamb
 		eb_vaho
 		eb_ingu
