@@ -67,8 +67,12 @@ TMPCHECK="/tmp/$(basename ${0})-tmp-${RANDOM}.txt"
 
 array_names(){
 	SELECTED_CHECKS=(
+		eb_iwfi
 		eb_trwh
 		eb_obge
+		eb_obdt
+		eb_obsr
+		eb_obds
 		eb_obvi eb_node
 		eb_epe6									# remove when EAPI6 is gone
 		eb_doe6									# remove when EAPI6 is gone
@@ -91,10 +95,15 @@ array_names(){
 		me_miin
 		me_mipm
 		me_duud
+		me_mmri
 	)
 	declare -gA FULL_CHECKS=(
+		[eb_iwfi]="${WORKDIR}/ebuild_install_worthless_file_install"
 		[eb_trwh]="${WORKDIR}/ebuild_trailing_whitespaces"
 		[eb_obge]="${WORKDIR}/ebuild_obsolete_gentoo_mirror_usage"
+		[eb_obdt]="${WORKDIR}/ebuild_obsolete_dependency_tracking"
+		[eb_obsr]="${WORKDIR}/ebuild_obsolete_silent_rules"
+		[eb_obds]="${WORKDIR}/ebuild_obsolete_disable_static"
 		[eb_obvi]="${WORKDIR}/ebuild_obsolete_virtual"
 		[eb_node]="${WORKDIR}/ebuild_nonexist_dependency"
 		[eb_epe6]="${WORKDIR}/ebuild_epatch_in_eapi6"
@@ -123,6 +132,7 @@ array_names(){
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
 		[me_duud]="${WORKDIR}/metadata_duplicate_useflag_description"
+		[me_mmri]="${WORKDIR}/metadata_missing_remote_id"
 	)
 }
 
@@ -141,6 +151,12 @@ var_descriptions(){
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 
+	read -r -d '' eb_iwfi <<- EOM
+	Ebuilds shouldn't install "INSTALL". (with exceptions)
+	Also see: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
+
+	${info_default0}
+	EOM
 	read -r -d '' eb_trwh <<- EOM
 	Simple check to find leading or trailing whitespaces in a set of variables.
 	For example: SRC_URI=" www.foo.com/bar.tar.gz "
@@ -150,6 +166,27 @@ var_descriptions(){
 	read -r -d '' eb_obge <<- EOM
 	Ebuilds shouldn't use mirror://gentoo in SRC_URI because it's deprecated.
 	Also see: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
+
+	${info_default0}
+	EOM
+	read -r -d '' eb_obdt <<- EOM
+	Ebuilds don't need to specifiy --disable-dependency-tracking in econf.
+	This is automatically specified from EAPI4.
+	Also see: <a href="https://dev.gentoo.org/~zmedico/portage/doc/ch06s03s05.html">Link</a>
+
+	${info_default0}
+	EOM
+	read -r -d '' eb_obsr <<- EOM
+	Ebuilds don't need to specifiy --disable-silent-rules in econf.
+	This is automatically specified from EAPI5.
+	Also see: <a href="https://devmanual.gentoo.org/ebuild-writing/eapi/index.html">Link</a>
+
+	${info_default0}
+	EOM
+	read -r -d '' eb_obds <<- EOM
+	Ebuilds don't need to specifiy --disable-static in econf.
+	This is automatically specified from EAPI8.
+	Also see: <a href="https://devmanual.gentoo.org/ebuild-writing/eapi/index.html">Link</a>
 
 	${info_default0}
 	EOM
@@ -414,6 +451,14 @@ var_descriptions(){
 	gtk[:X:qt:zlib]                             list of USE flags which already exists as a global flag.
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
+	read -r -d '' me_mmri <<- EOM
+	Lists packages which has a certain homepage (github, sourceforge) but doesn't set remote-id in metadata.xml
+
+	Data Format ( dev-libs/foo|github[:sourceforge]|dev@gentoo.org:loper@foo.de ):
+	dev-libs/foo                                package category/name
+	github[:sourceforge]                        list of remote-id's which are missing
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
 }
 #
 ### IMPORTANT SETTINGS END ###
@@ -421,7 +466,7 @@ var_descriptions(){
 
 ebuild-check() {
 	array_names
-	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating standard information for ${1}" | (debug_output)
+	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating ebuild-check standard information for ${1}" | (debug_output)
 
 	local rel_path=${1}																									# path relative to ${REPOTREE}:	./app-admin/salt/salt-0.5.2.ebuild
 	local cat="$(echo ${rel_path}|cut -d'/' -f1)"												# package category:							app-admin
@@ -481,10 +526,38 @@ ebuild-check() {
 		[[ $(grep DESCRIPTION ${abs_md5_path} | wc -m) -gt 95 ]] && output eb_def0 eb_de80
 	fi
 
-		# mirror usage [eb_obge]
+	# mirror usage [eb_obge]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obge " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obge]/${WORKDIR}\/}" | (debug_output)
 		$(grep -q 'mirror://gentoo' ${rel_path}) && output eb_def0 eb_obge
+	fi
+
+	# disable-dependency-tracking check [eb_obdt]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obdt " ]]; then
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obdt]/${WORKDIR}\/}" | (debug_output)
+		$(grep -q 'disable-dependency-tracking' ${rel_path}) && output eb_def0 eb_obdt
+	fi
+
+	# disable-silent-rules check [eb_obsr]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obsr " ]]; then
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obsr]/${WORKDIR}\/}" | (debug_output)
+		$(grep -q 'disable-silent-rules' ${rel_path}) && output eb_def0 eb_obsr
+	fi
+
+	# disable-static check [eb_obds]
+	if [[ "${ebuild_eapi}" = "8" ]] && [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obds " ]]; then
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obds]/${WORKDIR}\/}" | (debug_output)
+		$(grep -q 'disable-static' ${rel_path}) && output eb_def0 eb_obds
+	fi
+
+	# check if INSTALL file would be installed in DOCS or dodoc [eb_iwfi]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_iwfi " ]]; then
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_iwfi]/${WORKDIR}\/}" | (debug_output)
+		if $(grep dodoc ${rel_path} | grep -q INSTALL); then
+			output eb_def0 eb_iwfi
+		elif $(grep DOCS ${rel_path} | grep -v INSTALL_ | grep -q INSTALL ); then
+			output eb_def0 eb_iwfi
+		fi
 	fi
 
 	# HOMEPAGE with variables [eb_vaho]
@@ -610,8 +683,7 @@ ebuild-check() {
 		fi
 	fi
 
-	# eclass checks, only check if ECLASSES is not empty [eb_miec & eb_unec
-	# & eb_mief]
+	# eclass checks, only check if ECLASSES is not empty [eb_miec & eb_unec & eb_mief]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_miec " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_unec " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_mief " ]]; then
@@ -759,7 +831,7 @@ ebuild-check() {
 
 package-check() {
 	array_names
-	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating standard information for ${1}" | (debug_output)
+	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating package-check standard information for ${1}" | (debug_output)
 
 	array_names
 	local rel_path=${1}																		# path relative to ${REPOTREE}:	./app-admin/salt/
@@ -1287,17 +1359,13 @@ package-check() {
 		fi
 	fi
 
-	# check if homepage is reachable and if it redirects to another link. [pa_hobs
-	# & pa_hore]
+	# check if homepage is reachable and if it redirects to another link. [pa_hobs & pa_hore]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobs " ]] || [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hore " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobs]/${WORKDIR}\/} and ${FULL_CHECKS[pa_hore]/${WORKDIR}\/}" | (debug_output)
 		for eb in ${abs_path}/*.ebuild; do
 			local ebuild_eapi="$(get_eapi ${eb})"
 			local ebuild_filename="$(basename ${eb})"
 			local ebuild_name="${ebuild_filename%.*}"
-			#local ebuild=$(basename ${eb%.*})
-			#local filename="${ebuild}.ebuild"
-			#local cat="$(echo ${rel_path}|cut -d'/' -f1)"													# package category:						app-admin
 			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${ebuild_name}"	# full md5 path:							/usr/portage/metadata/md5-cache/app-admin/salt-0.5.2
 			local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
 
@@ -1372,18 +1440,20 @@ package-check() {
 
 metadata-check() {
 	array_names
-	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating standard information for ${1}" | (debug_output)
+	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "generating metadata-check standard information for ${1}" | (debug_output)
 
 	array_names
 	local rel_path=${1}																		# path relative to ${REPOTREE}:	./app-admin/salt/metadata.xml
 	local cat="$(echo ${rel_path}|cut -d'/' -f1)"					# package category:							app-admin
 	local pak="$(echo ${rel_path}|cut -d'/' -f2)"					# package name:									salt
 	local maintainer="$(get_main_min "${cat}/${pak}")"		# maintainer of package:				foo@gentoo.org:bar@gmail.com
+	local abs_path="${REPOTREE}/${cat}/${pak}"						# full path:										/usr/portage/app-admin/salt
 
 	output_formats(){
 		declare -gA array_formats=(
 			[me_def0]="${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 			[me_duud]="${cat}/${pak}${DL}$(echo ${dup_use[@]}|tr ' ' ':')${DL}${maintainer}"
+			[me_mmri]="${cat}/${pak}${DL}$(echo ${mri[@]}|tr ' ' ':')${DL}${maintainer}"
 		)
 		echo "${array_formats[${1}]}"
 	}
@@ -1438,6 +1508,43 @@ metadata-check() {
 			[ -n "${dup_use}" ] && output me_duud me_duud
 		fi
 	fi
+
+	# missing remote-id [me_mmri]
+	if [[ " ${SELECTED_CHECKS[*]} " =~ " me_mmri " ]]; then
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[me_mmri]/${WORKDIR}\/}" | (debug_output)
+		local mri=( )
+		local eb=""
+
+		for eb in ${abs_path}/*.ebuild; do
+			local ebuild_check="${eb##*/}"
+			local pakname=${ebuild_check%.ebuild}
+			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${pakname}"
+			local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
+
+			[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking: ${pakname}" | (debug_output)
+
+
+			# get siteid's
+			#  cd /mnt/data/git/gentoo
+			#  grep -R remote-id|cut -d'"' -f2|sort -u
+			# find all of one siteid
+			#  grep -Re "remote-id.*rubygems"
+
+			local siteid
+			for siteid in github.com sourceforge.net pypi.org gitlab.com; do
+				if $(grep ^HOMEPAGE= ${abs_md5_path} | grep -q ${siteid}); then
+					if ! $(grep -qe "remote-id.*\"${siteid%.*}\"" ${rel_path}); then
+						mri+=( ${siteid} )
+					fi
+				fi
+			done
+		done
+
+		# remove duplicates
+		mapfile -t mri < <(printf '%s\n' "${mri[@]}"|sort -u)
+		[ -n "${mri}" ] && output me_mmri me_mmri
+	fi
+	
 }
 
 # create a list of categories in ${REPOTREE}
@@ -1539,14 +1646,14 @@ find_func(){
 			-type f -name "*.ebuild" -print 2>/dev/null | while read -r line; do ebuild-check ${line}; done
 		find ${SEARCHPATTERN[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 			-type d -print 2>/dev/null | while read -r line; do package-check ${line}; done
-		find ${SEARCHPATTERN[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
+		find ${SEARCHPATTERN[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.xml" -print 2>/dev/null | while read -r line; do metadata-check ${line}; done
 	else
 		find ${SEARCHPATTERN[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.ebuild" -print 2>/dev/null | parallel ebuild-check {}
 		find ${SEARCHPATTERN[@]} -mindepth ${MIND} -maxdepth ${MAXD} \
 			-type d -print 2>/dev/null | parallel package-check {}
-		find ${SEARCHPATTERN[@]} -mindepth ${MIND} -maxdepth $(expr ${MAXD} + 1) \
+		find ${SEARCHPATTERN[@]} -mindepth $(expr ${MIND} + 1) -maxdepth $(expr ${MAXD} + 1) \
 			-type f -name "*.xml" -print 2>/dev/null | parallel metadata-check {}
 	fi
 
