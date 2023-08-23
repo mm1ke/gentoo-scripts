@@ -69,7 +69,6 @@ array_names(){
 	SELECTED_CHECKS=(
 		eb_iwfi
 		eb_trwh
-		eb_obge
 		eb_obdt
 		eb_obsr
 		eb_obds
@@ -100,7 +99,6 @@ array_names(){
 	declare -gA FULL_CHECKS=(
 		[eb_iwfi]="${WORKDIR}/ebuild_install_worthless_file_install"
 		[eb_trwh]="${WORKDIR}/ebuild_trailing_whitespaces"
-		[eb_obge]="${WORKDIR}/ebuild_obsolete_gentoo_mirror_usage"
 		[eb_obdt]="${WORKDIR}/ebuild_obsolete_dependency_tracking"
 		[eb_obsr]="${WORKDIR}/ebuild_obsolete_silent_rules"
 		[eb_obds]="${WORKDIR}/ebuild_obsolete_disable_static"
@@ -160,12 +158,6 @@ var_descriptions(){
 	read -r -d '' eb_trwh <<- EOM
 	Simple check to find leading or trailing whitespaces in a set of variables.
 	For example: SRC_URI=" www.foo.com/bar.tar.gz "
-
-	${info_default0}
-	EOM
-	read -r -d '' eb_obge <<- EOM
-	Ebuilds shouldn't use mirror://gentoo in SRC_URI because it's deprecated.
-	Also see: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
 
 	${info_default0}
 	EOM
@@ -524,12 +516,6 @@ ebuild-check() {
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_de80 " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_de80]/${WORKDIR}\/}" | (debug_output)
 		[[ $(grep DESCRIPTION ${abs_md5_path} | wc -m) -gt 95 ]] && output eb_def0 eb_de80
-	fi
-
-	# mirror usage [eb_obge]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obge " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obge]/${WORKDIR}\/}" | (debug_output)
-		$(grep -q 'mirror://gentoo' ${rel_path}) && output eb_def0 eb_obge
 	fi
 
 	# disable-dependency-tracking check [eb_obdt]
