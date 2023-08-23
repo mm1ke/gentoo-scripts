@@ -3,14 +3,75 @@
 
 This repository contains a collection of various qa scripts for gentoo ebuild repositories. Results of the these scripts can be seen on https://gentooqa.levelnine.at/
 
-## patchtest.sh
-This scripts tries to find unused patches by creating a list of files from the `files` directory and tries to find them in ebuilds. In order to improve its finding rates it also replaces Variable like `${P}`,`${PV}`,`${PN}` and other variations. Further more it also creates lists of possible Name variation in order to find patches which are written like following:
-`epatch foo-bar-{patch1,patch2,patch3}.patch`
-However this has limitations and won't find every case. Lastly it also tries to find files and patches which are used in ebuilds by calling them via an asterisk ('*'), like:
-`epatch ${FILESDIR}/*.patch`
+## repostats.sh
+Repostats generates statistics about repos. Following statistics are generated:
+* ebuild_eapi_statistics: `EAPI` usage in repo
+* ebuild_live_statistics: lists all live (`9999`) ebuilds
+* ebuild_eclass_statistics: eclass usage among ebuilds
+* ebuild_licenses_statistics: `LICENSE` usage among ebuilds
+* ebuild_keywords_statistics: keyword usage among ebuilds
+* ebuild_virtual_use_statistics: `virtual/*` usage among ebuilds
+* ebuild_obsolete_eapi: lists all ebuilds which have an obsolete `EAPI`
+* ebuild_cleanup_candidates: lists ebuilds which are candidates to cleanup
+* ebuild_stable_candidates: lists ebuilds which are candidates for stabilization
+* ebuild_glep81_group_statistics: `app-group/*` usage among ebuilds
+* ebuild_glep81_user_statistics: `app-user/*` usage among ebuilds
 
-### Limitations:
-Following Structures can't be found yet and will give a false positive:
+## repochecks.sh
+`repochecks` scan ebuilds, categories or a whole repository for various errors and mistakes. Nowadays many checks are already done by the the amazing tool `dev-util/pkgcheck`, which is why i've included the checks from `pkgcheck` into `repochecks`.  
+Since `pkgcheck` already has mostly the same checks as `repochecks`, checks which are basically the same are going to be removed in further updates.
+Following a list of all the checks done with `repochecks` and (if available) the correspondig check in `pkgcheck`.
+* ebuild_install_worthless_file_install: checks for ebuilds which install `INSTALL` files
+* ebuild_trailing_whitespaces: checks for trailing whitespaces in ebuilds
+  * **pkgcheck**: WhitespaceFound
+* ebuild_obsolete_dependency_tracking: checks if ebuilds have `--disable-dependency-tracking` enabled. Not needed since `EAPI4`
+* ebuild_obsolete_silent_rules: checks if ebuilds have `--disable-silent-rules` enabled. Not needed since `EAPI5`
+* ebuild_obsolete_disable_static: checks if ebuilds have `--disable-static` enabled. Not needed since `EAPI8`
+* ebuild_variable_missing_braces: Simple check to find variables in ebuilds which not use curly braces.
+* ebuild_epatch_in_eapi6: checks for `epatch` usage in `EAPI 6` ebuilds
+  * going to be removed with the last EAPI6 ebuild
+* ebuild_dohtml_in_eapi6: checks for `dohtml` usage in `EAPI 6`  ebuids
+  * going to be removed with the last EAPI6 ebuild
+* ebuild_description_over_80: checks if `DESCRIPTION` is longer then 80 chars
+  * **pkgcheck**: DescriptionCheck
+* ebuild_variables_in_homepages: checks if `HOMEPAGE` contains variables
+  * **pkgcheck**: ReferenceInMetadataVar
+* ebuild_insecure_git_uri_usage: checks for `git://` usage
+* ebuild_deprecated_eclasses: lists ebuilds which uses deprecated eclasses
+  * **pkgcheck**: DeprecatedEclass
+* ebuild_leading_trailing_whitespaces_in_variables: checks for leading / trailing whitespaces in certain variables
+* ebuild_multiple_deps_per_line: lists ebuilds which have multiple dependencies in on line
+* ebuild_nonexist_dependency: checks for dependencies which doesn't exists
+* ebuild_obsolete_virtual: lists virtuals which has effective only on consumer left
+* ebuild_missing_eclasses: lists ebuilds which are missing eclasses
+  * **pkgcheck**: InheritsCheck
+* ebuild_unused_eclasses: lists ebuilds who `inherit` eclasses which are not needed
+  * **pkgcheck**: InheritsCheck
+* ebuild_missing_eclasses_fatal: lists ebuilds which are missing eclasses and are not inherited indirectly
+  * **pkgcheck**: InheritsCheck
+* ebuild_homepage_upstream_shutdown: lists ebuilds who have a `HOMEPAGE` to a know shutdown service
+* ebuild_homepage_unsync: lists packages who have different `HOMEPAGE` among ebuilds
+* ebuild_missing_zip_dependency: lists ebuilds which misses `app-arch/unzip` dependency
+* ebuild_src_uri_offline: lists ebuilds who's upstream `SRC_URI` is unavailable and are the ebuild has mirror restricted enabled
+* ebuild_src_uri_bad: This check uses wget's spider functionality to check if a ebuild's `SRC_URI` link still works
+* ebuild_unused_patches: Extensive check to find unused pachtes. Uses a `whitelist` for false-positives
+* ebuild_unused_patches_simple: simple check for unused patches
+* ebuild_insecure_pkg_post_config: lists ebuilds who use ch{mod,own} -R in `pkg_config` or `pkg_postinst`
+* ebuild_insecure_init_scripts: lists ebuilds who use ch{mod,own} -R in init scripts
+* ebuild_homepage_redirections: lists ebuilds with a Homepage which actually redirects to another sites
+  * **pkgcheck**: RedirectedUrl
+* packages_pkgcheck_scan: runs `pkgcheck scan --net --keywords=-info -q` on packages
+  * **pkgcheck**: simply use `pkgcheck`
+* metadata_mixed_indentation: Checks metadata files (`metadata.xml`) if it uses mixed tabs and whitespaces
+  * **pkgcheck**: PkgMetadataXmlIndentation
+* metadata_missing_proxy_maintainer: Checks the `metadata.xml` of proxy maintained packages if it includes actually a non gentoo email address (address of proxy maintainer)
+  * **pkgcheck**: MaintainerWithoutProxy
+* metadata_duplicate_useflag_description: Lists packages which define use flags locally in `metadata.xml` which already exists as a global use flag.
+* metadata_missing_remote_id: Lists packages which has a certain homepage (github, sourceforge) but doesn't set remote-id in `metadata.xml`
+  * **pkgcheck**: MissingRemoteId
+
+### Limitations for ebuild_unused_patches:
+Following Structures can't be found (yet) and will give a false positive:
 * Usage of special vars which are not included in the script: `epatch foo-bar-${MY_VERS}.patch`
 * Usage of patching via eclasses: In this case not the ebuild uses the file, but the eclass. For example: `apache-module` do that. However we exclude most of the beforehand.
 * Usage for loops like:
@@ -22,64 +83,13 @@ done
 * False negative can also occur if the filename is the same as the package name.
 * Directories under the `files` directory will be ignored (for now)
 
-## repostats.sh
-Repostats generates statistics about repos. Following statistics are generated:
-* ebuild_eapi_statistics: `EAPI` usage in repo
-* ebuild_live_statistics: lists all live `9999` ebuids
-* ebuild_eclass_statistics: eclass usage among ebuilds
-* ebuild_licenses_statistics: license usage among ebuilds
-* ebuild_keywords_statistics: keyword usage among ebuilds
-* ebuild_virtual_use_statistics: `virtual/*` usage among ebuilds
-* ebuild_obsolete_eapi: lists all ebuilds which have an obsolete `EAPI`
-* ebuild_cleanup_candidates: lists ebuilds which are candidates to cleanup
-* ebuild_stable_candidates: lists ebuilds which are candidates for stabilization
-* ebuild_glep81_group_statistics: `app-group/*` usage among ebuilds
-* ebuild_glep81_user_statistics: `app-user/*` usage among ebuilds
 
-## repochecks.sh
-This is the main qa script which contains most of the checks. For following checks are being made:
-* ebuild_trailing_whitespaces: checks for trailing whitespaces in ebuilds
-* ebuild_obsolete_gentoo_mirror_usage: checks for `mirror://gentoo` usage in ebuilds
-* ebuild_epatch_in_eapi6: checks for `epatch` usage in `EAPI 6` ebuilds
-* ebuild_dohtml_in_eapi6: checks for `dohtml` usage in `EAPI 6`  ebuids
-* ebuild_description_over_80: checks if `DESCRIPTION` is longer then 80 chars
-* ebuild_variables_in_homepages: checks if `HOMEPAGE` contains variables
-* ebuild_insecure_git_uri_usage: checks for `git://` usage
-* ebuild_deprecated_eclasses: lists ebuilds which uses deprecated eclasses
-* ebuild_leading_trailing_whitespaces_in_variables: checks for leading / trailing whitespaces in certain variables
-* ebuild_multiple_deps_per_line: lists ebuilds which have multiple dependencies in on line
-* ebuild_nonexist_dependency: checks for dependencies which doesn't exists
-* ebuild_obsolete_virtual: lists virtuals which has effective only on consumer left
-* ebuild_missing_eclasses: lists ebuilds which are missing eclasses
-* ebuild_unused_eclasses: lists ebuilds who `inherit` eclasses which are not needed
-* ebuild_missing_eclasses_fatal: lists ebuilds which are missing eclasses and are not inherited indirectly
-* ebuild_homepage_upstream_shutdown: lists ebuilds who have a `HOMEPAGE` to a know shutdown service
-* ebuild_homepage_unsync: lists packages who have different `HOMEPAGE` among ebuilds
-* ebuild_missing_zip_dependency: lists ebuilds which misses `app-arch/unzip` dependency
-* ebuild_src_uri_offline: lists ebuilds who's upstream `SRC_URI` is unavailable and are the ebuild has mirror restricted enabled
-* ebuild_unused_patches_simple: simple check for unused patches
-* ebuild_insecure_pkg_post_config: lists ebuilds who use ch{mod,own} -R in `pkg_config` or `pkg_postinst`
-* ebuild_insecure_init_scripts: lists ebuilds who use ch{mod,own} -R in init scripts
-
-For a detailed explanation of each check please refer to the descriptions in the scripts.
-
-## wwwtest.sh
-This script tries to get the http statuscode of every homepage of the `HOMEPAGE` variable. This script is more usefull if the `script_mode` is enabled as it will multiple lists of the result.
-These a sorted after maintainer, httpcode, package and a special filter. Further more homepages which reply with a `301` statuscode (redirect) will be saved in special lists which checks the redirected page again.
-
-## srctest.sh
-This script checks if the `SRC_URI` links are available. It generates 3 return values. Available and not_available are obviously. maybe_available will be return when wget gets 403/Forbidden as return code. In that case the download might be still available but doesn't get recognized from wget when it behaves as a spider.
-
-## repomancheck.sh
-A script which runs 'repoman full' on every package. The result is also filtered by repoman's checks.
+For a detailed explanation of each check please refer to the descriptions in `repochecks`
 
 # Misc
 
-## tmpcheck.sh
-This is a template file for new scripts.
-
 ## qa.sh
-This script is used in order to run multiple repositories. It support to run scripts in `diff`mode in order to only run on packages which were changes since last run.
+This script is used in order to run multiple repositories. It support to run scripts in `diff` mode (git diffs) in order to only run on packages which were changes since last run.
 
 # Tools
 
@@ -90,14 +100,14 @@ This python script doesn't take any arguments and just prints every gentoo proje
 Simply prints the inheration tree of a particular eclass.
 
 ## whitecheck.sh
-Removes obsolete entries from whitelist files. (used for patchcheck.sh)
+Removes obsolete entries from whitelist files (for unused patches)
 
 ## eclassinfo.sh
 Prints functions which can be used by ebuilds.
 
 # Usage:
 
-Following usage will work for every script:
+Following usage will work for `repochecks` and `repostats`:
 
 * Scan the full portage tree: `./scriptname.sh full`
 * Scan a whole category: `./scriptname.sh app-admin`
