@@ -304,4 +304,7 @@ white_list=(
 	"dev-util/clazy;clazy-1.11-fix-llvm-15.patch;clazy-1.11-r3.ebuild"
 	"dev-util/clazy;clazy-1.11-fix-llvm-16.patch;clazy-1.11-r3.ebuild"
 	"app-admin/logcheck;logcheck.service;logcheck-1.4.3.ebuild"
+	"media-video/subtitlecomposer;subtitlecomposer-0.7.1-changingaudio-crashfix.patch;subtitlecomposer-0.7.1-r3.ebuild"
+	"media-video/subtitlecomposer;subtitlecomposer-0.7.1-subtitle-crashfix.patch;subtitlecomposer-0.7.1-r3.ebuild"
+	"media-video/subtitlecomposer;subtitlecomposer-0.7.1-vobsub-crashfix.patch;subtitlecomposer-0.7.1-r3.ebuild"
 )
