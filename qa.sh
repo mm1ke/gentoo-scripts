@@ -32,7 +32,7 @@ export DRYRUN=false
 export DEBUG=false
 export FILERESULTS=true
 export TIMELOG="/tmp/qa-time-$(date -I).log"
-export SITEDIR="/media/qa/gentooqa/www/"
+export SITEDIR="/mnt/data/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
 export GTREE="/tmp/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
