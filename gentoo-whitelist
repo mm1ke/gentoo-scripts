@@ -326,7 +326,7 @@ white_list=(
 	"sys-devel/autoconf-vanilla;autoconf-2.71-darwin.patch;autoconf-vanilla-2.71.ebuild:autoconf-vanilla-2.72c.ebuild:autoconf-vanilla-9999.ebuild"
 	"sys-devel/autoconf-vanilla;autoconf-2.71-make-4.4.patch;autoconf-vanilla-2.71.ebuild"
 	"sys-devel/autoconf-vanilla;autoconf-2.71-time.patch;autoconf-vanilla-2.71.ebuild"
-	"sys-devel/autoconf-vanilla;autoconf-2.72c-conflicts.patch;autoconf-vanilla-2.72c.ebuild"
+	"sys-devel/autoconf-vanilla;autoconf-2.72-conflicts.patch;autoconf-vanilla-2.72.ebuild"
 	"sys-devel/automake-vanilla;automake-1.11.6-install-sh-avoid-low-risk-race-in-tmp.patch;automake-vanilla-1.11.6.ebuild"
 	"sys-devel/automake-vanilla;automake-1.11.6-perl-5.16.patch;automake-vanilla-1.11.6.ebuild"
 	"sys-devel/automake-vanilla;automake-1.11.6-perl-escape-curly-bracket-r1.patch;automake-vanilla-1.11.6.ebuild"
@@ -334,4 +334,7 @@ white_list=(
 	"sys-devel/automake-vanilla;automake-1.16.5-fix-instmany-python.sh-test.patch;automake-vanilla-1.16.5.ebuild"
 	"sys-devel/automake-vanilla;automake-1.16.5-fix-py-compile-basedir.sh-test.patch;automake-vanilla-1.16.5.ebuild"
 	"sys-devel/automake-vanilla;automake-1.16.5-py3-compile.patch;automake-vanilla-1.16.5.ebuild"
+	"kde-plasma/kscreenlocker;kde6-fingerprint.pam;kscreenlocker-5.91.0.ebuild"
+	"kde-plasma/kscreenlocker;kde6.pam;kscreenlocker-5.91.0.ebuild"
+	"kde-plasma/kscreenlocker;kde6-smartcard.pam;kscreenlocker-5.91.0.ebuild"
 )
