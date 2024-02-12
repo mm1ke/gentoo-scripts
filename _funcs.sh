@@ -126,7 +126,9 @@ _update_buglists(){
 				s|</em>\"_status:| |; \
 				s|_resolution:| |; \
 				s|_severity:| |; \
-				s|</a></li>||;" \
+				s|</a></li>||; \
+				s|&gt;||; \
+				s|&lt;||;" \
 				${bugfile}
 
 			cat ${bugfile} >> ${BUGTMPDIR}/full-$(date -I).txt
