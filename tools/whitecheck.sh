@@ -23,7 +23,7 @@
 # Discription:
 # script for checking the whitelist for obsolete entries
 
-PORTTREE="/mnt/data/gentoo/"
+PORTTREE="/mnt/data/git/gentoo/"
 
 if [ -z "${1}" ]; then
 	echo "You need to provide a whitelist file"
