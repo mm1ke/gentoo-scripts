@@ -59,7 +59,6 @@ array_names(){
 		rs_lics
 		rs_keys
 		rs_vius
-		#rs_obse								# remove after eapi5 is gone
 		rs_clec rs_stac
 		rs_ggrs
 		rs_guss
@@ -71,7 +70,6 @@ array_names(){
 		[rs_lics]="${WORKDIR}/ebuild_licenses_statistics"
 		[rs_keys]="${WORKDIR}/ebuild_keywords_statistics"
 		[rs_vius]="${WORKDIR}/ebuild_virtual_use_statistics"
-		[rs_obse]="${WORKDIR}/ebuild_obsolete_eapi"
 		[rs_clec]="${WORKDIR}/ebuild_cleanup_candidates"
 		[rs_stac]="${WORKDIR}/ebuild_stable_candidates"
 		[rs_ggrs]="${WORKDIR}/ebuild_glep81_group_statistics"
@@ -149,12 +147,6 @@ foo-1.12-r2.ebuild                          full filename
 virtual/ooo                                 virtual(s) used by this ebuild, seperated by ':'
 dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 EOM
-read -r -d '' rs_obse <<- EOM
-Lists all ebuilds which have an obsolete EAPI
-
-${info_default0}
-EOM
-
 read -r -d '' rs_clec <<- EOM
 This script searches if there is a newer revision (-rX) available. In case a newer revision is found KEYWORDS are
 gonna be checked as well. If both keywords are the same for both ebuilds the older one is considered as a removal
@@ -274,14 +266,6 @@ main() {
 		[[ -n "${results1}" ]] && output def1 rs_ecls
 	fi
 
-	# obsolete eapis [rs_obse]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " rs_obse " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[rs_obse]/${WORKDIR}\/}" | (debug_output)
-		if [ ${ebuild_eapi} -lt ${min_allow_eapi} ]; then
-			output def0 rs_obse
-		fi
-	fi
-
 	# live ebuilds [rs_livs]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " rs_livs " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[rs_livs]/${WORKDIR}\/}" | (debug_output)
@@ -325,6 +309,7 @@ main() {
 				local eapi_found_ebuild="$(get_eapi ${abs_path}/${norm_name}-r${i}.ebuild)"
 				# only ebuild with a greater eapi then $min_allow_eapi are considered
 				# candidates for stable requests/cleanup
+				# also check if ebuild is masked
 				if [ ${eapi_found_ebuild} -ge ${min_allow_eapi} ] && ! $(check_mask ${found_ebuild}); then
 
 					local old_ebuild="${cat}/${pak}/${org_name}.ebuild"
