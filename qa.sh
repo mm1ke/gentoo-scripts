@@ -57,17 +57,22 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 	# the repositories need to exists in order to be updated
+	# check if directory exists
+	# > if not, create dir, clone repo
 	if ! [ -d "${REPOTREE}" ]; then
 		mkdir -p "${REPOTREE}"
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
+	# directory exists but is empty
+	# > clone repo
 	elif [ -z "$(ls -A ${REPOTREE})" ]; then
 		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
+	# repo exists, sync it
 	else
 		if $(git -C ${REPOTREE} status >/dev/null 2>${LOGFILE}); then
 			git -C ${REPOTREE} rev-parse HEAD > ${GITINFO}/${REPO}-head
 			git -C ${REPOTREE} pull >/dev/null 2>&1
 		else
-			echo "Error syncing git tree. Exiting" > ${LOGFILE}
+			echo "Error syncing ${REPO} git tree. Exiting" >> ${LOGFILE}
 			exit
 		fi
 	fi
@@ -93,9 +98,9 @@ for repodir in ${REPOSITORIES[@]}; do
 		# to override the diff mode this is usefull when the script got updates
 		# which should run on the whole tree
 		if ${DIFFMODE} && ! [[ -e "/tmp/${SCRIPT_NAME}" ]]; then
-			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >>${LOGFILE} 2>&1
+			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} diff >> ${LOGFILE} 2>&1
 		else
-			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} full >>${LOGFILE} 2>&1
+			/usr/bin/time -q -f %e -a -o ${TIMELOG} ${SCRIPTDIR}/${s_v2} full >> ${LOGFILE} 2>&1
 		fi
 	done
 
@@ -106,29 +111,29 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	# create full package/maintainer lists
 	echo "Processing script: genlists" >> ${LOGFILE}
-	${SCRIPTDIR}/genlists.sh >>${LOGFILE} 2>&1
+	${SCRIPTDIR}/genlists.sh >> ${LOGFILE} 2>&1
 
 	# write results into database
 	# must be done while the for loop since benchmark statistics are being
 	# overwriten each run
 	if ${DBWRITE}; then
 		SITESCRIPTS=$(dirname ${SITEDIR})
-		echo -e "\nCreating Database Entries for ${REPO}\n" >>${LOGFILE}
-		${SITESCRIPTS}/dbinsert.sh >>${LOGFILE} 2>&1
+		echo -e "\nCreating Database Entries for ${REPO}\n" >> ${LOGFILE}
+		${SITESCRIPTS}/dbinsert.sh >> ${LOGFILE} 2>&1
 	fi
 
 	rm ${TIMELOG}
 done
 
-echo -e "\nFinish with checking all repos\n" >>${LOGFILE}
+echo -e "\nFinish with checking all repos\n" >> ${LOGFILE}
 if ${SITEGEN}; then
 	export REPOS="$(echo ${REPOSITORIES[@]})"
 	SITESCRIPTS=$(dirname ${SITEDIR})
-	echo -e "\nGenerating HTML output:\n" >>${LOGFILE}
+	echo -e "\nGenerating HTML output:\n" >> ${LOGFILE}
 	${SITESCRIPTS}/sitegen.sh >>${LOGFILE} 2>&1
 fi
 
-echo -e "\nFinish generating HTML output\n" >>${LOGFILE}
+echo -e "\nFinish generating HTML output\n" >> ${LOGFILE}
 
 # with /tmp/${scriptname} it's possible to override the default DIFFMODE to
 # force a full run. Since this should only be done once, we remove existings
@@ -137,4 +142,4 @@ for diff_s in ${scripts_diff}; do
 	rm -f /tmp/${diff_s%.*}
 done
 
-echo -e "\nDONE" >>${LOGFILE}
+echo -e "\nDONE" >> ${LOGFILE}
