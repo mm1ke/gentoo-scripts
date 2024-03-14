@@ -77,11 +77,15 @@ for repodir in ${REPOSITORIES[@]}; do
 		fi
 	fi
 
-	echo -e "\nFind changed packages for ${REPO}" >> ${LOGFILE}
 	if [ -s "${GITINFO}/${REPO}-head" ]; then
+		echo -e "\nFind changed packages for ${REPO}" >> ${LOGFILE}
 		git -C ${REPOTREE} diff --name-only $(<${GITINFO}/${REPO}-head) HEAD \
 			| cut -d'/' -f1,2|sort -u|grep  -e '\([a-z0-9].*-[a-z0-9].*/\|virtual/\)' \
 			>> ${GITINFO}/${REPO}-catpak.log
+		echo -e "\nFind removed packages for ${REPO} >> ${LOGFILE}"
+		git -C ${REPOTREE} diff --diff-filter=D --summary $(<${GITINFO}/${REPO}-head) HEAD \
+			| grep metadata.xml | cut -d' ' -f5 \
+			>> ${GITINFO}/${REPO}-catpak-rm.log
 	else
 		DIFFMODE=false
 	fi
@@ -106,7 +110,10 @@ for repodir in ${REPOSITORIES[@]}; do
 
 	echo -e "\nFinishing checks for ${REPO}\n" >> ${LOGFILE}
 	mv ${GITINFO}/${REPO}-catpak.log ${GITINFO}/${REPO}-changes-$(date -I).log
+	mv ${GITINFO}/${REPO}-catpak-rm.log ${GITINFO}/${REPO}-deletes-$(date -I).log
 	find ${GITINFO} -name "${REPO}-changes-*" -type f -printf '%T@ %p\n' \
+		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
+	find ${GITINFO} -name "${REPO}-deletes-*" -type f -printf '%T@ %p\n' \
 		| sort -k1 -n | head -n-7 | cut -d' ' -f2 | xargs -r rm
 
 	# create full package/maintainer lists
@@ -129,11 +136,11 @@ echo -e "\nFinish with checking all repos\n" >> ${LOGFILE}
 if ${SITEGEN}; then
 	export REPOS="$(echo ${REPOSITORIES[@]})"
 	SITESCRIPTS=$(dirname ${SITEDIR})
-	echo -e "\nGenerating HTML output:\n" >> ${LOGFILE}
-	${SITESCRIPTS}/sitegen.sh >>${LOGFILE} 2>&1
+	echo -e "Generating HTML output:\n" >> ${LOGFILE}
+	${SITESCRIPTS}/sitegen.sh >> ${LOGFILE} 2>&1
 fi
 
-echo -e "\nFinish generating HTML output\n" >> ${LOGFILE}
+echo -e "Finish generating HTML output\n" >> ${LOGFILE}
 
 # with /tmp/${scriptname} it's possible to override the default DIFFMODE to
 # force a full run. Since this should only be done once, we remove existings
