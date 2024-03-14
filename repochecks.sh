@@ -83,7 +83,7 @@ array_names(){
 		eb_mude
 		eb_miec eb_unec eb_mief
 		eb_hous
-		eb_mizd eb_sruo eb_srub
+		eb_mizd eb_sruo eb_srub eb_srsm eb_srfo
 		eb_inpp
 		pa_unpa
 		pa_houn
@@ -119,6 +119,8 @@ array_names(){
 		[eb_mizd]="${WORKDIR}/ebuild_missing_zip_dependency"
 		[eb_sruo]="${WORKDIR}/ebuild_src_uri_offline"
 		[eb_srub]="${WORKDIR}/ebuild_src_uri_bad"
+		[eb_srfo]="${WORKDIR}/ebuild_src_uri_file_offline"
+		[eb_srsm]="${WORKDIR}/ebuild_src_uri_size_mismatch"
 		[eb_inpp]="${WORKDIR}/ebuild_insecure_pkg_post_config"
 		[pa_unpa]="${WORKDIR}/ebuild_unused_patches"
 		[pa_houn]="${WORKDIR}/ebuild_homepage_unsync"
@@ -338,7 +340,7 @@ var_descriptions(){
 	EOM
 	read -r -d '' eb_srub <<- EOM
 	This check uses wget's spider functionality to check if a ebuild's SRC_URI link still works.
-	The timeout to try to get a file is 15 seconds.
+	The timeout to try to get a file is 15 seconds. This exculdes mirror:// links.
 
 	Data Format ( 7|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com/bar.zip|dev@gentoo.org:loper@foo.de ):
 	7                                           EAPI Version
@@ -346,6 +348,25 @@ var_descriptions(){
 	dev-libs/foo                                package category/name
 	foo-1.12-r2.ebuild                          full filename
 	https://foo.bar.com/bar.zip                 file which is not available
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
+	read -r -d '' eb_srfo <<- EOM
+	Similar to ebuild_src_uri_bad this tries to download the sources from a ebuild. However it simply uses ebuild ... fetch in order
+	todo so. This way mirror:// links won't be excluded.
+
+	Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|dev@gentoo.org:loper@foo.de ):
+	7                                           EAPI Version
+	dev-libs/foo                                package category/name
+	foo-1.12-r2.ebuild                          full filename
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
+	read -r -d '' eb_srsm <<- EOM
+	Calls GENTOO_MIRRORS="" ebuild package fetch. This should catch problems like fetches file(s) that do not match recorded_size
+
+	Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|dev@gentoo.org:loper@foo.de ):
+	7                                           EAPI Version
+	dev-libs/foo                                package category/name
+	foo-1.12-r2.ebuild                          full filename
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' eb_inpp <<- EOM
@@ -768,8 +789,14 @@ ebuild-check() {
 	# unzip dependency
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_mizd " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_sruo " ]] \
+		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srsm " ]] \
+		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srfo " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srub " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_mizd]/${WORKDIR}\/} and ${FULL_CHECKS[eb_sruo]/${WORKDIR}\/} and ${FULL_CHECKS[eb_srub]/${WORKDIR}\/}" | (debug_output)
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_mizd]/${WORKDIR}\/} \
+			and ${FULL_CHECKS[eb_sruo]/${WORKDIR}\/} \
+			and ${FULL_CHECKS[eb_srub]/${WORKDIR}\/} \
+			and ${FULL_CHECKS[eb_srfo]/${WORKDIR}\/} \
+			and ${FULL_CHECKS[eb_srsm]/${WORKDIR}\/}" | (debug_output)
 		local _src_links=( $(grep ^SRC_URI= ${abs_md5_path}|cut -d'=' -f2-) )
 		local array_results1=( )
 		local file_offline=( )
@@ -784,10 +811,10 @@ ebuild-check() {
 						fi
 					fi
 					# exclude ebuilds which inherit one of the following eclasses:
-					# toolchain-binutils toolchain-glibc texlive-module
+					# texlive-module
 					# these generate lots of false postive by generating SRC_URI via the
 					# eclasses
-					if ! $(get_eclasses "${cat}/${pak}/${pakname}" | grep -q -E "toolchain-binutils|toolchain-glibc|texlive-module"); then
+					if ! $(get_eclasses "${cat}/${pak}/${pakname}" | grep -q -E "texlive-module"); then
 						if $(get_file_status_detailed ${l}); then
 							if $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}); then
 								# offline (restrict)
@@ -801,6 +828,25 @@ ebuild-check() {
 			[ -n "${array_results1}" ] && output eb_def1 eb_mizd
 			[ -n "${file_offline}" ] && output eb_sruo eb_sruo
 			[ -n "${bad_file_status}" ] && output eb_srub eb_srub
+			if [ -z "${array_results1}" ] && [ -z "${file_offline}" ] && [ -z "${bad_file_status}" ]; then
+				if ! $(echo ${pakver}|grep -q 9999) && ! $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}) ; then
+					local tmpdir=$(mktemp -d)
+					local fetchlog=$(mktemp)
+					# first download and see if it fails
+					if ! $(DISTDIR="${tmpdir}" GENTOO_MIRRORS="" /usr/bin/ebuild ${abs_path_ebuild} fetch >${fetchlog} 2>&1); then
+						# if fails, see if the log contains REQUIRED_USE settings -> ignore these
+						if ! $(grep -q REQUIRED_USE ${fetchlog}); then
+							if $(grep -q "VERIFY FAILED" ${fetchlog}); then
+								output eb_def0 eb_srsm
+							else
+								output eb_def0 eb_srfo
+							fi
+						fi
+					fi
+					rm "${fetchlog}"
+					rm -rf "${tmpdir}"
+				fi
+			fi
 		fi
 	fi
 
