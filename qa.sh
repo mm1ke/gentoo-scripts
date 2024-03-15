@@ -10,7 +10,7 @@ REPOSITORIES=(
 	"guru|https://github.com/gentoo/guru"
 	"science|https://github.com/gentoo/sci"
 	"pentoo|https://github.com/pentoo/pentoo-overlay"
-	)
+)
 
 # enable diffmode per default
 DIFFMODE=true
@@ -34,7 +34,7 @@ export FILERESULTS=true
 export TIMELOG="/tmp/qa-time-$(date -I).log"
 export SITEDIR="/mnt/data/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
-export GTREE="/tmp/repos/gentoo/"
+export GTREE="/mnt/data/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
 mkdir -p "${GITINFO}"
 # testvars
@@ -48,12 +48,12 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPO="$(echo ${repodir%%|*})"
 	REPOLINK="https://github.com/gentoo-mirror/${REPO}"
 	export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	export REPOTREE="/tmp/repos/${REPO}/"
+	export REPOTREE="/mnt/data/repos/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
 	# testvars
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	#export REPOTREE="/tmp/repos/${REPO}/"
-	#export HASHTREE="/tmp/repohashs/${REPO}/"
+	#export REPOTREE="/mnt/data/repos/${REPO}/"
+	#export HASHTREE="/mnt/data/repohashs/${REPO}/"
 
 	echo -e "\nChecking ${REPO}\n" >> ${LOGFILE}
 	# the repositories need to exists in order to be updated
@@ -61,16 +61,16 @@ for repodir in ${REPOSITORIES[@]}; do
 	# > if not, create dir, clone repo
 	if ! [ -d "${REPOTREE}" ]; then
 		mkdir -p "${REPOTREE}"
-		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
+		git clone ${REPOLINK} ${REPOTREE} >> ${LOGFILE} 2>&1
 	# directory exists but is empty
 	# > clone repo
 	elif [ -z "$(ls -A ${REPOTREE})" ]; then
-		git clone ${REPOLINK} ${REPOTREE} >/dev/null 2>&1
+		git clone ${REPOLINK} ${REPOTREE} >> ${LOGFILE} 2>&1
 	# repo exists, sync it
 	else
 		if $(git -C ${REPOTREE} status >/dev/null 2>${LOGFILE}); then
 			git -C ${REPOTREE} rev-parse HEAD > ${GITINFO}/${REPO}-head
-			git -C ${REPOTREE} pull >/dev/null 2>&1
+			git -C ${REPOTREE} pull >>${LOGFILE} 2>&1
 		else
 			echo "Error syncing ${REPO} git tree. Exiting" >> ${LOGFILE}
 			exit
@@ -82,7 +82,7 @@ for repodir in ${REPOSITORIES[@]}; do
 		git -C ${REPOTREE} diff --name-only $(<${GITINFO}/${REPO}-head) HEAD \
 			| cut -d'/' -f1,2|sort -u|grep  -e '\([a-z0-9].*-[a-z0-9].*/\|virtual/\)' \
 			>> ${GITINFO}/${REPO}-catpak.log
-		echo -e "\nFind removed packages for ${REPO} >> ${LOGFILE}"
+		echo -e "\nFind removed packages for ${REPO}" >> ${LOGFILE}
 		git -C ${REPOTREE} diff --diff-filter=D --summary $(<${GITINFO}/${REPO}-head) HEAD \
 			| grep metadata.xml | cut -d' ' -f5 \
 			>> ${GITINFO}/${REPO}-catpak-rm.log
