@@ -830,8 +830,8 @@ ebuild-check() {
 			[ -n "${bad_file_status}" ] && output eb_srub eb_srub
 			if [ -z "${array_results1}" ] && [ -z "${file_offline}" ] && [ -z "${bad_file_status}" ]; then
 				if ! $(echo ${pakver}|grep -q 9999) && ! $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}) ; then
-					local tmpdir=$(mktemp -d)
-					local fetchlog=$(mktemp)
+					local tmpdir="$(mktemp -p /var/tmp/portage -d)"
+					local fetchlog="$(mktemp)"
 					# first download and see if it fails
 					if ! $(DISTDIR="${tmpdir}" GENTOO_MIRRORS="" /usr/bin/ebuild ${abs_path_ebuild} fetch >${fetchlog} 2>&1); then
 						# if fails, see if the log contains REQUIRED_USE settings -> ignore these
