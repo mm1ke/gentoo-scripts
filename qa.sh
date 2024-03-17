@@ -68,7 +68,7 @@ for repodir in ${REPOSITORIES[@]}; do
 		git clone ${REPOLINK} ${REPOTREE} >> ${LOGFILE} 2>&1
 	# repo exists, sync it
 	else
-		if $(git -C ${REPOTREE} status >/dev/null 2>${LOGFILE}); then
+		if $(git -C ${REPOTREE} status >>${LOGFILE} 2>&1); then
 			# if the keephead file exists, don't update repo-head file
 			# this way an older head (for example form the day before) could be used
 			# to run the scripts. this file will be removed at the end.
