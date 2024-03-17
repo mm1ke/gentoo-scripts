@@ -69,8 +69,15 @@ for repodir in ${REPOSITORIES[@]}; do
 	# repo exists, sync it
 	else
 		if $(git -C ${REPOTREE} status >/dev/null 2>${LOGFILE}); then
-			git -C ${REPOTREE} rev-parse HEAD > ${GITINFO}/${REPO}-head
-			git -C ${REPOTREE} pull >>${LOGFILE} 2>&1
+			# if the keephead file exists, don't update repo-head file
+			# this way an older head (for example form the day before) could be used
+			# to run the scripts. this file will be removed at the end.
+			if [ -e "/tmp/keephead" ]; then
+				git -C ${REPOTREE} pull >>${LOGFILE} 2>&1
+			else
+				git -C ${REPOTREE} rev-parse HEAD > ${GITINFO}/${REPO}-head
+				git -C ${REPOTREE} pull >>${LOGFILE} 2>&1
+			fi
 		else
 			echo "Error syncing ${REPO} git tree. Exiting" >> ${LOGFILE}
 			exit
@@ -148,5 +155,7 @@ echo -e "Finish generating HTML output\n" >> ${LOGFILE}
 for diff_s in ${scripts_diff}; do
 	rm -f /tmp/${diff_s%.*}
 done
+# the same as with the temporay scriptname file, remove /tmp/keephead
+rm -f /tmp/keephead
 
 echo -e "\nDONE" >> ${LOGFILE}
