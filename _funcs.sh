@@ -30,6 +30,12 @@ BUGTMPDIR="/tmp/buglists/"
 DL='|'
 export FDL=4
 
+# settings which shouldn't be in _funcs.sh
+# like api keys
+if [ -e ~/.config/checks.conf ]; then
+	source ~/.config/checks.conf
+fi
+
 # check and set DEBUG
 if [ -z "${DEBUG}" ]; then
 	export DEBUG=false
@@ -384,6 +390,21 @@ get_site_status(){
 	local code="$(curl -o /dev/null --silent --max-time 20 --head --write-out '%{http_code}\n' ${hp})"
 	echo "${code}"
 }
+
+# return the site rating of a given homepage
+get_site_rating(){
+	# ABUSEAPIKEY comes from checks.conf
+	local hpip="${1}"
+	local abuselink="https://api.abuseipdb.com/api/v2/check"
+	local rating="$(curl -s -G ${abuselink} \
+		--data-urlencode "ipAddress=${hpip}" \
+		-d maxAgeInDays=90 \
+		-d verbose \
+		-H "Key: ${ABUSEAPIKEY}" \
+		-H "Accept: application/json" \
+		| jq '.[] | .abuseConfidenceScore')"
+	echo "${rating}"
+	}
 
 check_mask(){
 	local ebuild="${1}"
@@ -1298,4 +1319,4 @@ export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
 	get_site_status get_file_status_detailed get_age_v3 post_checks \
 	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2 \
-	get_keywords_v2 sort_result_column_v1 sort_result_v6
+	get_keywords_v2 sort_result_column_v1 sort_result_v6 get_site_rating

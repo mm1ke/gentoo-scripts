@@ -64,6 +64,7 @@ fi
 SCRIPT_TYPE="checks"
 WORKDIR="/tmp/$(basename ${0})-${RANDOM}"
 TMPCHECK="/tmp/$(basename ${0})-tmp-${RANDOM}.txt"
+TMPIPCHECK="/tmp/$(basename ${0})-tmpip-${RANDOM}.txt"
 
 array_names(){
 	SELECTED_CHECKS=(
@@ -83,13 +84,15 @@ array_names(){
 		eb_mude
 		eb_miec eb_unec eb_mief
 		eb_hous
-		eb_mizd eb_sruo eb_srub eb_srsm eb_srfo
+		eb_mizd eb_sruo eb_srub
+		eb_srsm eb_srfo
 		eb_inpp
 		pa_unpa
 		pa_houn
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore
+		#pa_hobr - disable this check for now - needs api key
 		pa_pksc
 		me_miin
 		me_mipm
@@ -128,6 +131,7 @@ array_names(){
 		[pa_inis]="${WORKDIR}/ebuild_insecure_init_scripts"
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
 		[pa_hore]="${WORKDIR}/ebuild_homepage_redirections"
+		[pa_hobr]="${WORKDIR}/ebuild_homepage_bad_rating"
 		[pa_pksc]="${WORKDIR}/packages_pkgcheck_scan"
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
@@ -432,6 +436,18 @@ var_descriptions(){
 	foo-1.12-r2.ebuild                          full filename
 	https://foo.bar.com                         original hommepage in ebuild
 	https://bar.foo.com                         redirected homepage
+	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
+	EOM
+	read -r -d '' pa_hobr <<- EOM
+	Lists ebuilds with a Homepage(IP) which has an bad rating from abuseipdb
+
+	Data Format ( 7|100|2021-06-01|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de ):
+	7                                           EAPI Version
+	100                                         rating from abuseipdb (everything above 0)
+	2021-06-01                                  date of check
+	dev-libs/foo                                package category/name
+	foo-1.12-r2.ebuild                          full filename
+	https://foo.bar.com                         original hommepage in ebuild
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' pa_pksc <<- EOM
@@ -789,14 +805,10 @@ ebuild-check() {
 	# unzip dependency
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_mizd " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_sruo " ]] \
-		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srsm " ]] \
-		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srfo " ]] \
 		|| [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srub " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_mizd]/${WORKDIR}\/} \
 			and ${FULL_CHECKS[eb_sruo]/${WORKDIR}\/} \
-			and ${FULL_CHECKS[eb_srub]/${WORKDIR}\/} \
-			and ${FULL_CHECKS[eb_srfo]/${WORKDIR}\/} \
-			and ${FULL_CHECKS[eb_srsm]/${WORKDIR}\/}" | (debug_output)
+			and ${FULL_CHECKS[eb_srub]/${WORKDIR}\/}" | (debug_output)
 		local _src_links=( $(grep ^SRC_URI= ${abs_md5_path}|cut -d'=' -f2-) )
 		local array_results1=( )
 		local file_offline=( )
@@ -828,23 +840,30 @@ ebuild-check() {
 			[ -n "${array_results1}" ] && output eb_def1 eb_mizd
 			[ -n "${file_offline}" ] && output eb_sruo eb_sruo
 			[ -n "${bad_file_status}" ] && output eb_srub eb_srub
-			if [ -z "${array_results1}" ] && [ -z "${file_offline}" ] && [ -z "${bad_file_status}" ]; then
-				if ! $(echo ${pakver}|grep -q 9999) && ! $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}) ; then
-					local tmpdir="$(mktemp -p /var/tmp/portage -d)"
-					local fetchlog="$(mktemp)"
-					# first download and see if it fails
-					if ! $(DISTDIR="${tmpdir}" GENTOO_MIRRORS="" /usr/bin/ebuild ${abs_path_ebuild} fetch >${fetchlog} 2>&1); then
-						# if fails, see if the log contains REQUIRED_USE settings -> ignore these
-						if ! $(grep -q REQUIRED_USE ${fetchlog}); then
-							if $(grep -q "VERIFY FAILED" ${fetchlog}); then
-								output eb_def0 eb_srsm
-							else
-								output eb_def0 eb_srfo
+			if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srsm " ]] || [[ " ${SELECTED_CHECKS[*]} " =~ " eb_srfo " ]]; then
+				[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_srsm]/${WORKDIR}\/} \
+					and ${FULL_CHECKS[eb_srfo]/${WORKDIR}\/}" | (debug_output)
+				# only run if previous checks were without results
+				if [ -z "${array_results1}" ] && [ -z "${file_offline}" ] && [ -z "${bad_file_status}" ]; then
+					if ! $(echo ${pakver}|grep -q 9999) && \
+						! $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}) && \
+						! $(grep -q -e "^SRC_URI=.*dev.gentoo.org" ${abs_md5_path}) ; then
+						local tmpdir="$(mktemp -p /var/tmp/portage -d)"
+						local fetchlog="$(mktemp)"
+						# first download and see if it fails
+						if ! $(DISTDIR="${tmpdir}" GENTOO_MIRRORS="" /usr/bin/ebuild ${abs_path_ebuild} fetch >${fetchlog} 2>&1); then
+							# if fails, see if the log contains REQUIRED_USE settings -> ignore these
+							if ! $(grep -q REQUIRED_USE ${fetchlog}); then
+								if $(grep -q "VERIFY FAILED" ${fetchlog}); then
+									output eb_def0 eb_srsm
+								else
+									output eb_def0 eb_srfo
+								fi
 							fi
 						fi
+						rm "${fetchlog}"
+						rm -rf "${tmpdir}"
 					fi
-					rm "${fetchlog}"
-					rm -rf "${tmpdir}"
 				fi
 			fi
 		fi
@@ -879,6 +898,7 @@ package-check() {
 			[pa_houn]="${hp_count}${DL}${cat}/${pak}${DL}${maintainer}"
 			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${maintainer}"
 			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
+			[pa_hobr]="${ebuild_eapi}${DL}${siterating}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${hpip}${DL}${maintainer}"
 			[pa_unpa]="${cat}/${pak}${DL}${upatch}${DL}${maintainer}"
 		)
 		echo "${array_formats[${1}]}"
@@ -1393,7 +1413,8 @@ package-check() {
 
 	# check if homepage is reachable and if it redirects to another link. [pa_hobs & pa_hore]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobs " ]] || [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hore " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobs]/${WORKDIR}\/} and ${FULL_CHECKS[pa_hore]/${WORKDIR}\/}" | (debug_output)
+		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobs]/${WORKDIR}\/} and \
+			${FULL_CHECKS[pa_hore]/${WORKDIR}\/}" | (debug_output)
 		for eb in ${abs_path}/*.ebuild; do
 			local ebuild_eapi="$(get_eapi ${eb})"
 			local ebuild_filename="$(basename ${eb})"
@@ -1412,7 +1433,10 @@ package-check() {
 					elif $(echo ${hp}|grep -q metacpan.org/release); then
 						continue
 					else
+						# get ip of homepage
 						local _checktmp="$(grep "${DL}${hp}${DL}" ${TMPCHECK}|head -1)"
+
+						# check site status
 						if [ -z "${_checktmp}" ]; then
 							[ ${DEBUGLEVEL} -ge 2 ] && echo "checking site status ${hp}" | (debug_output)
 							local statuscode="$(get_site_status ${hp})"
@@ -1420,6 +1444,32 @@ package-check() {
 						else
 							[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hp} in ${TMPCHECK}" | (debug_output)
 							statuscode="${_checktmp:2:3}"
+						fi
+
+						# check site rating status
+						if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobr " ]]; then
+							[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobr]/${WORKDIR}\/}" | (debug_output)
+							hpip="$(dig +short "$(echo ${hp} | sed -e 's|https://||g' -e 's|http://||g' | cut -d'/' -f1)" | grep '^[.0-9]*$' |  head -1)"
+							[ -n "${hpip}" ] && local _checktmpip="$(grep "${DL}${hpip}${DL}" ${TMPIPCHECK}|head -1)"
+							if [ -n "${hpip}" ]; then
+								if [ -z "${_checktmpip}" ]; then
+									[ ${DEBUGLEVEL} -ge 2 ] && echo "checking rating status ${hp}" | (debug_output)
+									local siterating="$(get_site_rating ${hpip})"
+									echo "${ebuild_eapi}${DL}${siterating}${DL}${hpip}${DL}" >> ${TMPIPCHECK}
+									if [ "${siterating}" != "0" ]; then
+										[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
+										output pa_hobr pa_hobr
+									fi
+								else
+									[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hpip} in ${TMPIPCHECK}" | (debug_output)
+									# filter out only the rating
+									siterating="$(echo ${_checktmpip} | cut -d"${DL}" -f2)"
+									if [ "${siterating}" != "0" ]; then
+										[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
+										output pa_hobr pa_hobr
+									fi
+								fi
+							fi
 						fi
 					fi
 
@@ -1735,6 +1785,7 @@ fi
 cd ${REPOTREE}
 
 touch ${TMPCHECK}
+touch ${TMPIPCHECK}
 array_names
 _gen_gentoo_eclasses
 _gen_repo_categories
@@ -1747,11 +1798,12 @@ done
 ${FILERESULTS} && mkdir -p ${RUNNING_CHECKS[@]}
 
 export -f ebuild-check package-check metadata-check array_names
-export WORKDIR TMPCHECK WFILE
+export WORKDIR TMPCHECK TMPIPCHECK WFILE
 
 depth_set_v4 ${1}
 
 ${FILERESULTS} && rm -rf ${WORKDIR}
 rm ${TMPCHECK}
+rm ${TMPIPCHECK}
 
 [[ ${DEBUGLEVEL} -ge 1 ]] && echo "*** finished ${0}" | (debug_output)
