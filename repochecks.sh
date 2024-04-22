@@ -69,21 +69,21 @@ TMPIPCHECK="/tmp/$(basename ${0})-tmpip-${RANDOM}.txt"
 array_names(){
 	SELECTED_CHECKS=(
 		eb_iwfi
-		eb_trwh
+		eb_trwh									# remove when EAPI6 is gone (pkgcheck check)
 		eb_obdt
 		eb_obsr
 		eb_obds
 		eb_obvi eb_node
 		eb_epe6									# remove when EAPI6 is gone
 		eb_doe6									# remove when EAPI6 is gone
-		eb_de80
+		eb_de80									# remove when EAPI6 is gone (pkgcheck check)
 		eb_vamb
-		eb_vaho
+		eb_vaho									# remove when EAPI6 is gone (pkgcheck check)
 		eb_ingu
 		eb_ltwv
 		eb_mude
 		eb_miec eb_unec eb_mief
-		eb_hous
+		eb_hous									# remove when EAPI6 is gone
 		eb_mizd eb_sruo eb_srub
 		eb_srsm eb_srfo
 		eb_inpp
