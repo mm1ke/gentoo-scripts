@@ -1,4 +1,5 @@
 white_list=(
+	"app-emulation/hercules-sdl;gen_hashes.sh;all"
 	"sys-apps/portage;README.RESCUE;all"
 	"x11-wm/fvwm3;README.translucency;all"
 	"app-portage/gpyutils;implementations.txt;all"
