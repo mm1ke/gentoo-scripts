@@ -108,7 +108,7 @@ white_list=(
 	"x11-misc/xdialog;xdialog-2.3.1-no-strip.patch;xdialog-2.3.1.ebuild"
 	"gnustep-base/gnustep-make;gnustep-5.csh;gnustep-make-2.8.0-r1.ebuild:gnustep-make-2.9.0.ebuild"
 	"gnustep-base/gnustep-make;gnustep-5.sh;gnustep-make-2.8.0-r1.ebuild:gnustep-make-2.9.0.ebuild"
-	"net-analyzer/munin;munin-graph.service;munin-2.0.67-r7.ebuild:munin-2.0.69.ebuild:munin-2.0.69-r1.ebuild"
+	"net-analyzer/munin;munin-graph.service;munin-2.0.73-r4.ebuild:munin-2.0.75.ebuild:munin-2.0.76.ebuild"
 	"net-analyzer/munin;munin-graph.socket;munin-2.0.73-r4.ebuild:munin-2.0.75.ebuild:munin-2.0.76.ebuild"
 	"net-analyzer/munin;munin-html.service;munin-2.0.73-r4.ebuild:munin-2.0.75.ebuild:munin-2.0.76.ebuild"
 	"net-analyzer/munin;munin-html.socket;munin-2.0.73-r4.ebuild:munin-2.0.75.ebuild:munin-2.0.76.ebuild"
