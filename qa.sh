@@ -38,7 +38,7 @@ export FILERESULTS=true
 export TIMELOG="/tmp/qa-time-$(date -I).log"
 export SITEDIR="/mnt/data/qa/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
-export GTREE="/mnt/data/repos/gentoo/"
+export GTREE="/mnt/data/qa/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
 mkdir -p "${GITINFO}"
 # testvars
@@ -52,7 +52,7 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPO="$(echo ${repodir%%|*})"
 	REPOLINK="https://github.com/gentoo-mirror/${REPO}"
 	export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	export REPOTREE="/mnt/data/repos/${REPO}/"
+	export REPOTREE="/mnt/data/qa/repos/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
 	# testvars
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
