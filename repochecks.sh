@@ -88,7 +88,7 @@ array_names(){
 		eb_srsm eb_srfo
 		eb_inpp
 		pa_unpa
-		pa_houn
+		pa_houn									# remove when EAPI6 is gone
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore
