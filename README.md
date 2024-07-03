@@ -52,6 +52,7 @@ Following a list of all the checks done with `repochecks` and (if available) the
 * ebuild_homepage_upstream_shutdown: lists ebuilds who have a `HOMEPAGE` to a know shutdown service
 * ebuild_homepage_unsync: lists packages who have different `HOMEPAGE` among ebuilds
 * ebuild_missing_zip_dependency: lists ebuilds which misses `app-arch/unzip` dependency
+  * **pkgcheck**: MissingUnpackerDep
 * ebuild_src_uri_offline: lists ebuilds who's upstream `SRC_URI` is unavailable and are the ebuild has mirror restricted enabled
 * ebuild_src_uri_bad: This check uses wget's spider functionality to check if a ebuild's `SRC_URI` link still works
 * ebuild_unused_patches: Extensive check to find unused pachtes. Uses a `whitelist` for false-positives
