@@ -848,7 +848,7 @@ ebuild-check() {
 					if ! $(echo ${pakver}|grep -q 9999) && \
 						! $(grep -q -e "^RESTRICT=.*mirror" ${rel_path}) && \
 						! $(grep -q -e "^SRC_URI=.*dev.gentoo.org" ${abs_md5_path}) ; then
-						local tmpdir="$(mktemp -p /var/tmp/portage -d)"
+						local tmpdir="$(mktemp -p /var/tmp -d)"
 						local fetchlog="$(mktemp)"
 						# first download and see if it fails
 						if ! $(DISTDIR="${tmpdir}" GENTOO_MIRRORS="" /usr/bin/ebuild ${abs_path_ebuild} fetch >${fetchlog} 2>&1); then
