@@ -1645,9 +1645,9 @@ _gen_gentoo_eclasses(){
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	if [[ -n "${GTREE}" ]]; then
 		# a list of eclass which we're going to check
-		local etc=( optfeature wrapper edos2unix ltprune eutils estack preserve-libs \
-			vcs-clean epatch desktop versionator user-info flag-o-matic xdg-utils \
-			libtool udev eapi7-ver pam ssl-cert toolchain-funcs )
+		local etc=( optfeature wrapper edos2unix estack preserve-libs \
+			vcs-clean desktop versionator user-info flag-o-matic xdg-utils \
+			libtool udev pam ssl-cert toolchain-funcs )
 
 		local eclasses_with_funcs=( )
 
