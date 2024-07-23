@@ -28,6 +28,8 @@ SITEGEN=true
 CLEANLOG=true
 # set directory were the scripts are
 SCRIPTDIR="/home/bob/qa/"
+# set directory were qa data resides
+QADIR="/mnt/data/qa/gentoo.levelnine.at/"
 
 #
 ## important settings
@@ -36,9 +38,9 @@ export DRYRUN=false
 export DEBUG=false
 export FILERESULTS=true
 export TIMELOG="/tmp/qa-time-$(date -I).log"
-export SITEDIR="/mnt/data/qa/gentooqa.levelnine.at/gentooqa/www/"
+export SITEDIR="${QADIR}/gentooqa/www/"
 # gentoo main tree directory, requried for certain checks
-export GTREE="/mnt/data/qa/gentooqa.levelnine.at/repos/gentoo/"
+export GTREE="${QADIR}/repos/gentoo/"
 export GITINFO="${SCRIPTDIR}/gitinfo"
 mkdir -p "${GITINFO}"
 # testvars
@@ -52,12 +54,11 @@ for repodir in ${REPOSITORIES[@]}; do
 	export REPO="$(echo ${repodir%%|*})"
 	REPOLINK="https://github.com/gentoo-mirror/${REPO}"
 	export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	export REPOTREE="/mnt/data/qa/gentooqa.levelnine.at/repos/${REPO}/"
+	export REPOTREE="${QADIR}/repos/${REPO}/"
 	export PT_WHITELIST="${REPO}-whitelist"
 	# testvars
 	#export RESULTSDIR="/${SITEDIR}/results/${REPO}/"
-	#export REPOTREE="/mnt/data/repos/${REPO}/"
-	#export HASHTREE="/mnt/data/repohashs/${REPO}/"
+	#export REPOTREE="/${QADIR}/repos/${REPO}/"
 
 	echo -e "\nChecking ${REPO}\n" | (logstd)
 	# the repositories need to exists in order to be updated
