@@ -29,7 +29,7 @@ CLEANLOG=true
 # set directory were the scripts are
 SCRIPTDIR="/home/bob/qa/"
 # set directory were qa data resides
-QADIR="/mnt/data/qa/gentoo.levelnine.at/"
+QADIR="/mnt/data/qa/gentooqa.levelnine.at/"
 
 #
 ## important settings
