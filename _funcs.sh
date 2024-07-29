@@ -256,6 +256,7 @@ depth_set_v4() {
 					if [[ -e ${oldlog} ]]; then
 						# copy old result file to workdir and filter the result
 						cp ${oldlog} ${oldfull}/
+						cp ${oldlog} ${oldfull}/full-yesterday.txt
 						for cpak in $(cat ${changed_packages}); do
 							# the substring replacement is important (replaces '/' to '\/'), otherwise the sed command
 							# will fail because '/' aren't escapted. also remove first slash
