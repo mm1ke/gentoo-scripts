@@ -80,12 +80,14 @@ fi
 # Feature settings
 ENABLE_GIT=false
 ENABLE_MD5=false
+ENABLE_ABUSECHECK=false
 TREE_IS_MASTER=false
 [ -e "${REPOTREE}/.git" ] && ENABLE_GIT=true
 [ -e "${REPOTREE}/metadata/md5-cache" ] && ENABLE_MD5=true
 [ "$(cat ${REPOTREE}/profiles/repo_name)" = "gentoo" ] && TREE_IS_MASTER=true
+[ -n "${ABUSEAPIKEY}" ] && ENABLE_ABUSECHECK=true
 
-export ENABLE_GIT ENABLE_MD5 DEBUG DL BUGTMPDIR TREE_IS_MASTER \
+export ENABLE_GIT ENABLE_MD5 ENABLE_ABUSECHECK DEBUG DL BUGTMPDIR TREE_IS_MASTER \
 	FILERESULTS RESULTSDIR REPOCHECK DRYRUN GTREE
 #
 # globaly vars END

@@ -91,8 +91,7 @@ array_names(){
 		pa_houn									# remove when EAPI6 is gone
 		pa_unps
 		pa_inis
-		pa_hobs pa_hore
-		#pa_hobr - disable this check for now - needs api key
+		pa_hobs pa_hore #pa_hobr #- disable this check for now - needs api key
 		pa_pksc
 		me_miin
 		me_mipm
@@ -1448,25 +1447,28 @@ package-check() {
 
 						# check site rating status
 						if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobr " ]]; then
-							[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobr]/${WORKDIR}\/}" | (debug_output)
-							hpip="$(dig +short "$(echo ${hp} | sed -e 's|https://||g' -e 's|http://||g' | cut -d'/' -f1)" | grep '^[.0-9]*$' |  head -1)"
-							[ -n "${hpip}" ] && local _checktmpip="$(grep "${DL}${hpip}${DL}" ${TMPIPCHECK}|head -1)"
-							if [ -n "${hpip}" ]; then
-								if [ -z "${_checktmpip}" ]; then
-									[ ${DEBUGLEVEL} -ge 2 ] && echo "checking rating status ${hp}" | (debug_output)
-									local siterating="$(get_site_rating ${hpip})"
-									echo "${ebuild_eapi}${DL}${siterating}${DL}${hpip}${DL}" >> ${TMPIPCHECK}
-									if [ "${siterating}" != "0" ]; then
-										[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
-										output pa_hobr pa_hobr
-									fi
-								else
-									[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hpip} in ${TMPIPCHECK}" | (debug_output)
-									# filter out only the rating
-									siterating="$(echo ${_checktmpip} | cut -d"${DL}" -f2)"
-									if [ "${siterating}" != "0" ]; then
-										[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
-										output pa_hobr pa_hobr
+							# only run abusecheck if api key is available
+							if ${ENABLE_ABUSECHECK}; then
+								[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobr]/${WORKDIR}\/}" | (debug_output)
+								hpip="$(dig +short "$(echo ${hp} | sed -e 's|https://||g' -e 's|http://||g' | cut -d'/' -f1)" | grep '^[.0-9]*$' |  head -1)"
+								[ -n "${hpip}" ] && local _checktmpip="$(grep "${DL}${hpip}${DL}" ${TMPIPCHECK}|head -1)"
+								if [ -n "${hpip}" ]; then
+									if [ -z "${_checktmpip}" ]; then
+										[ ${DEBUGLEVEL} -ge 2 ] && echo "checking rating status ${hp}" | (debug_output)
+										local siterating="$(get_site_rating ${hpip})"
+										echo "${ebuild_eapi}${DL}${siterating}${DL}${hpip}${DL}" >> ${TMPIPCHECK}
+										if [ "${siterating}" != "0" ]; then
+											[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
+											output pa_hobr pa_hobr
+										fi
+									else
+										[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hpip} in ${TMPIPCHECK}" | (debug_output)
+										# filter out only the rating
+										siterating="$(echo ${_checktmpip} | cut -d"${DL}" -f2)"
+										if [ "${siterating}" != "0" ]; then
+											[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
+											output pa_hobr pa_hobr
+										fi
 									fi
 								fi
 							fi
@@ -1713,6 +1715,8 @@ _gen_repo_whitelist(){
 find_func(){
 	[[ ${DEBUGLEVEL} -ge 1 ]] && echo ">>> calling ${FUNCNAME[0]} (MIND:${MIND} MAXD:${MAXD})" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** searchpattern is: ${SEARCHPATTERN[@]}" | (debug_output)
+	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** packages to check: ${#SEARCHPATTERN[@]}" | (debug_output)
+	echo "${#SEARCHPATTERN[@]}" >> /tmp/packages_to_check.txt
 
 	# restore results for pa_pksc since they are not generated via
 	# gen_sort_pak_v5 for them
