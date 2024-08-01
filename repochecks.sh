@@ -1716,7 +1716,6 @@ find_func(){
 	[[ ${DEBUGLEVEL} -ge 1 ]] && echo ">>> calling ${FUNCNAME[0]} (MIND:${MIND} MAXD:${MAXD})" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** searchpattern is: ${SEARCHPATTERN[@]}" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** packages to check: ${#SEARCHPATTERN[@]}" | (debug_output)
-	echo "${#SEARCHPATTERN[@]}" >> /tmp/packages_to_check.txt
 
 	# restore results for pa_pksc since they are not generated via
 	# gen_sort_pak_v5 for them
