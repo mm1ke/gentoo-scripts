@@ -82,7 +82,6 @@ array_names(){
 		eb_srsm eb_srfo
 		eb_inpp
 		pa_unpa
-		pa_unps
 		pa_inis
 		pa_hobs pa_hore #pa_hobr #- disable this check for now - needs api key
 		pa_pksc
@@ -112,7 +111,6 @@ array_names(){
 		[eb_srsm]="${WORKDIR}/ebuild_src_uri_size_mismatch"
 		[eb_inpp]="${WORKDIR}/ebuild_insecure_pkg_post_config"
 		[pa_unpa]="${WORKDIR}/ebuild_unused_patches"
-		[pa_unps]="${WORKDIR}/ebuild_unused_patches_simple"
 		[pa_inis]="${WORKDIR}/ebuild_insecure_init_scripts"
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
 		[pa_hore]="${WORKDIR}/ebuild_homepage_redirections"
@@ -328,13 +326,6 @@ var_descriptions(){
 	Data Format ( dev-libs/foo|foo-fix-1.12.patch|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
 	foo-fix-1.12.patch                          patch which is not used by any ebuild
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
-	read -r -d '' pa_unps <<- EOM
-	Very limited check to find unused patches, mostly without false positives
-
-	Data Format ( dev-libs/foo|dev@gentoo.org:loper@foo.de ):
-	dev-libs/foo                                package category/name
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' pa_inis <<- EOM
@@ -1253,19 +1244,6 @@ package-check() {
 			fi
 		else
 			[ ${DEBUGLEVEL} -ge 3 ] && echo "skipping: ${cat}/${pak} has no files directory" | (debug_output)
-		fi
-	fi
-
-	# simple patchtest [pa_unps]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_unps " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_unps]/${WORKDIR}\/}" | (debug_output)
-		local eclasses="apache-module|elisp|vdr-plugin-2|ruby-ng|readme.gentoo-r1|java-vm-2|php-ext-source-r3|selinux-policy-2|toolchain-glibc"
-		if [ -d "${REPOTREE}/${rel_path}/files" ]; then
-			if ! $(echo ${WHITELIST}|grep -q "${cat}/${pak}"); then
-				if ! $(grep -q -E ".diff|.patch|FILESDIR|${eclasses}" ${REPOTREE}/${rel_path}/*.ebuild); then
-					output pa_def0 pa_unps
-				fi
-			fi
 		fi
 	fi
 
