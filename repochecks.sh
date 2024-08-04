@@ -69,26 +69,19 @@ TMPIPCHECK="/tmp/$(basename ${0})-tmpip-${RANDOM}.txt"
 array_names(){
 	SELECTED_CHECKS=(
 		eb_iwfi
-		eb_trwh									# remove when EAPI6 is gone (pkgcheck check)
 		eb_obdt
 		eb_obsr
 		eb_obds
 		eb_obvi eb_node
-		eb_epe6									# remove when EAPI6 is gone
-		eb_doe6									# remove when EAPI6 is gone
-		eb_de80									# remove when EAPI6 is gone (pkgcheck check)
 		eb_vamb
-		eb_vaho									# remove when EAPI6 is gone (pkgcheck check)
 		eb_ingu
 		eb_ltwv
 		eb_mude
 		eb_miec eb_unec eb_mief
-		eb_hous									# remove when EAPI6 is gone
 		eb_mizd eb_sruo eb_srub
 		eb_srsm eb_srfo
 		eb_inpp
 		pa_unpa
-		pa_houn									# remove when EAPI6 is gone
 		pa_unps
 		pa_inis
 		pa_hobs pa_hore #pa_hobr #- disable this check for now - needs api key
@@ -100,24 +93,18 @@ array_names(){
 	)
 	declare -gA FULL_CHECKS=(
 		[eb_iwfi]="${WORKDIR}/ebuild_install_worthless_file_install"
-		[eb_trwh]="${WORKDIR}/ebuild_trailing_whitespaces"
 		[eb_obdt]="${WORKDIR}/ebuild_obsolete_dependency_tracking"
 		[eb_obsr]="${WORKDIR}/ebuild_obsolete_silent_rules"
 		[eb_obds]="${WORKDIR}/ebuild_obsolete_disable_static"
 		[eb_obvi]="${WORKDIR}/ebuild_obsolete_virtual"
 		[eb_node]="${WORKDIR}/ebuild_nonexist_dependency"
-		[eb_epe6]="${WORKDIR}/ebuild_epatch_in_eapi6"
-		[eb_doe6]="${WORKDIR}/ebuild_dohtml_in_eapi6"
-		[eb_de80]="${WORKDIR}/ebuild_description_over_80"
 		[eb_vamb]="${WORKDIR}/ebuild_variable_missing_braces"
-		[eb_vaho]="${WORKDIR}/ebuild_variables_in_homepages"
 		[eb_ingu]="${WORKDIR}/ebuild_insecure_git_uri_usage"
 		[eb_ltwv]="${WORKDIR}/ebuild_leading_trailing_whitespaces_in_variables"
 		[eb_mude]="${WORKDIR}/ebuild_multiple_deps_per_line"
 		[eb_miec]="${WORKDIR}/ebuild_missing_eclasses"
 		[eb_unec]="${WORKDIR}/ebuild_unused_eclasses"
 		[eb_mief]="${WORKDIR}/ebuild_missing_eclasses_fatal"
-		[eb_hous]="${WORKDIR}/ebuild_homepage_upstream_shutdown"
 		[eb_mizd]="${WORKDIR}/ebuild_missing_zip_dependency"
 		[eb_sruo]="${WORKDIR}/ebuild_src_uri_offline"
 		[eb_srub]="${WORKDIR}/ebuild_src_uri_bad"
@@ -125,7 +112,6 @@ array_names(){
 		[eb_srsm]="${WORKDIR}/ebuild_src_uri_size_mismatch"
 		[eb_inpp]="${WORKDIR}/ebuild_insecure_pkg_post_config"
 		[pa_unpa]="${WORKDIR}/ebuild_unused_patches"
-		[pa_houn]="${WORKDIR}/ebuild_homepage_unsync"
 		[pa_unps]="${WORKDIR}/ebuild_unused_patches_simple"
 		[pa_inis]="${WORKDIR}/ebuild_insecure_init_scripts"
 		[pa_hobs]="${WORKDIR}/ebuild_homepage_bad_statuscode"
@@ -157,12 +143,6 @@ var_descriptions(){
 	read -r -d '' eb_iwfi <<- EOM
 	Ebuilds shouldn't install "INSTALL". (with exceptions)
 	Also see: <a href="https://devmanual.gentoo.org/general-concepts/mirrors/">Link</a>
-
-	${info_default0}
-	EOM
-	read -r -d '' eb_trwh <<- EOM
-	Simple check to find leading or trailing whitespaces in a set of variables.
-	For example: SRC_URI=" www.foo.com/bar.tar.gz "
 
 	${info_default0}
 	EOM
@@ -202,24 +182,6 @@ var_descriptions(){
 	sys-apps/bar:dev-libs/libdir(2015-08-13)    non-existing package(s). If removed after git migration a removal date is shown.
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
-	read -r -d '' eb_epe6 <<- EOM
-	'epatch' is deprecated and should be replaced by 'eapply'.
-	Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
-
-	${info_default0}
-	EOM
-	read -r -d '' eb_doe6 <<- EOM
-	'dohtml' is deprecated in EAPI6 and banned in EAPI7.
-	This check lists EAPI6 ebuilds which still use 'dohtml'
-	Also see: <a href="https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/">Link</a>
-
-	${info_default0}
-	EOM
-	read -r -d '' eb_de80 <<- EOM
-	Checks ebuilds if the DESCRIPTION is longer than 80 characters.
-
-	${info_default0}
-	EOM
 	read -r -d '' eb_vamb <<- EOM
 	Simple check to find variables which not use curly braces.
 	Only a certain set of variables are being checked.
@@ -230,13 +192,6 @@ var_descriptions(){
 	foo-1.12-r2.ebuild                          full filename
 	DEPEND:SRC_URI                              list of variables which not use curly braces, seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
-	read -r -d '' eb_vaho <<- EOM
-	Simple check to find variables in HOMEPAGE. While not technically a bug, this shouldn't be used.
-	See Tracker bug: <a href="https://bugs.gentoo.org/408917">Link</a>
-	Also see bug: <a href="https://bugs.gentoo.org/562812">Link</a>
-
-	${info_default0}
 	EOM
 	read -r -d '' eb_ingu <<- EOM
 	Ebuilds shouldn't use git:// for git repos because its insecure. Should be replaced with https://
@@ -309,17 +264,6 @@ var_descriptions(){
 	user(enewuser):udev(edev_get)               eclasse(s) and function name the ebuild uses but not inherits, seperated by ':'
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
-	read -r -d '' eb_hous <<- EOM
-	This checks lists ebuilds which still use a homepage of a know dead upstrem site.
-	Also see: <a href="https://wiki.gentoo.org/wiki/Upstream_repository_shutdowns">Link</a>
-
-	Data Format ( 7|dev-libs/foo|foo-1.12-r2.ebuild|https://foo.bar.com|dev@gentoo.org:loper@foo.de ):
-	7                                           EAPI Version
-	dev-libs/foo                                package category/name
-	foo-1.12-r2.ebuild                          full filename
-	https://foo.bar.com                         homepage(s) which are going to be removed, seperated by ':'
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
 	read -r -d '' eb_mizd <<- EOM
 	Packages which downlaods ZIP files but misses app-arch/unzip in DEPEND.
 
@@ -384,14 +328,6 @@ var_descriptions(){
 	Data Format ( dev-libs/foo|foo-fix-1.12.patch|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
 	foo-fix-1.12.patch                          patch which is not used by any ebuild
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
-	read -r -d '' pa_houn <<- EOM
-	Lists packages who have different homepages over it's ebuild versions.
-
-	Data Format ( 2|dev-libs/foo|dev@gentoo.org:loper@foo.de ):
-	2                                           number of different homepages found over all ebuilds
-	dev-libs/foo                                package category/name
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 	read -r -d '' pa_unps <<- EOM
@@ -530,30 +466,6 @@ ebuild-check() {
 		fi
 	}
 
-	# trailing whitespace [eb_trwh]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_trwh " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_trwh]/${WORKDIR}\/}" | (debug_output)
-		$(grep -Eq " +$" ${rel_path}) && output eb_def0 eb_trwh
-	fi
-
-	# epatch usage [eb_epe6]
-	if [[ "${ebuild_eapi}" = "6" ]] && [[ " ${SELECTED_CHECKS[*]} " =~ " eb_epe6 " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_epe6]/${WORKDIR}\/}" | (debug_output)
-		$(grep -q "\<epatch\>" ${rel_path}) && output eb_def0 eb_epe6
-	fi
-
-	# dohtml usage [eb_doe6]
-	if [[ "${ebuild_eapi}" = "6" ]] && [[ " ${SELECTED_CHECKS[*]} " =~ " eb_doe6 " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_doe6]/${WORKDIR}\/}" | (debug_output)
-		$(grep -q "\<dohtml\>" ${rel_path}) && output eb_def0 eb_doe6
-	fi
-
-	# DESCRIPTION over 80 [eb_de80]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_de80 " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_de80]/${WORKDIR}\/}" | (debug_output)
-		[[ $(grep DESCRIPTION ${abs_md5_path} | wc -m) -gt 95 ]] && output eb_def0 eb_de80
-	fi
-
 	# disable-dependency-tracking check [eb_obdt]
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_obdt " ]]; then
 		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_obdt]/${WORKDIR}\/}" | (debug_output)
@@ -579,14 +491,6 @@ ebuild-check() {
 			output eb_def0 eb_iwfi
 		elif $(grep DOCS ${rel_path} | grep -v INSTALL_ | grep -q INSTALL ); then
 			output eb_def0 eb_iwfi
-		fi
-	fi
-
-	# HOMEPAGE with variables [eb_vaho]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_vaho " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_vaho]/${WORKDIR}\/}" | (debug_output)
-		if $(grep -q "HOMEPAGE=.*\${" ${rel_path}); then
-			$(grep -q 'HOMEPAGE=.*${HOMEPAGE}' ${rel_path}) && output eb_def0 eb_vaho
 		fi
 	fi
 
@@ -779,27 +683,6 @@ ebuild-check() {
 		fi
 	fi
 
-	# check for upstream shutdowns [eb_hous]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_hous " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[eb_hous]/${WORKDIR}\/}" | (debug_output)
-		_filters=(
-			'berlios.de' 'gitorious.org' 'codehaus.org' 'code.google.com'
-			'fedorahosted.org' 'gna.org' 'freecode.com' 'freshmeat.net'
-		)
-		local site single_hp
-		local array_results1=( )
-		local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
-		for site in ${_filters[@]}; do
-			for single_hp in ${ebuild_hps}; do
-				if $(echo ${single_hp}|grep -q ${site}); then
-					array_results1+=( ${single_hp} )
-				fi
-			done
-		done
-		[ -n "${array_results1}" ] && output eb_def1 eb_hous
-	fi
-
-
 	# check if upstream source is available (only if mirror restricted) + missing
 	# unzip dependency
 	if [[ " ${SELECTED_CHECKS[*]} " =~ " eb_mizd " ]] \
@@ -894,7 +777,6 @@ package-check() {
 		declare -gA array_formats=(
 			[pa_def0]="${cat}/${pak}${DL}${maintainer}"
 			[pa_def1]="${cat}/${pak}${DL}$(echo ${array_results1[@]}|tr ' ' ':')${DL}${maintainer}"
-			[pa_houn]="${hp_count}${DL}${cat}/${pak}${DL}${maintainer}"
 			[pa_hobs]="${ebuild_eapi}${DL}${statuscode}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${maintainer}"
 			[pa_hore]="${ebuild_eapi}${DL}${new_code}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${correct_site}${DL}${maintainer}"
 			[pa_hobr]="${ebuild_eapi}${DL}${siterating}${DL}$(date -I)${DL}${cat}/${pak}${DL}${ebuild_filename}${DL}${hp}${DL}${hpip}${DL}${maintainer}"
@@ -1372,14 +1254,6 @@ package-check() {
 		else
 			[ ${DEBUGLEVEL} -ge 3 ] && echo "skipping: ${cat}/${pak} has no files directory" | (debug_output)
 		fi
-	fi
-
-
-	# check for unsync homepages [pa_houn]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_houn " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_houn]/${WORKDIR}\/}" | (debug_output)
-		local hp_count="$(grep "^HOMEPAGE=" ${REPOTREE}/metadata/md5-cache/${cat}/${pak}-[0-9]* | cut -d'=' -f2|sort -u |wc -l)"
-		[ "${hp_count}" -gt 1 ] && output pa_houn pa_houn
 	fi
 
 	# simple patchtest [pa_unps]
