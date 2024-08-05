@@ -1523,6 +1523,12 @@ find_func(){
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** searchpattern is: ${SEARCHPATTERN[@]}" | (debug_output)
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** packages to check: ${#SEARCHPATTERN[@]}" | (debug_output)
 
+	# disalbe abuse check if there are more then 1000 packages to scan
+	# the free check only covers up to 1000 checks
+	if [[ ${#SEARCHPATTERN[@]} -ge 1000 ]]; then
+		ENABLE_ABUSECHECK=false
+	fi
+
 	# restore results for pa_pksc since they are not generated via
 	# gen_sort_pak_v5 for them
 	if ${FILERESULTS}; then
