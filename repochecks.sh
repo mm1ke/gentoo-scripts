@@ -119,7 +119,6 @@ array_names(){
 		[me_miin]="${WORKDIR}/metadata_mixed_indentation"
 		[me_mipm]="${WORKDIR}/metadata_missing_proxy_maintainer"
 		[me_duud]="${WORKDIR}/metadata_duplicate_useflag_description"
-		[me_mmri]="${WORKDIR}/metadata_missing_remote_id"
 	)
 }
 
@@ -404,14 +403,6 @@ var_descriptions(){
 	Data Format ( dev-libs/foo|gtk[:X:qt:zlib]|dev@gentoo.org:loper@foo.de ):
 	dev-libs/foo                                package category/name
 	gtk[:X:qt:zlib]                             list of USE flags which already exists as a global flag.
-	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
-	EOM
-	read -r -d '' me_mmri <<- EOM
-	Lists packages which has a certain homepage (github, sourceforge) but doesn't set remote-id in metadata.xml
-
-	Data Format ( dev-libs/foo|github[:sourceforge]|dev@gentoo.org:loper@foo.de ):
-	dev-libs/foo                                package category/name
-	github[:sourceforge]                        list of remote-id's which are missing
 	dev@gentoo.org:loper@foo.de                 maintainer(s), seperated by ':'
 	EOM
 }
@@ -1389,7 +1380,6 @@ metadata-check() {
 		declare -gA array_formats=(
 			[me_def0]="${cat}/${pak}${DL}${filename}${DL}${maintainer}"
 			[me_duud]="${cat}/${pak}${DL}$(echo ${dup_use[@]}|tr ' ' ':')${DL}${maintainer}"
-			[me_mmri]="${cat}/${pak}${DL}$(echo ${mri[@]}|tr ' ' ':')${DL}${maintainer}"
 		)
 		echo "${array_formats[${1}]}"
 	}
@@ -1445,42 +1435,6 @@ metadata-check() {
 		fi
 	fi
 
-	# missing remote-id [me_mmri]
-	if [[ " ${SELECTED_CHECKS[*]} " =~ " me_mmri " ]]; then
-		[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[me_mmri]/${WORKDIR}\/}" | (debug_output)
-		local mri=( )
-		local eb=""
-
-		for eb in ${abs_path}/*.ebuild; do
-			local ebuild_check="${eb##*/}"
-			local pakname=${ebuild_check%.ebuild}
-			local abs_md5_path="${REPOTREE}/metadata/md5-cache/${cat}/${pakname}"
-			local ebuild_hps="$(grep ^HOMEPAGE= ${abs_md5_path}|cut -d'=' -f2-)"
-
-			[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking: ${pakname}" | (debug_output)
-
-
-			# get siteid's
-			#  cd /mnt/data/git/gentoo
-			#  grep -R remote-id|cut -d'"' -f2|sort -u
-			# find all of one siteid
-			#  grep -Re "remote-id.*rubygems"
-
-			local siteid
-			for siteid in github.com sourceforge.net pypi.org gitlab.com; do
-				if $(grep ^HOMEPAGE= ${abs_md5_path} | grep -q ${siteid}); then
-					if ! $(grep -qe "remote-id.*\"${siteid%.*}\"" ${rel_path}); then
-						mri+=( ${siteid} )
-					fi
-				fi
-			done
-		done
-
-		# remove duplicates
-		mapfile -t mri < <(printf '%s\n' "${mri[@]}"|sort -u)
-		[ -n "${mri}" ] && output me_mmri me_mmri
-	fi
-	
 }
 
 # create a list of categories in ${REPOTREE}
