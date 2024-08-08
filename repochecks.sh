@@ -1348,7 +1348,7 @@ package-check() {
 
 		cd ${abs_path}
 		local TMPFILE="/tmp/${cat}-${pak}-${RANDOM}.log"
-		/usr/bin/pkgcheck scan -r ${REPOTREE%/} --net --keywords=-info --color=n > ${TMPFILE}
+		/usr/bin/pkgcheck scan -r ${REPOTREE%/} --net --keywords=warning,style,MissingRemoteId --color=n > ${TMPFILE}
 
 		local array_results1=( $(grep '^  [a-zA-Z].*' ${TMPFILE} | cut -d':' -f1| sort -u ) )
 
