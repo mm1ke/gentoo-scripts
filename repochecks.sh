@@ -83,7 +83,7 @@ array_names(){
 		eb_inpp
 		pa_unpa
 		pa_inis
-		pa_hobs pa_hore #pa_hobr #- disable this check for now - needs api key
+		pa_hobs pa_hore pa_hobr # pa_hobr requires api key
 		pa_pksc
 		me_miin
 		me_mipm
