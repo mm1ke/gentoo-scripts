@@ -1290,6 +1290,8 @@ package-check() {
 
 						# check site rating status
 						if [[ " ${SELECTED_CHECKS[*]} " =~ " pa_hobr " ]]; then
+							local min_rating=60
+
 							# only run abusecheck if api key is available
 							if ${ENABLE_ABUSECHECK}; then
 								[[ ${DEBUGLEVEL} -ge 2 ]] && echo "checking for ${FULL_CHECKS[pa_hobr]/${WORKDIR}\/}" | (debug_output)
@@ -1300,7 +1302,8 @@ package-check() {
 										[ ${DEBUGLEVEL} -ge 2 ] && echo "checking rating status ${hp}" | (debug_output)
 										local siterating="$(get_site_rating ${hpip})"
 										echo "${ebuild_eapi}${DL}${siterating}${DL}${hpip}${DL}" >> ${TMPIPCHECK}
-										if [ "${siterating}" != "0" ]; then
+										# lets only log rating above 60
+										if [ ${siterating} -gt ${min_rating} ]; then
 											[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
 											output pa_hobr pa_hobr
 										fi
@@ -1308,7 +1311,7 @@ package-check() {
 										[ ${DEBUGLEVEL} -ge 2 ] && echo "found ${hpip} in ${TMPIPCHECK}" | (debug_output)
 										# filter out only the rating
 										siterating="$(echo ${_checktmpip} | cut -d"${DL}" -f2)"
-										if [ "${siterating}" != "0" ]; then
+										if [ ${siterating} -gt ${min_rating} ]; then
 											[ ${DEBUGLEVEL} -ge 2 ] && echo "rating for ${hpip} is ${siterating}" | (debug_output)
 											output pa_hobr pa_hobr
 										fi
