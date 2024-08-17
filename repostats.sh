@@ -404,7 +404,6 @@ find_func(){
 
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** fileresults enabled: ${FILERESULTS}" | (debug_output)
 	if ${FILERESULTS}; then
-		#gen_descriptions
 		var_descriptions
 		for s in ${SELECTED_CHECKS[@]}; do
 			echo "${!s}" >> ${FULL_CHECKS[${s}]}/description.txt

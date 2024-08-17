@@ -1559,8 +1559,10 @@ find_func(){
 
 	[[ ${DEBUGLEVEL} -ge 2 ]] && echo "*** fileresults enabled: ${FILERESULTS}" | (debug_output)
 	if ${FILERESULTS}; then
-		clean_results
-		var_descriptions
+		clean_results # remove results if they're empty
+		var_descriptions # set descriptions
+		# check if a variable of a selected check is defined
+		# and put it's context into the description file
 		for s in ${SELECTED_CHECKS[@]}; do
 			echo "${!s}" >> ${FULL_CHECKS[${s}]}/description.txt
 		done

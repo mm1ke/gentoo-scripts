@@ -1030,17 +1030,13 @@ gen_sort_filter_v2(){
 	wait
 }
 
-gen_descriptions(){
-	for i in $(seq 0 $(expr ${#RUNNING_CHECKS[@]} - 1)); do
-		data_descriptions ${i} >> "${RUNNING_CHECKS[${i}]}/description.txt"
-	done
-}
-
 clean_results(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	local c
 	for c in ${RUNNING_CHECKS[@]}; do
+		# check was running, file exists
 		if [ -e "${c}/full.txt" ]; then
+			# file is NOT greater then zero -> file is empty
 			if ! [ -s "${c}/full.txt" ]; then
 				rm ${c}/full.txt
 			fi
