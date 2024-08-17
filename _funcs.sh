@@ -321,12 +321,6 @@ get_licenses(){
 
 # returns a list of keywords set for a certain ebuild
 # list looks like: amd64:~x86
-get_keywords(){
-	local rel_ebuild="${1}"
-	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
-	local eb_keywords=( $(grep ^KEYWORDS ${eb_path} |cut -d'=' -f2 | tr ' ' '\n') )
-	echo ${eb_keywords[@]}|tr ' ' ':'
-}
 get_keywords_v2(){
 	local rel_ebuild="${1}"
 	local eb_path="${REPOTREE}/metadata/md5-cache/${rel_ebuild}"
@@ -422,65 +416,6 @@ check_mask(){
 	fi
 }
 
-# function to sort the output, takes one argument (optional)
-# the argument is the column number to sort after
-sort_result_v4(){
-	local fixed_column="${1}"
-	local single_rc="${2}"
-	local rc_id
-
-	# find pakackge location in result
-	_file_sort(){
-		local column=""
-		[ -n "${fixed_column}" ] && column="${fixed_column}"
-		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: sorting ${rc_id}" | (debug_output)
-		if [ -z "${column}" ]; then
-			local pak_loc="$(_find_package_location "${rc_id}")"
-			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: package location found ${pak_loc}" | (debug_output)
-			[ -z "${pak_loc}" ] && column=1 || column=${pak_loc}
-			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: column set: ${column}" | (debug_output)
-		fi
-
-		sort -t"${DL}" -k${column} -o${rc_id} ${rc_id}
-	}
-
-	# check input
-	_file_check(){
-		# check if rc_id is directory
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: rc_id is ${rc_id}" | (debug_output)
-				return 0
-			else
-				[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
-				return 1
-			fi
-		# else check if rc_id exists (must be a file then)
-		elif ! [ -e ${rc_id} ]; then
-			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: W: no rc_id set!" | (debug_output)
-			return 1
-		# otherwise rc_id doesn't exist
-		else
-			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: rc_id is ${rc_id}" | (debug_output)
-			return 0
-		fi
-	}
-
-	if [ -z "${single_rc}" ]; then
-		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo ">>> sort_result_v4: calling sorting for all running checks (column: ${fixed_column})" | (debug_output)
-		for rc_id in ${RUNNING_CHECKS[@]}; do
-			[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "sort_result_v4: checking and try sorting ${rc_id}" | (debug_output)
-			_file_check && _file_sort
-		done
-	else
-		[ ${DEBUGLEVEL} -ge ${FDL} ] && echo ">>> sort_result_v4: calling sorting for ${RUNNING_CHECKS[${single_rc}]} (column: ${fixed_column})" | (debug_output)
-		rc_id="${RUNNING_CHECKS[${single_rc}]}"
-		_file_check && _file_sort
-	fi
-	[ ${DEBUGLEVEL} -ge ${FDL} ] && echo "<<< sort_result_v4: finish sorting" | (debug_output)
-}
-
 # sort results after a certain column
 sort_result_column_v1(){
 	local column="${1}"
@@ -523,6 +458,8 @@ sort_result_column_v1(){
 	[[ ${DEBUGLEVEL} -ge ${FDL} ]] && echo "<<< ${FUNCNAME[0]}: finish sorting" | (debug_output)
 }
 
+# function to sort the output, takes one argument (optional)
+# the argument is the column number to sort after
 sort_result_v5(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 
@@ -689,67 +626,6 @@ compare_keywords(){
 }
 
 # function which sorts a list by it's maintainer
-gen_sort_main_v4(){
-	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
-	else
-		local check_files=( "${1}" )
-	fi
-
-	local id d v
-
-	_gen_sort(){
-		local rc_id="${1}"
-
-		if [ -d "${rc_id}" ]; then
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				return 0
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			return 0
-		fi
-
-		# find pakackge location in result first
-		local pak_loc="$(_find_package_location "${rc_id}")"
-		if [ -s "${rc_id}" ]; then
-			# check the first 10 entries
-			for x in $(head -n10 "${rc_id}"); do
-				local pak="$(echo ${x}|cut -d'|' -f${pak_loc})"
-				local pak_main="$(get_main_min ${pak})"
-				for i in $(seq 1 $(expr $(echo ${x} |grep -o '|' | wc -l) + 1)); do
-					if [ "$(echo ${x}|cut -d'|' -f${i})" = "${pak_main}" ]; then
-						local main_loc=${i}
-						break 2
-					fi
-				done
-			done
-		fi
-		# generate maintainer sortings only if we find the location
-		if [ -n "${main_loc}" ]; then
-			mkdir -p "${rc_id%/*}/sort-by-maintainer"
-			local main
-			for main in $(cat "${rc_id}" |cut -d "${DL}" -f${main_loc}|tr ':' '\n'| grep -v "^[[:space:]]*$"|sort -u); do
-				grep "${main}" "${rc_id}" > "${rc_id%/*}/sort-by-maintainer/"$(echo ${main}|sed "s|@|_at_|; s|gentoo.org|g.o|;")".txt"
-			done
-		fi
-	}
-
-	for id in ${check_files[@]}; do
-		for v in sort-by-filter sort-by-eapi; do
-			if [ -d "${id}/${v}" ]; then
-				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort "${d}" &
-				done
-			fi
-		done
-		_gen_sort "${id}" &
-	done
-	wait
-}
-
-# function which sorts a list by it's maintainer
 gen_sort_main_v5(){
 	[ ${DEBUGLEVEL} -ge 1 ] && echo ">>> calling ${FUNCNAME[0]}" | (debug_output)
 	if [ -z "${1}" ]; then
@@ -809,58 +685,6 @@ gen_sort_main_v5(){
 	}
 
 	[ ${DEBUGLEVEL} -ge 3 ] && echo ">>> full list: ${check_files[@]}" | (debug_output)
-	for id in ${check_files[@]}; do
-		for v in sort-by-filter sort-by-eapi; do
-			if [ -d "${id}/${v}" ]; then
-				for d in $(find ${id}/${v}/* -type d); do
-					_gen_sort "${d}" &
-				done
-			fi
-		done
-		_gen_sort "${id}" &
-	done
-	wait
-}
-
-# function which sorts a list by it's package
-gen_sort_pak_v4() {
-	if [ -z "${1}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
-	else
-		local check_files=( "${1}" )
-	fi
-
-	local id d v
-
-	_gen_sort(){
-		local rc_id="${1}"
-
-		if [ -d "${rc_id}" ]; then
-			# check input
-			if [ -e "${rc_id}/full.txt" ]; then
-				rc_id="${rc_id}/full.txt"
-			else
-				return 0
-			fi
-		elif ! [ -e "${rc_id}" ]; then
-			return 0
-		fi
-
-		# find pakackge location in result
-		pak_loc="$(_find_package_location "${rc_id}")"
-		# only create package sorting if we found package location
-		if [ -n "${pak_loc}" ]; then
-			local f_packages="$(cat "${rc_id}"| cut -d "${DL}" -f${pak_loc} |sort -u)"
-			local pack
-			for pack in ${f_packages}; do
-				local f_cat="$(echo ${pack}|cut -d'/' -f1)"
-				local f_pak="$(echo ${pack}|cut -d'/' -f2)"
-				mkdir -p "${rc_id%/*}/sort-by-package/${f_cat}"
-				grep "\<${pack}\>" "${rc_id}" > "${rc_id%/*}/sort-by-package/${f_cat}/${f_pak}.txt"
-			done
-		fi
-	}
-
 	for id in ${check_files[@]}; do
 		for v in sort-by-filter sort-by-eapi; do
 			if [ -d "${id}/${v}" ]; then
@@ -961,37 +785,6 @@ gen_sort_eapi_v1(){
 		if [ -e "${rc_id}/full.txt" ]; then
 			for _eapi in $(cut -c-1 ${rc_id}/full.txt|sort -u); do
 				_gen_sort_eapi "${_eapi}" &
-			done
-		fi
-	done
-	wait
-}
-
-gen_sort_filter_v1(){
-	local column="${1}"
-	if [ -z "${2}" ]; then
-		local check_files=( "${RUNNING_CHECKS[@]}" )
-	else
-		local check_files=( "${2}" )
-	fi
-
-	local rc_id file ec ecd
-
-	_gen_sort_filter() {
-		local file="${1}"
-		local col="${2}"
-		local ec
-		for ec in $(echo "${file}"|cut -d'|' -f${col}|tr ':' ' '|cut -d'(' -f1); do
-			mkdir -p "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')"
-			echo "${file}" >> "${rc_id}/sort-by-filter/$(echo ${ec}|tr '/' '_')/full.txt"
-		done
-	}
-
-	local _file
-	for rc_id in ${check_files[@]}; do
-		if [ -e "${rc_id}/full.txt" ]; then
-			for _file in $(cat "${rc_id}/full.txt"); do
-				_gen_sort_filter "${_file}" "${column}" &
 			done
 		fi
 	done
@@ -1313,9 +1106,9 @@ END`
 
 export -f get_main_min get_perm get_eapi check_eclasses_usage count_keywords \
 	compare_keywords get_bugs_bool get_age_last get_git_age date_update \
-	get_time_diff sort_result_v4 check_mask gen_sort_eapi_v1 gen_sort_filter_v1 \
-	get_licenses get_eclasses get_keywords get_depend gen_sort_main_v4 \
-	gen_sort_pak_v4 get_eclasses_real_v2 clean_results debug_output \
+	get_time_diff check_mask gen_sort_eapi_v1 \
+	get_licenses get_eclasses get_depend \
+	get_eclasses_real_v2 clean_results debug_output \
 	get_site_status get_file_status_detailed get_age_v3 post_checks \
 	sort_result_v5 gen_sort_pak_v5 gen_sort_main_v5 gen_sort_filter_v2 \
 	get_keywords_v2 sort_result_column_v1 sort_result_v6 get_site_rating
